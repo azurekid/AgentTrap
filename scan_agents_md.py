@@ -274,14 +274,53 @@ def base64_findings(i, ln):
     return out
 
 
+DENY_START = re.compile(r'"(?:deny|ask)"\s*:\s*\[', re.I)
+
+
+def mask_denied(lines):
+    """Blank the contents of "deny"/"ask" arrays: restrictive entries like "Bash(curl *)" are not grants."""
+    out, depth = [], 0
+    for ln in lines:
+        buf, n, i = list(ln), len(ln), 0
+        start = 0 if depth else None
+        while i < n:
+            if depth == 0:
+                m = DENY_START.search(ln, i)
+                if not m:
+                    break
+                depth, start, i = 1, m.end(), m.end()
+                continue
+            c = ln[i]
+            if c == '"':
+                j = i + 1
+                while j < n and ln[j] != '"':
+                    j += 2 if ln[j] == "\\" else 1
+                i = j + 1
+                continue
+            if c == "[":
+                depth += 1
+            elif c == "]":
+                depth -= 1
+                if depth == 0:
+                    buf[start:i] = " " * (i - start)
+                    start = None
+            i += 1
+        if depth and start is not None:
+            buf[start:] = " " * (n - start)
+        out.append("".join(buf))
+    return out
+
+
 def scan_text(text, allow):
     out = []
-    for i, ln in enumerate(re.split(r"\r?\n", text), 1):
+    lines = re.split(r"\r?\n", text)
+    masked = mask_denied(lines)
+    for i, ln in enumerate(lines, 1):
         for rid, sev, msg, rx in SECRET_RULES:
             if rx.search(ln):
                 out.append(finding(i, sev, rid, msg, "[REDACTED: potential credential]"))
         for rid, sev, msg, rx in RULES:
-            if rx.search(ln):
+            if rx.search(masked[i - 1]):
                 out.append(finding(i, sev, rid, msg, ln))
         out += url_findings(i, ln, allow)
         out += base64_findings(i, ln)

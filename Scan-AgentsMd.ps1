@@ -287,10 +287,43 @@ function ConvertTo-EscapedString {
 
 #region Detectors ---------------------------------------------------------------
 
+function Get-DeniedMask {
+    <# Blanks the contents of "deny"/"ask" arrays: restrictive entries like "Bash(curl *)" are not grants. #>
+    param([string[]]$Lines)
+    $start = [regex]::new('"(?:deny|ask)"\s*:\s*\[', 'IgnoreCase')
+    $depth = 0
+    foreach ($ln in $Lines) {
+        $buf = $ln.ToCharArray(); $n = $buf.Length; $i = 0
+        $from = if ($depth) { 0 } else { -1 }
+        while ($i -lt $n) {
+            if ($depth -eq 0) {
+                $m = $start.Match($ln, $i)
+                if (-not $m.Success) { break }
+                $depth = 1; $from = $m.Index + $m.Length; $i = $from; continue
+            }
+            $c = $buf[$i]
+            if ($c -eq '"') {
+                $j = $i + 1
+                while ($j -lt $n -and $buf[$j] -ne '"') { $j += $(if ($buf[$j] -eq '\') { 2 } else { 1 }) }
+                $i = $j + 1; continue
+            }
+            if ($c -eq '[') { $depth++ }
+            elseif ($c -eq ']') {
+                $depth--
+                if ($depth -eq 0) { for ($k = $from; $k -lt $i; $k++) { $buf[$k] = ' ' }; $from = -1 }
+            }
+            $i++
+        }
+        if ($depth -and $from -ge 0) { for ($k = $from; $k -lt $n; $k++) { $buf[$k] = ' ' } }
+        , (-join $buf)
+    }
+}
+
 function Get-RuleMatch {
-    param([int]$LineNo, [string]$Line, [array]$Rules, [hashtable]$Refs = @{})
+    param([int]$LineNo, [string]$Line, [array]$Rules, [hashtable]$Refs = @{}, [string]$Masked = $null)
+    if ($null -eq $Masked) { $Masked = $Line }
     foreach ($r in $Rules) {
-        if ($r[3].IsMatch($Line)) { New-Finding $LineNo $r[1] $r[0] $r[2] $Line $Refs[$r[0]] }
+        if ($r[3].IsMatch($Masked)) { New-Finding $LineNo $r[1] $r[0] $r[2] $Line $Refs[$r[0]] }
     }
 }
 
@@ -342,6 +375,7 @@ function Get-ContentFinding {
     param([string]$Text, [pscustomobject]$Config)
     $out = [Collections.Generic.List[object]]::new()
     $lines = $Text -split "\r?\n"
+    $masked = @(Get-DeniedMask $lines)
     for ($n = 1; $n -le $lines.Count; $n++) {
         $ln = $lines[$n - 1]
         foreach ($r in $script:SecretRules) {
@@ -349,7 +383,7 @@ function Get-ContentFinding {
                 $out.Add((New-Finding $n $r.severity $r.id $r.message '[REDACTED: potential credential]'))
             }
         }
-        Get-RuleMatch     $n $ln $Config.Rules $Config.RuleRefs | ForEach-Object { $out.Add($_) }
+        Get-RuleMatch     $n $ln $Config.Rules $Config.RuleRefs $masked[$n - 1] | ForEach-Object { $out.Add($_) }
         Get-UrlFinding    $n $ln $Config                        | ForEach-Object { $out.Add($_) }
         Get-Base64Finding $n $ln $Config                        | ForEach-Object { $out.Add($_) }
         Get-UnicodeSmugglingFinding $n $ln $Config.RuleRefs     | ForEach-Object { $out.Add($_) }

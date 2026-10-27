@@ -121,6 +121,23 @@ def test_secret_assignment_ignores_powershell_command_calls(tmp_path):
             assert sum(f["rule"] == "SECRET-ASSIGNMENT" for f in findings) == expected, text
 
 
+def test_permission_wildcard_ignores_deny_and_ask_lists(tmp_path):
+    multi = '{\n "permissions": {\n  "deny": [\n   "Bash(curl *)",\n   "Bash(rm *)"\n  ],\n  "ask": ["Bash(git push *)"],\n  "allow": [\n   "Bash(python *)"\n  ]\n }\n}\n'
+    cases = [(multi, [9]),
+             ('{"deny": ["Bash(curl *)"], "allow": ["Bash(*)"]}\n', [1]),
+             ('{"permissions": {"deny": ["Bash(curl *)"]}}\n', []),
+             ('{"allow": ["Bash(python *)"]}\n', [1])]
+    file = tmp_path / "settings.json"
+    for text, lines in cases:
+        file.write_text(text)
+        completed = subprocess.run(
+            ["pwsh", "-NoProfile", "-File", str(ROOT / "Scan-AgentsMd.ps1"), "-Json", "-Path", str(file)],
+            capture_output=True, text=True, check=False)
+        ps = next(iter(json.loads(completed.stdout).values()))
+        for findings in (ps, scan_file(str(file), text, DEFAULT_ALLOW)):
+            assert [f["line"] for f in findings if f["rule"] == "PERMISSION-WILDCARD"] == lines, text
+
+
 def test_static_page_and_policy(client):
     response = client.get("/")
     assert response.status_code == 200
