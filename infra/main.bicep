@@ -11,7 +11,7 @@ param namePrefix string = 'skillvenom'
 
 @description('App Service plan SKU. B1 is the smallest tier with Always On.')
 @allowed(['B1', 'B2', 'B3', 'P0v3', 'P1v3'])
-param appServiceSku string = 'B1'
+param appServiceSku string = 'B3'
 
 @description('Python runtime for App Service Linux.')
 param pythonVersion string = '3.14'
