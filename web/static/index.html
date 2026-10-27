@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Inspect AI agent instructions and configurations for prompt injection, exposed credentials, and unsafe execution with AgentTrap.">
+  <title>AgentTrap | AI Security Operations</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%237cf7ca'/%3E%3Cpath d='M8 24 16 7l8 17M11 19h10' fill='none' stroke='%2310251c' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="AgentTrap home"><span class="brand-mark">A<span>›</span></span><span>AGENT<span class="brand-accent">TRAP</span><small>AI SECURITY OPERATIONS</small></span></a>
+    <div class="workspace-label">SECURITY WORKSPACE</div>
+    <nav aria-label="Tools"><a class="nav-item active" href="#scanner"><span>⌘</span> AgentTrap <span class="live-dot"></span></a></nav>
+    <div class="workspace-label tools-label">DETECTION COVERAGE</div>
+    <div class="coverage-item"><span class="tiny-icon">01</span> Prompt injection</div>
+    <div class="coverage-item"><span class="tiny-icon">02</span> Exposed credentials</div>
+    <div class="coverage-item"><span class="tiny-icon">03</span> Unsafe execution</div>
+    <div class="coverage-item"><span class="tiny-icon">04</span> Hidden instructions</div>
+    <div class="sidebar-bottom"><span class="outline-shield">◇</span><strong>Trust nothing.<br>Inspect everything.</strong><p>A safer boundary between your agents and their instructions.</p><a href="/sources" target="_blank" rel="noopener">Detection research ↗</a></div>
+  </aside>
+  <div class="main-shell">
+    <header class="topbar"><div><span class="muted">Workspace</span><span class="breadcrumb">/</span> Agent security</div><div class="topbar-right"><span class="status-dot"></span> STATIC ANALYSIS <span class="version">v1.0</span></div></header>
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="eyebrow"><span class="short-line"></span> THE AI TRUST BOUNDARY</div>
+        <div class="hero-row"><div><h1>Your agents follow instructions.<br><span>Know whose.</span></h1><p class="hero-description">Uncover hidden threats in the files that guide your AI tools.<br>Inspect agent instructions, configurations, and exposed secrets before they become an incident.</p></div><div class="radar" aria-hidden="true"><div class="radar-inner"><svg viewBox="0 0 64 72"><path d="M32 5 55 14v20c0 16-23 32-23 32S9 50 9 34V14Z"/><path class="shield-check" d="m22 34 7 7 14-16"/></svg></div><span class="radar-point"></span></div></div>
+        <div class="feature-strip"><span><i></i> Real AgentTrap engine</span><span><i></i> No code execution</span><span><i></i> Credential detection</span><span><i></i> Private investigation archive</span></div>
+      </section>
+      <section class="scanner-section" id="scanner" aria-labelledby="scanner-title">
+        <div class="section-heading"><div><span class="section-number">01 /</span><h2 id="scanner-title">Inspect your agent files</h2></div><span class="tag">AGENTTRAP SCANNER</span></div>
+        <div class="scan-card">
+          <div class="tabs" role="tablist" aria-label="Scan source"><button id="upload-tab" role="tab" aria-selected="true" aria-controls="upload-panel" class="tab active" type="button"><span aria-hidden="true">↥</span> Upload files</button><button id="repo-tab" role="tab" aria-selected="false" aria-controls="repo-panel" class="tab" type="button" tabindex="-1"><span aria-hidden="true">⑂</span> Scan repository</button><span class="tab-note">READ-ONLY INSPECTION</span></div>
+          <form id="scan-form">
+            <div id="upload-panel" role="tabpanel" aria-labelledby="upload-tab">
+              <label class="dropzone" id="dropzone" for="files"><span class="upload-icon" aria-hidden="true">↥</span><strong>Drop your agent files here</strong><span>or <span class="text-accent">browse files</span> to get started</span><small>Markdown, JSON, TOML &amp; agent rules · 256 KiB per file · 2 MiB total</small><input type="file" id="files" multiple aria-describedby="file-help"></label>
+              <div class="selection-row"><span id="file-help">Up to 100 files. Preserve config paths by selecting a folder.</span><label class="folder-button" for="folder">Select folder ↗<input id="folder" type="file" webkitdirectory multiple></label></div>
+              <ul id="file-list" class="file-list" aria-label="Selected files"></ul>
+            </div>
+            <div id="repo-panel" role="tabpanel" aria-labelledby="repo-tab" hidden>
+              <label class="field-label" for="repository">PUBLIC GITHUB REPOSITORY</label>
+              <div class="url-field"><span aria-hidden="true">⑂</span><input id="repository" type="url" placeholder="https://github.com/owner/repository" autocomplete="off" spellcheck="false" maxlength="240" disabled></div>
+              <p class="input-help">Scans supported agent files on the default branch, pinned to a commit. No cloning, submodules, code execution, or private repository credentials.</p>
+              <div class="repo-info"><span>⌕</span><div><strong>Agent-aware discovery</strong><p>Finds instructions and auto-loaded configuration files—including hidden folders. Ordinary repository Markdown is excluded unless it matches an agent pattern.</p></div></div>
+            </div>
+            <div class="options-row"><label class="checkbox-label"><input id="workflows" type="checkbox"><span>Include GitHub Actions workflows <small>Optional · may produce more findings</small></span></label><span class="threshold">Review threshold <strong>HIGH +</strong></span></div>
+            <div class="privacy-notice"><span aria-hidden="true">ⓘ</span><p><strong>Investigation &amp; retention notice</strong> Files with HIGH or CRITICAL findings are automatically retained in a private investigation archive for 30 days. Original content may include credentials. No separate consent checkbox is required. Only submit files you are authorized to share.</p></div>
+            <div class="scan-actions"><span><span class="status-dot"></span> Content is inspected, never executed</span><button id="scan-button" class="primary-button" type="submit">Run security scan <span aria-hidden="true">→</span></button></div>
+          </form>
+        </div>
+        <div id="progress" class="progress" role="status" hidden><span class="spinner"></span><span>Inspecting agent files. Repository scans may take up to a minute…</span></div>
+        <div id="error" class="error-box" role="alert" hidden></div>
+      </section>
+      <section id="results" class="results" aria-labelledby="results-title" hidden>
+        <div class="section-heading"><div><span class="section-number">02 /</span><h2 id="results-title">Scan intelligence</h2></div><button id="download" class="secondary-button" type="button">Export JSON ↧</button></div>
+        <div id="verdict" class="verdict"></div>
+        <div id="metrics" class="metrics"></div>
+        <div id="report-notes" class="report-notes"></div>
+        <div class="findings-toolbar"><h3>File findings <span id="finding-count"></span></h3><label>Severity <select id="severity"><option value="ALL">All severities</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label></div>
+        <div id="findings"></div>
+        <p class="disclaimer" id="disclaimer"></p>
+      </section>
+      <section class="coverage-grid" aria-label="Supported agent ecosystems">
+        <article><span class="card-kicker">INSTRUCTIONS</span><h3>The context is the attack surface.</h3><p>AGENTS.md, CLAUDE.md, GEMINI.md, SKILL.md, Copilot instructions, prompts, and custom agent files.</p><span class="code-chip">*.instructions.md</span><span class="code-chip">*.agent.md</span></article>
+        <article><span class="card-kicker">CONFIGURATIONS</span><h3>Look beyond the Markdown.</h3><p>Claude hooks, Codex permissions, Cursor MCP, Gemini settings, VS Code tasks, and editor rule files.</p><span class="code-chip">.claude/</span><span class="code-chip">.vscode/</span><span class="code-chip">.codex/</span></article>
+        <article><span class="card-kicker">CREDENTIAL EXPOSURE</span><h3>Secrets don't belong in context.</h3><p>Detect token-shaped values, private keys, JWT-like strings, service URLs, and hard-coded credentials.</p><span class="code-chip">Redacted findings</span><span class="code-chip">Rotate exposed keys</span></article>
+      </section>
+      <footer><span><span class="brand-accent">AGENTTRAP</span> / AI SECURITY OPERATIONS</span><span>Static signals. Human judgment. <a href="/sources" target="_blank" rel="noopener">View research ↗</a></span></footer>
+    </main>
+  </div>
+</body>
+</html>
