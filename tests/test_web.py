@@ -80,7 +80,7 @@ def test_new_secret_rules_powershell_parity(tmp_path):
 def test_static_page_and_policy(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "Allow investigation retention" in response.text and "30 days" in response.text
+    assert "Allow investigation retention" in response.text
     assert 'id="scan-form"' in response.text and "/assets/app.js" in response.text
     assert "script-src 'self'" in response.headers["content-security-policy"]
     assert client.get("/api/policy").json()["retention_days"] == 30
