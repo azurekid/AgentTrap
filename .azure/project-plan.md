@@ -1,4 +1,4 @@
-# SkillVenom web application — approved scope
+# SkillVenom web application: approved scope
 
 The user approved implementation, deployment artifacts (Bicep, scripts, CI/CD), not resource provisioning.
 

@@ -1,4 +1,4 @@
-# PI-006 — Offensive security tasking disguised as authorized testing
+# PI-006: Offensive security tasking disguised as authorized testing
 
 > Offensive security tasking disguised as authorized testing
 

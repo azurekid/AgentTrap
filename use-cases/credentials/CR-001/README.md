@@ -1,4 +1,4 @@
-# CR-001 — Config file ships live-shaped API tokens
+# CR-001: Config file ships live-shaped API tokens
 
 > Config file ships live-shaped API tokens
 

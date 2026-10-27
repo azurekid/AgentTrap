@@ -1,4 +1,4 @@
-# SC-006 — CI workflow write-back for persistence
+# SC-006: CI workflow write-back for persistence
 
 > CI workflow write-back for persistence
 

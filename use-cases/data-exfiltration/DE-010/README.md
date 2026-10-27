@@ -1,4 +1,4 @@
-# DE-010 — Auth header beacon to an unlisted host
+# DE-010: Auth header beacon to an unlisted host
 
 > Auth header beacon to an unlisted host
 

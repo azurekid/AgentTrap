@@ -163,7 +163,7 @@ function drawRadar(tactics) {
     const lines = SHORT[tactic.key] || [tactic.name];
     const label = svg("text", { x, y: y - (lines.length - 1) * 7, "text-anchor": anchor, class: `axis-label${tactic.findings ? " hot" : ""}`, "data-key": tactic.key });
     lines.forEach((line, n) => label.append(svg("tspan", { x, dy: n ? 15 : 0 }, line)));
-    label.append(svg("tspan", { x, dy: 15, class: "axis-count" }, tactic.findings ? `${tactic.findings} finding${tactic.findings === 1 ? "" : "s"}` : "—"));
+    label.append(svg("tspan", { x, dy: 15, class: "axis-count" }, tactic.findings ? `${tactic.findings} finding${tactic.findings === 1 ? "" : "s"}` : "-"));
     radar.append(label);
   });
   radar.classList.remove("grow");
@@ -248,7 +248,7 @@ function renderResults() {
   text.append(
     node("span", "verdict-label", report.status === "no_targets" ? "NO TARGET FILES" : summary.verdict),
     node("span", "verdict-sub", report.status === "no_targets"
-      ? "No supported agent files found — this is not a clean bill of health."
+      ? "No supported agent files found, this is not a clean bill of health."
       : `${report.status === "partial" ? "Partial scan · " : ""}${summary.findings} finding${summary.findings === 1 ? "" : "s"} across ${summary.files} file${summary.files === 1 ? "" : "s"}`),
   );
   verdict.replaceChildren(node("span", "verdict-icon", risky ? "!" : incomplete ? "?" : "✓"), text);

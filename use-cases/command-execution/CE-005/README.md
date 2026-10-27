@@ -1,4 +1,4 @@
-# CE-005 — Agent tasked to wipe system and cloud resources
+# CE-005: Agent tasked to wipe system and cloud resources
 
 > Agent tasked to wipe system and cloud resources
 

@@ -1,4 +1,4 @@
-# DE-008 — Local file exfiltration of MCP config
+# DE-008: Local file exfiltration of MCP config
 
 > Local file exfiltration of MCP config
 

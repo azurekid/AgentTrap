@@ -1,4 +1,4 @@
-# CE-004 — Destructive wipe framed as maintenance
+# CE-004: Destructive wipe framed as maintenance
 
 > Destructive wipe framed as maintenance
 

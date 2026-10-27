@@ -1,4 +1,4 @@
-# OB-006 — Base64 command blob decoded and piped to shell
+# OB-006: Base64 command blob decoded and piped to shell
 
 > Base64 command blob decoded and piped to shell
 

@@ -1,4 +1,4 @@
-# PI-001 — Classic ignore-previous-instructions override
+# PI-001: Classic ignore-previous-instructions override
 
 > Classic ignore-previous-instructions override
 

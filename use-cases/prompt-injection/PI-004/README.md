@@ -1,4 +1,4 @@
-# PI-004 — Prefilled AI assistant link poisons future answers
+# PI-004: Prefilled AI assistant link poisons future answers
 
 > Prefilled AI assistant link poisons future answers
 

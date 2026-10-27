@@ -1,4 +1,4 @@
-# PI-002 — Fake system/role tags smuggled into Markdown
+# PI-002: Fake system/role tags smuggled into Markdown
 
 > Fake system/role tags smuggled into Markdown
 

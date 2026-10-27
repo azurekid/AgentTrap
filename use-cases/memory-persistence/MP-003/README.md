@@ -1,4 +1,4 @@
-# MP-003 — Host persistence via crontab and shell rc
+# MP-003: Host persistence via crontab and shell rc
 
 > Host persistence via crontab and shell rc
 

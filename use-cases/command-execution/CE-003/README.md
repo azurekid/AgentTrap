@@ -1,4 +1,4 @@
-# CE-003 — Reverse shell over /dev/tcp and netcat
+# CE-003: Reverse shell over /dev/tcp and netcat
 
 > Reverse shell over /dev/tcp and netcat
 

@@ -1,4 +1,4 @@
-# TM-002 — Hidden group/role grant during a read-only task
+# TM-002: Hidden group/role grant during a read-only task
 
 > Hidden group/role grant during a read-only task
 

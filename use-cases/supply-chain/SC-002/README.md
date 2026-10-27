@@ -1,4 +1,4 @@
-# SC-002 — Authoritative 'you MUST install' nudge
+# SC-002: Authoritative 'you MUST install' nudge
 
 > Authoritative 'you MUST install' nudge
 

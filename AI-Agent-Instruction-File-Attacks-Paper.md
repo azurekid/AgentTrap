@@ -2,7 +2,7 @@
 
 ### A Plain-Language Research Paper
 
-**Version 1.0 — 27 October 2026**
+**Version 1.0, 27 October 2026**
 
 ---
 
@@ -44,7 +44,7 @@ documentation.**
 
 An **AI coding agent** is a tool like OpenAI Codex, Claude Code, Google Gemini
 CLI, Cursor, GitHub Copilot, Amazon Q, Windsurf, or Cline. It uses a **large
-language model** (an "LLM" — a program trained to understand and produce text)
+language model** (an "LLM", a program trained to understand and produce text)
 to help you build software.
 
 The key point is that the agent does not only talk. It **acts**. With your
@@ -55,7 +55,7 @@ permission, it can:
 - install software packages from the internet,
 - change its own settings.
 
-To act correctly, the agent needs **context** — background information about
+To act correctly, the agent needs **context**, background information about
 your project. Where does it get this context? Partly from **instruction files**.
 
 ### 1.1 What is an instruction file?
@@ -116,29 +116,29 @@ single line of broken code.
 In October 2026, researchers at Forever Security found a real attack on a
 customer's computer [1][2]. The story is important because it shows every step.
 
-**Step 1 — The bait.** A file named `AGENTS.md` appeared in the user's
+**Step 1: The bait.** A file named `AGENTS.md` appeared in the user's
 `~/Downloads` folder. (The symbol `~` means "your home folder". So `~/Downloads`
 is your normal download location.)
 
-**Step 2 — Why Downloads is dangerous.** The `~/Downloads` folder is special. It
+**Step 2: Why Downloads is dangerous.** The `~/Downloads` folder is special. It
 is the one folder that a web page can write to on its own. When you visit some
 web pages, your browser can save a file there **without asking you**. Chrome,
 Edge, and Firefox do this by default and only show a small notification. So an
 attacker can drop an `AGENTS.md` file onto your machine just by getting you to
 open a web page.
 
-**Step 3 — The trigger.** Many people open their AI agent inside `~/Downloads`,
+**Step 3: The trigger.** Many people open their AI agent inside `~/Downloads`,
 for example to sort or clean the folder. When the agent starts there, it
 automatically reads the malicious `AGENTS.md`.
 
-**Step 4 — The payload.** The **payload** (the harmful action) in this case was
+**Step 4: The payload.** The **payload** (the harmful action) in this case was
 an order to install a malicious software package called `function-color`. The
 agent tried to install it. The researchers reproduced this against OpenAI Codex
 with a 90% success rate using a harmless stand-in action [1].
 
-**Step 5 — A second, worse version.** In a related test, the researchers used a
+**Step 5: A second, worse version.** In a related test, the researchers used a
 malicious `CLAUDE.md` file to redirect the agent's network traffic to a server
-they controlled. This exposed the agent's **OAuth token** — a secret key that
+they controlled. This exposed the agent's **OAuth token**, a secret key that
 proves who you are to a service. With that token, the attacker's server could
 impersonate the model and send back commands that ran code, succeeding in about
 50% of tests [1].
@@ -154,7 +154,7 @@ A **taxonomy** is an organised list of categories. We group the known
 techniques into eight families. Each family explains the idea, gives a real
 example, and names the warning signs a defender can look for.
 
-### 4.1 Family A — Stealing secrets (exfiltration)
+### 4.1 Family A, Stealing secrets (exfiltration)
 
 **Exfiltration** means secretly sending data out of your computer to the
 attacker. Secrets include API keys, OAuth tokens, SSH private keys (used to log
@@ -182,7 +182,7 @@ in to servers), and cloud credentials.
 credential files; `ping`/`nslookup`/`dig` followed by odd domain names; image
 links or escape sequences that carry data.
 
-### 4.2 Family B — Installing harmful software (supply-chain attacks)
+### 4.2 Family B, Installing harmful software (supply-chain attacks)
 
 A **supply-chain attack** poisons the software you depend on, so that trusting a
 normal-looking package infects you.
@@ -206,7 +206,7 @@ normal-looking package infects you.
 "always use X"; registry or index changes; new workflow files that scan for
 secrets.
 
-### 4.3 Family C — Redirecting network traffic
+### 4.3 Family C, Redirecting network traffic
 
 Here the attacker does not steal a file directly. Instead, the attacker changes
 **where the agent connects**, so that all later traffic flows through their
@@ -226,7 +226,7 @@ server.
 **Warning signs:** any `*_BASE_URL` or proxy variable; edits to `/etc/hosts`;
 new trusted certificates.
 
-### 4.4 Family D — Weakening the safety switches
+### 4.4 Family D, Weakening the safety switches
 
 Modern agents ask for permission before dangerous actions. These attacks try to
 turn that protection off.
@@ -247,12 +247,12 @@ turn that protection off.
 **Warning signs:** bypass flags; auto-approve settings set to true; wildcard
 permission entries such as `Bash(*)`.
 
-### 4.5 Family E — Abusing agent and editor configuration
+### 4.5 Family E, Abusing agent and editor configuration
 
 Agents and code editors have powerful features that an attacker can turn against
 you by editing a config file.
 
-- **Hooks.** Claude Code supports **hooks** — commands that run automatically at
+- **Hooks.** Claude Code supports **hooks**, commands that run automatically at
   certain moments (for example, when a session starts). A poisoned
   `.claude/settings.json` can plant a hook that runs attacker code every time
   [22][26].
@@ -269,7 +269,7 @@ you by editing a config file.
 **Warning signs:** `hooks`, `apiKeyHelper`, or MCP server definitions in config
 files; tasks set to run on folder open.
 
-### 4.6 Family F — Hiding the attack (obfuscation)
+### 4.6 Family F, Hiding the attack (obfuscation)
 
 **Obfuscation** means hiding the true meaning so a human reviewer does not see
 it, while the machine still reads it.
@@ -293,7 +293,7 @@ it, while the machine still reads it.
 **Warning signs:** invisible or direction-control characters; long Base64 blocks;
 hidden comments containing commands.
 
-### 4.7 Family G — Manipulating the human and the agent's mind
+### 4.7 Family G, Manipulating the human and the agent's mind
 
 These attacks target trust and attention rather than a specific command.
 
@@ -310,7 +310,7 @@ These attacks target trust and attention rather than a specific command.
 **Warning signs:** concealment phrases; "ignore/disregard previous"; fake system
 tags; approval text that pushes a specific command.
 
-### 4.8 Family H — Spreading and staying (worms and persistence)
+### 4.8 Family H, Spreading and staying (worms and persistence)
 
 - **Self-propagation (worms).** The file tells the agent to copy the malicious
   text into *other* instruction files, in this and other projects. This can
@@ -389,7 +389,7 @@ checking of the files themselves**.
 
 ### 7.3 Automatic scanning (our tool)
 
-We built a **static scanner** — a program that reads the files and looks for
+We built a **static scanner**, a program that reads the files and looks for
 warning signs **without running anything**. ("Static" means it analyses the text;
 it does not execute it.) The scanner:
 
@@ -402,7 +402,7 @@ it does not execute it.) The scanner:
   `.vscode/settings.json` / `tasks.json`;
 - **decodes hidden Unicode "Tag" text** and shows what it says, and warns about
   long runs of invisible variation selectors;
-- checks known **IOCs** (**Indicators of Compromise** — specific known-bad names,
+- checks known **IOCs** (**Indicators of Compromise**, specific known-bad names,
   such as the `function-color` package, the `s1ngularity-repository` name, or the
   Shai-Hulud workflow file);
 - flags files that sit in risky locations like `~/Downloads`;

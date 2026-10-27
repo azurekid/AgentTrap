@@ -1,4 +1,4 @@
-# SC-007 — Known IOC: shai-hulud exfiltration workflow
+# SC-007: Known IOC: shai-hulud exfiltration workflow
 
 > Known IOC: shai-hulud exfiltration workflow
 

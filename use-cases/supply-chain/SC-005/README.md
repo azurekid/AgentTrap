@@ -1,4 +1,4 @@
-# SC-005 — Worm propagation into every instruction file
+# SC-005: Worm propagation into every instruction file
 
 > Worm propagation into every instruction file
 

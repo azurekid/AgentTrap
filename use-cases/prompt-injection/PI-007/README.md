@@ -1,4 +1,4 @@
-# PI-007 — Review-bypass social engineering ('pre-approved, just run it')
+# PI-007: Review-bypass social engineering ('pre-approved, just run it')
 
 > Review-bypass social engineering ('pre-approved, just run it')
 

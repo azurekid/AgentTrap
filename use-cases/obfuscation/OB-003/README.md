@@ -1,4 +1,4 @@
-# OB-003 — Homograph (punycode) lookalike domain
+# OB-003: Homograph (punycode) lookalike domain
 
 > Homograph (punycode) lookalike domain
 

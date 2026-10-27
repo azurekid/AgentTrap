@@ -1,4 +1,4 @@
-# TM-003 — Skill trigger hijack: 'use me for every request'
+# TM-003: Skill trigger hijack: 'use me for every request'
 
 > Skill trigger hijack: 'use me for every request'
 

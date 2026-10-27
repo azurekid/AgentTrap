@@ -1,4 +1,4 @@
-# TM-001 — Agent tool exfiltrates secrets to another repository
+# TM-001: Agent tool exfiltrates secrets to another repository
 
 > Agent tool exfiltrates secrets to another repository
 

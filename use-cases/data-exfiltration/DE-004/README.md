@@ -1,4 +1,4 @@
-# DE-004 — GitHub CLI exfiltration via attacker repo
+# DE-004: GitHub CLI exfiltration via attacker repo
 
 > GitHub CLI exfiltration via attacker repo
 

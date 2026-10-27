@@ -1,4 +1,4 @@
-# SC-008 — Plain-HTTP dependency download
+# SC-008: Plain-HTTP dependency download
 
 > Plain-HTTP dependency download
 

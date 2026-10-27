@@ -1,4 +1,4 @@
-# PA-004 — VS Code task auto-runs a script on folder open
+# PA-004: VS Code task auto-runs a script on folder open
 
 > VS Code task auto-runs a script on folder open
 

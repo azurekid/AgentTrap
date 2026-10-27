@@ -1,4 +1,4 @@
-# OB-002 — Variation-selector smuggling
+# OB-002: Variation-selector smuggling
 
 > Variation-selector smuggling
 

@@ -1,4 +1,4 @@
-# TM-005 — OAuth/token environment reference
+# TM-005: OAuth/token environment reference
 
 > OAuth/token environment reference
 

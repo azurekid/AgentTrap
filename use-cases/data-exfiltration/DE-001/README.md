@@ -1,4 +1,4 @@
-# DE-001 — Markdown image beacon exfiltrates conversation
+# DE-001: Markdown image beacon exfiltrates conversation
 
 > Markdown image beacon exfiltrates conversation
 

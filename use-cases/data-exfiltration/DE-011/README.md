@@ -1,4 +1,4 @@
-# DE-011 — Credential-prompt harvesting dialog
+# DE-011: Credential-prompt harvesting dialog
 
 > Credential-prompt harvesting dialog
 

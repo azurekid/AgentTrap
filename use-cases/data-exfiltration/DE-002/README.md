@@ -1,4 +1,4 @@
-# DE-002 — DNS-tunnel exfiltration of a secret
+# DE-002: DNS-tunnel exfiltration of a secret
 
 > DNS-tunnel exfiltration of a secret
 

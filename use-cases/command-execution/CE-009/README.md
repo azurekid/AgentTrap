@@ -1,4 +1,4 @@
-# CE-009 — Install-script tampering disables TLS checks
+# CE-009: Install-script tampering disables TLS checks
 
 > Install-script tampering disables TLS checks
 

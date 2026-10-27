@@ -1,4 +1,4 @@
-# DE-007 — Environment dump piped to a collector
+# DE-007: Environment dump piped to a collector
 
 > Environment dump piped to a collector
 

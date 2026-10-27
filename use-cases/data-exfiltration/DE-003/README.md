@@ -1,4 +1,4 @@
-# DE-003 — ANSI escape hyperlink hides an exfil URL
+# DE-003: ANSI escape hyperlink hides an exfil URL
 
 > ANSI escape hyperlink hides an exfil URL
 

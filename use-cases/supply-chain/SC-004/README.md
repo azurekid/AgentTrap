@@ -1,4 +1,4 @@
-# SC-004 — Registry/mirror redirection to a suspicious TLD
+# SC-004: Registry/mirror redirection to a suspicious TLD
 
 > Registry/mirror redirection to a suspicious TLD
 

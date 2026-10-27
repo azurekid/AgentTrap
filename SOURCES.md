@@ -19,13 +19,13 @@ URLs and dates are as reported by the research agent and were not individually r
 | 5 | GitHub changelog: warning for hidden Unicode text | GitHub | May 1, 2025 | https://github.blog/changelog/2025-05-01-github-now-provides-a-warning-about-hidden-unicode-text/ | docs/news |
 | 6 | Hiding and Finding Text with Unicode Tags | Johann Rehberger (Embrace The Red) | Jan 2024 | https://embracethered.com/blog/posts/2024/hiding-and-finding-text-with-unicode-tags/ | blog |
 | 7 | ASCII Smuggling and Hidden Prompt Instructions | Johann Rehberger | Feb 12, 2024 | https://embracethered.com/blog/posts/2024/ascii-smuggling-and-hidden-prompt-instructions/ | blog |
-| 8 | ASCII Smuggler Tool | Johann Rehberger | — | https://embracethered.com/blog/ascii-smuggler.html | tool/docs |
+| 8 | ASCII Smuggler Tool | Johann Rehberger | n/a | https://embracethered.com/blog/ascii-smuggler.html | tool/docs |
 | 9 | Reverse CAPTCHA: Evaluating LLM Susceptibility to Invisible Unicode Instruction Injection | Marcus Graves | Feb 26, 2026 | https://arxiv.org/abs/2603.00164 | paper |
 | 10 | Package Hallucination Attacks on Coding Agents through Prompt Injection in Rule Files | Wang, Jiang, Wang, Gong | Oct 7, 2026 | https://arxiv.org/abs/2610.09264 | paper |
 | 11 | Aletheia: Permission-Minimality Testing for Coding-Agent Rules | Jieke Shi et al. | Sep 30 2026 (v2 Oct 5 2026) | https://arxiv.org/abs/2609.39678 | paper |
 | 12 | CamoLeak: Critical GitHub Copilot Vulnerability | Omer Mayraz, Legit Security | Sep 30, 2025 | https://legitsecurity.com/blog/camoleak-critical-github-copilot-vulnerability-leaks-private-source-code | blog/CVE-2025-59145 |
 | 13 | Lies-in-the-Loop: Bypassing AI Agent Defenses | Checkmarx Zero | Sep 15, 2025 | https://checkmarx.com/zero-post/bypassing-ai-agent-defenses-with-lies-in-the-loop/ | blog |
-| 14 | Bypassing Claude Code: How Easy Is It To Trick an AI Security Reviewer | Checkmarx Zero | — | https://checkmarx.com/zero-post/bypassing-claude-code-how-easy-is-it-to-trick-an-ai-security-reviewer/ | blog |
+| 14 | Bypassing Claude Code: How Easy Is It To Trick an AI Security Reviewer | Checkmarx Zero | n/a | https://checkmarx.com/zero-post/bypassing-claude-code-how-easy-is-it-to-trick-an-ai-security-reviewer/ | blog |
 | 15 | CVE-2025-54136 (Cursor "MCPoison") | MITRE / Cursor GHSA | reserved Jul 16, pub. Aug 1, 2025 | https://cveawg.mitre.org/api/cve/CVE-2025-54136 ; https://github.com/cursor/cursor/security/advisories/GHSA-24mc-g4xr-4395 | CVE/advisory |
 | 16 | Cursor Vulnerability "MCPoison" | Check Point Research | Aug 2025 | https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/ | blog |
 | 17 | Cursor AI Code Editor Vulnerability (MCPoison coverage) | The Hacker News | Aug 2025 | https://thehackernews.com/2025/08/cursor-ai-code-editor-vulnerability.html | news |
@@ -33,23 +33,23 @@ URLs and dates are as reported by the research agent and were not individually r
 | 19 | CVE-2025-54135 ("CurXecute") | MITRE / Cursor GHSA | pub. Aug 5, 2025 | https://cveawg.mitre.org/api/cve/CVE-2025-54135 ; https://github.com/cursor/cursor/security/advisories/GHSA-4cxx-hrm3-49rm | CVE/advisory |
 | 20 | FAQ: CVE-2025-54135 & CVE-2025-54136 | Tenable | Aug 2025 | https://tenable.com/blog/faq-cve-2025-54135-cve-2025-54136-vulnerabilities-in-cursor-curxecute-mcpoison | blog |
 | 21 | CurXecute: Prompt Injection Flaw in Cursor IDE Enables RCE | Daily Security Review | Aug 2025 | https://dailysecurityreview.com/security-spotlight/curxecute-prompt-injection-flaw-in-cursor-ide-enables-remote-code-execution/ | news |
-| 22 | Claude Code Docs: Hooks | Anthropic | — | https://code.claude.com/docs/en/hooks | docs |
-| 23 | Claude Code Docs: Settings Reference | Anthropic | — | https://code.claude.com/docs/en/settings-reference | docs |
-| 24 | Claude Code Docs: Permissions | Anthropic | — | https://code.claude.com/docs/en/permissions | docs |
-| 25 | Claude Code Docs: CLI Reference | Anthropic | — | https://code.claude.com/docs/en/cli-reference | docs |
+| 22 | Claude Code Docs: Hooks | Anthropic | n/a | https://code.claude.com/docs/en/hooks | docs |
+| 23 | Claude Code Docs: Settings Reference | Anthropic | n/a | https://code.claude.com/docs/en/settings-reference | docs |
+| 24 | Claude Code Docs: Permissions | Anthropic | n/a | https://code.claude.com/docs/en/permissions | docs |
+| 25 | Claude Code Docs: CLI Reference | Anthropic | n/a | https://code.claude.com/docs/en/cli-reference | docs |
 | 26 | GHSA-ff64-7w26-62rf (Claude Code sandbox/hooks CVE-2026-25725) | Anthropic | fixed v2.1.2+ | https://github.com/anthropics/claude-code/security/advisories/GHSA-ff64-7w26-62rf | advisory/CVE |
-| 27 | Codex CLI Config Reference | OpenAI | — | https://learn.chatgpt.com/docs/config-file/config-reference ; https://github.com/openai/codex/blob/main/docs/config.md | docs |
+| 27 | Codex CLI Config Reference | OpenAI | n/a | https://learn.chatgpt.com/docs/config-file/config-reference ; https://github.com/openai/codex/blob/main/docs/config.md | docs |
 | 28 | Code Exec via Deception: Gemini AI CLI Hijack | Sam Cox, Tracebit | Jul 28, 2025 | https://tracebit.com/blog/code-exec-deception-gemini-ai-cli-hijack | blog |
-| 29 | Gemini CLI Configuration Reference | Google | — | https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/configuration.md | docs |
-| 30 | Cline Rules Docs | Cline | — | https://docs.cline.bot/customization/cline-rules.md | docs |
+| 29 | Gemini CLI Configuration Reference | Google | n/a | https://github.com/google-gemini/gemini-cli/blob/main/docs/reference/configuration.md | docs |
+| 30 | Cline Rules Docs | Cline | n/a | https://docs.cline.bot/customization/cline-rules.md | docs |
 | 31 | New Rules File Backdoor Attack (secondary coverage) | The Hacker News | Mar 2025 | https://thehackernews.com/2025/03/new-rules-file-backdoor-attack-lets.html | news |
 | 32 | AWS Security Bulletin AWS-2025-015 (Amazon Q incident) | AWS | Jul 2025 | https://aws.amazon.com/security/security-bulletins/AWS-2025-015/ | advisory/CVE-2025-8217 |
 | 33 | Hacker Plants Computer-Wiping Commands in Amazon's AI Coding Agent | 404 Media | Jul 2025 | https://404media.co/hacker-plants-computer-wiping-commands-in-amazons-ai-coding-agent/ | news |
 | 34 | Constructing a Timeline for Amazon Q Prompt Infection | mbgsec.com | Jul 24, 2025 | https://mbgsec.com/posts/2025-07-24-constructing-a-timeline-for-amazon-q-prompt-infection/ | blog |
 | 35 | VS Code Release Notes v1.99 | Microsoft | Mar 2025 | https://code.visualstudio.com/updates/v1_99 | docs |
-| 36 | VS Code Docs: Tasks (tasks.json) | Microsoft | — | https://code.visualstudio.com/docs/debugtest/tasks | docs |
+| 36 | VS Code Docs: Tasks (tasks.json) | Microsoft | n/a | https://code.visualstudio.com/docs/debugtest/tasks | docs |
 | 37 | GitHub Copilot Remote Code Execution via Prompt Injection | Johann Rehberger | 2025 | https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/ | blog/CVE-2025-53773 |
-| 38 | IDEsaster | Ari "MaccariTA" Marzouk | — | https://maccarita.com/posts/idesaster/ | blog |
+| 38 | IDEsaster | Ari "MaccariTA" Marzouk | n/a | https://maccarita.com/posts/idesaster/ | blog |
 | 39 | AWS Security Bulletin AWS-2025-019 | AWS | Oct 7, 2025 | https://aws.amazon.com/security/security-bulletins/AWS-2025-019/ | advisory |
 | 40 | s1ngularity Supply Chain Attack | Wiz Threat Research | Aug 29, 2025 | https://wiz.io/blog/s1ngularity-supply-chain-attack | blog |
 | 41 | GHSA-cxm3-wv7p-598c (Nx) | Nx/nrwl | Aug 2025 | https://github.com/nrwl/nx/security/advisories/GHSA-cxm3-wv7p-598c | advisory |

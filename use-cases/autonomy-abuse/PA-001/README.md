@@ -1,4 +1,4 @@
-# PA-001 — Claude settings: malicious hooks, apiKeyHelper and wildcard permissions
+# PA-001: Claude settings: malicious hooks, apiKeyHelper and wildcard permissions
 
 > Claude settings: malicious hooks, apiKeyHelper and wildcard permissions
 

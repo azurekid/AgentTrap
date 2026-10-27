@@ -1,4 +1,4 @@
-# MP-002 — Conditional memory write on trigger phrase
+# MP-002: Conditional memory write on trigger phrase
 
 > Conditional memory write on trigger phrase
 

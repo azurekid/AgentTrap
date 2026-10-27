@@ -1,4 +1,4 @@
-# PI-003 — Jailbreak persona (DAN / unrestricted mode)
+# PI-003: Jailbreak persona (DAN / unrestricted mode)
 
 > Jailbreak persona (DAN / unrestricted mode)
 

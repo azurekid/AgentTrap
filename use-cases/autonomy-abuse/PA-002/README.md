@@ -1,4 +1,4 @@
-# PA-002 — Codex config grants full access and disables approvals
+# PA-002: Codex config grants full access and disables approvals
 
 > Codex config grants full access and disables approvals
 

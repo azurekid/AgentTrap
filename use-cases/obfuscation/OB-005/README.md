@@ -1,4 +1,4 @@
-# OB-005 — Hidden HTML text via zero-size/invisible styling
+# OB-005: Hidden HTML text via zero-size/invisible styling
 
 > Hidden HTML text via zero-size/invisible styling
 

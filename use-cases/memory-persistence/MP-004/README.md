@@ -1,4 +1,4 @@
-# MP-004 — Instruction file in an untrusted Downloads folder
+# MP-004: Instruction file in an untrusted Downloads folder
 
 > Instruction file in an untrusted Downloads folder
 

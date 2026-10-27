@@ -1,4 +1,4 @@
-# DE-005 — Cloud instance-metadata credential theft
+# DE-005: Cloud instance-metadata credential theft
 
 > Cloud instance-metadata credential theft
 

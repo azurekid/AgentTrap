@@ -163,7 +163,7 @@ def report(found, errors, config):
         lines.append(f"### {feed}")
         for item in sorted((i for i in found if i["feed"] == feed), key=lambda i: i["date"] or datetime.min.replace(tzinfo=timezone.utc), reverse=True):
             date = item["date"].strftime("%Y-%m-%d") if item["date"] else "undated"
-            lines.append(f"- [ ] {item['title']} ({date}) — {item['url']} — matched: {', '.join(item['terms'][:6])}")
+            lines.append(f"- [ ] {item['title']} ({date}), {item['url']}, matched: {', '.join(item['terms'][:6])}")
         lines.append("")
     if errors:
         lines += ["### Feeds that failed", *[f"- {e}" for e in errors], ""]

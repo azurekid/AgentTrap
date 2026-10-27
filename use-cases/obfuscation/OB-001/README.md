@@ -1,4 +1,4 @@
-# OB-001 — Unicode tag-smuggling hides a shell command
+# OB-001: Unicode tag-smuggling hides a shell command
 
 > Unicode tag-smuggling hides a shell command
 

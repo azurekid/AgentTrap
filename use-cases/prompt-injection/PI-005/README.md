@@ -1,4 +1,4 @@
-# PI-005 — ClickFix fake human-verification lure
+# PI-005: ClickFix fake human-verification lure
 
 > ClickFix fake human-verification lure
 

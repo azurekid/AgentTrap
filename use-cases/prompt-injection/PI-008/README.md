@@ -1,4 +1,4 @@
-# PI-008 — AI CLI safety-bypass flags
+# PI-008: AI CLI safety-bypass flags
 
 > AI CLI safety-bypass flags
 

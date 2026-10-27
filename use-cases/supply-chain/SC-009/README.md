@@ -1,4 +1,4 @@
-# SC-009 — Credentials embedded in a clone URL
+# SC-009: Credentials embedded in a clone URL
 
 > Credentials embedded in a clone URL
 

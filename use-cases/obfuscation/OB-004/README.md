@@ -1,4 +1,4 @@
-# OB-004 — HTML comment hides an assistant-only instruction
+# OB-004: HTML comment hides an assistant-only instruction
 
 > HTML comment hides an assistant-only instruction
 

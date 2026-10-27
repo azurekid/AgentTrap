@@ -1,4 +1,4 @@
-# DE-006 — Browser-login and crypto-wallet theft
+# DE-006: Browser-login and crypto-wallet theft
 
 > Browser-login and crypto-wallet theft
 

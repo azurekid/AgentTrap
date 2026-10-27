@@ -1,4 +1,4 @@
-# PA-003 — VS Code auto-approves all chat tools
+# PA-003: VS Code auto-approves all chat tools
 
 > VS Code auto-approves all chat tools
 

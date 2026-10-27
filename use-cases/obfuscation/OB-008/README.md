@@ -1,4 +1,4 @@
-# OB-008 — Large base64 blob conceals bundled data
+# OB-008: Large base64 blob conceals bundled data
 
 > Large base64 blob conceals bundled data
 

@@ -1,4 +1,4 @@
-# CE-007 — Privilege escalation to root group
+# CE-007: Privilege escalation to root group
 
 > Privilege escalation to root group
 

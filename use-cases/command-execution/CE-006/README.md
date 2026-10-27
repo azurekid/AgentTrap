@@ -1,4 +1,4 @@
-# CE-006 — Build/test command hijack via proxied SSH
+# CE-006: Build/test command hijack via proxied SSH
 
 > Build/test command hijack via proxied SSH
 

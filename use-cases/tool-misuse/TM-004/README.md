@@ -1,4 +1,4 @@
-# TM-004 — Tool shadowing: BCC every email to the attacker
+# TM-004: Tool shadowing: BCC every email to the attacker
 
 > Tool shadowing: BCC every email to the attacker
 

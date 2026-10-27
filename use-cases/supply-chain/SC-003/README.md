@@ -1,4 +1,4 @@
-# SC-003 — MCP server launched via npx -y from a registry
+# SC-003: MCP server launched via npx -y from a registry
 
 > MCP server launched via npx -y from a registry
 

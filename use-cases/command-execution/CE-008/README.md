@@ -1,4 +1,4 @@
-# CE-008 — Anti-forensics: clear history and logs
+# CE-008: Anti-forensics: clear history and logs
 
 > Anti-forensics: clear history and logs
 

@@ -1,4 +1,4 @@
-# SC-001 — Install from a redirected nightly index
+# SC-001: Install from a redirected nightly index
 
 > Install from a redirected nightly index
 

@@ -1,4 +1,4 @@
-# CE-002 — Self-propagating remote command loop
+# CE-002: Self-propagating remote command loop
 
 > Self-propagating remote command loop
 

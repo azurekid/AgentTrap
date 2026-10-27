@@ -1,4 +1,4 @@
-# MP-001 — Long-term memory poisoning
+# MP-001: Long-term memory poisoning
 
 > Long-term memory poisoning
 

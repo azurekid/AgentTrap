@@ -1,4 +1,4 @@
-# CE-010 — Destructive wipe and force-push
+# CE-010: Destructive wipe and force-push
 
 > Destructive wipe and force-push
 

@@ -1,4 +1,4 @@
-# PA-005 — Gemini CLI trust and auto-accept disabled
+# PA-005: Gemini CLI trust and auto-accept disabled
 
 > Gemini CLI trust and auto-accept disabled
 

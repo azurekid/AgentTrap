@@ -1,4 +1,4 @@
-# CE-001 — Remote script piped straight into a shell
+# CE-001: Remote script piped straight into a shell
 
 > Remote script piped straight into a shell
 

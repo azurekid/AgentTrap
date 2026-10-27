@@ -1,4 +1,4 @@
-# OB-007 — Obfuscated bootstrap: echo base64 | base64 -d | sh
+# OB-007: Obfuscated bootstrap: echo base64 | base64 -d | sh
 
 > Obfuscated bootstrap: echo base64 | base64 -d | sh
 

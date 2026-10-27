@@ -1,4 +1,4 @@
-# DE-009 — CI secret printed into a PR comment
+# DE-009: CI secret printed into a PR comment
 
 > CI secret printed into a PR comment
 
