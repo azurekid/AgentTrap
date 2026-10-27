@@ -164,6 +164,7 @@ resource site 'Microsoft.Web/sites@2024-04-01' = {
         // The lifecycle rule in this template enforces the retention period.
         { name: 'AZURE_ARCHIVE_RETENTION_CONFIRMED', value: 'true' }
         { name: 'TRUSTED_PROXY_HOPS', value: string(trustedProxyHops) }
+        { name: 'SCAN_TIMEOUT_SECONDS', value: '60' }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
         { name: 'WEBSITES_PORT', value: '8000' }
         { name: 'PYTHONUNBUFFERED', value: '1' }

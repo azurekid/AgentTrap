@@ -235,15 +235,18 @@ def samples_data():
     return FileResponse(ROOT / "samples.json", media_type="application/json")
 
 
+SCAN_TIMEOUT = min(max(int(os.environ.get("SCAN_TIMEOUT_SECONDS", "45")), 5), 80)
+
+
 def scan_documents(documents: list[dict[str, str]]) -> list[dict]:
     try:
         result = subprocess.run(
             [sys.executable, "-m", "web.scan_worker"], input=json.dumps(documents),
-            capture_output=True, text=True, timeout=15, cwd=ROOT.parent, check=True,
+            capture_output=True, text=True, timeout=SCAN_TIMEOUT, cwd=ROOT.parent, check=True,
         )
         output = json.loads(result.stdout)
     except subprocess.TimeoutExpired as exc:
-        raise ScanInputError("Scanner exceeded its 15-second time limit. Scan fewer files.") from exc
+        raise ScanInputError(f"Scanner exceeded its {SCAN_TIMEOUT}-second time limit. Scan fewer files.") from exc
     except (subprocess.CalledProcessError, ValueError) as exc:
         raise RuntimeError("Scanner process failed.") from exc
     if "error" in output:

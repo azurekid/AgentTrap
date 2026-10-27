@@ -526,7 +526,7 @@ def test_security_guards(client):
 
 def test_scanner_timeout_not_clean(client, monkeypatch):
     def timeout(*args, **kwargs):
-        raise subprocess.TimeoutExpired("scanner", 15)
+        raise subprocess.TimeoutExpired("scanner", 45)
     monkeypatch.setattr(subprocess, "run", timeout)
     response = upload(client, "hello")
     assert response.status_code == 422

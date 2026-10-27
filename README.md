@@ -243,7 +243,7 @@ retention obligations before publicly accepting submissions.
 - 100 files, 256 KiB/file, 2 MiB combined text, 8,192 characters/line, UTF-8 only.
 - Requests are bounded to 3 MiB **before multipart parsing**.
 - Two concurrent scan requests; 10 requests/client/10 minutes,
-  60 requests/instance/10 minutes; 15-second isolated scanner timeout.
+  60 requests/instance/10 minutes; isolated scanner timeout (`SCAN_TIMEOUT_SECONDS`, default 45).
 - GitHub retrieval never downloads the whole repository. It resolves the default
   branch to a commit, lists that commit's file tree (16 MiB listing cap), and
   fetches **only supported agent files** from `raw.githubusercontent.com`, pinned
