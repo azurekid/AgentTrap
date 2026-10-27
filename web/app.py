@@ -179,7 +179,7 @@ app.add_middleware(PublicGuard)
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, exc: RequestValidationError):
     # FastAPI's default errors include input values, which may contain secrets.
-    return JSONResponse({"detail": "Invalid scan request. Check the URL and workflow option."}, 422)
+    return JSONResponse({"detail": "Invalid scan request. Check the URL, token and workflow option."}, 422)
 
 
 @app.get("/")
@@ -369,14 +369,19 @@ class RepositoryRequest(BaseModel):
     url: str = Field(max_length=240)
     include_workflows: bool = False
     archive_consent: bool = True
+    token: str | None = Field(default=None, max_length=256, repr=False)
 
 
 @app.post("/api/scan/repository")
 async def scan_repository(payload: RepositoryRequest, request: Request):
+    token = (payload.token or "").strip() or None
     try:
-        documents, skipped, sha = await run_in_threadpool(fetch_repository, payload.url, payload.include_workflows)
+        documents, skipped, sha = await run_in_threadpool(
+            fetch_repository, payload.url, payload.include_workflows, token)
     except ScanInputError as exc:
         raise HTTPException(422, str(exc)) from exc
     except httpx.HTTPError as exc:
-        raise HTTPException(502, "GitHub is unavailable or timed out. Upload selected files or try later.") from exc
-    return await execute(documents, payload.url.strip(), skipped, sha, request, payload.archive_consent)
+        raise HTTPException(502, "The repository host is unavailable or timed out. Upload selected files or try later.") from exc
+    # Private repositories are never archived, whatever the consent checkbox says.
+    return await execute(documents, payload.url.strip(), skipped, sha, request,
+                         payload.archive_consent and token is None)

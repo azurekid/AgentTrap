@@ -80,7 +80,7 @@ def test_new_secret_rules_powershell_parity(tmp_path):
 def test_static_page_and_policy(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "Investigation &amp; retention notice" in response.text
+    assert "Allow investigation retention" in response.text and "30 days" in response.text
     assert 'id="scan-form"' in response.text and "/assets/app.js" in response.text
     assert "script-src 'self'" in response.headers["content-security-policy"]
     assert client.get("/api/policy").json()["retention_days"] == 30
@@ -387,7 +387,7 @@ def test_folder_discovery(client):
 
 
 def test_repo_endpoint_uses_real_scanner(client, monkeypatch):
-    def fixture(url, workflows):
+    def fixture(url, workflows, token=None):
         return [{"path": ".codex/config.toml", "text": 'approval_policy = "never"'}], [], "a" * 40
     monkeypatch.setattr(app_module, "fetch_repository", fixture)
     response = client.post("/api/scan/repository", json={"url": "https://github.com/test/repo"})
@@ -859,3 +859,132 @@ def test_client_key_trusts_only_configured_proxy_hops(hops, header, expected):
     from web.app import client_key
     scope = {"client": ("10.0.0.1", 1234), "headers": [(b"x-forwarded-for", header)]}
     assert client_key(scope, hops) == expected
+
+
+def git_blob_sha(content):
+    return hashlib.sha1(b"blob %d\0" % len(content) + content).hexdigest()
+
+
+def mock_transport(monkeypatch, respond):
+    real_client = httpx.Client
+    monkeypatch.setattr(httpx, "Client", lambda **kwargs: real_client(transport=httpx.MockTransport(respond), **kwargs))
+
+
+@pytest.mark.parametrize("url,provider,path", [
+    ("https://gitlab.com/group/sub/proj.git", "gitlab", ("group", "sub", "proj")),
+    ("https://dev.azure.com/org/My%20Project/_git/repo", "azuredevops", ("org", "My Project", "repo")),
+])
+def test_parse_other_providers(url, provider, path):
+    ref = parse_repository(url)
+    assert (ref.provider, ref.path) == (provider, path)
+
+
+def test_self_managed_hosts_only_when_configured(monkeypatch):
+    with pytest.raises(ScanInputError):
+        parse_repository("https://git.corp.example/g/p")
+    monkeypatch.setenv("SCM_GITLAB_HOSTS", "git.corp.example")
+    monkeypatch.setenv("SCM_AZDO_HOSTS", "tfs.corp.example")
+    assert parse_repository("https://git.corp.example/g/p").provider == "gitlab"
+    assert parse_repository("https://tfs.corp.example/tfs/Coll/Proj/_git/r").path == ("tfs", "Coll", "Proj", "r")
+    with pytest.raises(ScanInputError):
+        parse_repository("https://tfs.corp.example:8443/tfs/Coll/Proj/_git/r")
+
+
+@pytest.mark.parametrize("url", [
+    "https://gitlab.com/group", "https://gitlab.com/g/p/-/tree/main", "https://gitlab.com/g/../p",
+    "https://dev.azure.com/org/_git/repo", "https://dev.azure.com/org/p/_git/r/extra",
+    "https://evil.example/org/p/_git/r", "https://dev.azure.com:444/org/p/_git/r",
+])
+def test_other_provider_urls_rejected(url):
+    with pytest.raises(ScanInputError):
+        parse_repository(url)
+
+
+def test_gitlab_private_fetch_uses_header_and_verifies_blob(monkeypatch):
+    sha, body = "c" * 40, b"hello"
+    seen = []
+    def respond(request):
+        seen.append(request)
+        assert request.url.host == "gitlab.com" and request.headers["private-token"] == "glpat-secret123"
+        if request.url.path.endswith("/repository/commits"):
+            return httpx.Response(200, json=[{"id": sha}])
+        if request.url.path.endswith("/repository/tree"):
+            page = request.url.params["page"]
+            items = [{"path": "AGENTS.md", "type": "blob", "mode": "100644", "id": git_blob_sha(body)},
+                     {"path": "docs", "type": "tree", "mode": "040000", "id": "d" * 40}]
+            return httpx.Response(200, json=items if page == "1" else [], headers={"x-next-page": "2" if page == "1" else ""})
+        assert request.url.path.endswith(f"/repository/blobs/{git_blob_sha(body)}/raw")
+        return httpx.Response(200, content=body)
+    mock_transport(monkeypatch, respond)
+    files, skipped, commit = fetch_repository("https://gitlab.com/g/p", False, "glpat-secret123")
+    assert files == [{"path": "AGENTS.md", "text": "hello"}] and commit == sha and skipped == []
+    assert "g%2Fp" in str(seen[0].url) and all("secret" not in str(r.url) for r in seen)
+
+
+def test_azure_devops_private_fetch(monkeypatch):
+    sha, body = "e" * 40, b"rules"
+    expected = "Basic " + base64.b64encode(b":pat-secret-1").decode()
+    def respond(request):
+        assert request.url.host == "dev.azure.com" and request.headers["authorization"] == expected
+        path = request.url.path
+        if path.endswith("/_apis/git/repositories/repo"):
+            return httpx.Response(200, json={"defaultBranch": "refs/heads/main"})
+        if path.endswith("/refs"):
+            assert request.url.params["filter"] == "heads/main"
+            return httpx.Response(200, json={"value": [{"name": "refs/heads/main", "objectId": sha}]})
+        if path.endswith("/items"):
+            assert request.url.params["versionDescriptor.version"] == sha
+            return httpx.Response(200, json={"value": [
+                {"path": "/", "gitObjectType": "tree", "objectId": "1" * 40},
+                {"path": "/AGENTS.md", "gitObjectType": "blob", "objectId": git_blob_sha(body)}]})
+        assert path.endswith(f"/blobs/{git_blob_sha(body)}")
+        return httpx.Response(200, content=body)
+    mock_transport(monkeypatch, respond)
+    files, skipped, commit = fetch_repository("https://dev.azure.com/org/proj/_git/repo", False, "pat-secret-1")
+    assert files == [{"path": "AGENTS.md", "text": "rules"}] and commit == sha
+
+
+def test_github_token_stays_on_api_host(monkeypatch):
+    sha, body = "a" * 40, b"hello"
+    hosts = []
+    def respond(request):
+        hosts.append(request.url.host)
+        assert request.headers["authorization"] == "Bearer ghp_secret1234"
+        if request.url.path.endswith("/commits/HEAD"):
+            return httpx.Response(200, text=sha)
+        if "/git/trees/" in request.url.path:
+            return httpx.Response(200, json=tree_fixture([("AGENTS.md", body, "100644")]))
+        assert "/git/blobs/" in request.url.path and request.headers["accept"] == "application/vnd.github.raw"
+        return httpx.Response(200, content=body)
+    mock_transport(monkeypatch, respond)
+    files, _, _ = fetch_repository("https://github.com/o/r", False, " ghp_secret1234\n")
+    assert files[0]["text"] == "hello" and set(hosts) == {"api.github.com"}
+
+
+@pytest.mark.parametrize("status,text", [(404, "cannot read it"), (401, "rejected the access token"), (203, "rejected"), (403, "denied access")])
+def test_token_errors_never_echo_token(monkeypatch, status, text):
+    mock_transport(monkeypatch, lambda request: httpx.Response(status))
+    with pytest.raises(ScanInputError, match=text) as info:
+        fetch_repository("https://gitlab.com/g/p", False, "glpat-secret123")
+    assert "secret" not in str(info.value)
+
+
+def test_anonymous_private_repo_asks_for_token(monkeypatch):
+    mock_transport(monkeypatch, lambda request: httpx.Response(203))
+    with pytest.raises(ScanInputError, match="access token"):
+        fetch_repository("https://dev.azure.com/o/p/_git/r", False)
+    with pytest.raises(ScanInputError, match="token format"):
+        fetch_repository("https://github.com/o/r", False, "bad token")
+
+
+def test_token_scan_is_never_archived(client, monkeypatch):
+    calls = {}
+    def fake(url, workflows, token=None):
+        calls["token"] = token
+        return [{"path": "AGENTS.md", "text": "hello"}], [], "a" * 40
+    monkeypatch.setattr(app_module, "fetch_repository", fake)
+    response = client.post("/api/scan/repository", json={
+        "url": "https://gitlab.com/g/p", "token": "glpat-secret123", "archive_consent": True})
+    assert response.status_code == 200 and calls["token"] == "glpat-secret123"
+    assert "secret" not in response.text
+    assert client.post("/api/scan/repository", json={"url": "https://gitlab.com/g/p", "token": "x" * 300}).status_code == 422

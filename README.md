@@ -48,10 +48,29 @@ the private archive container, outside the investigation retention prefix.
   Folder uploads use agent-aware discovery, not all Markdown/config files.
   Retain parent paths (for example `.claude/settings.json`) using **Select folder**.
 
-Repository URLs must be `https://github.com/owner/repository` (optionally `.git`).
-Only public repositories and their default branch are supported. A scan is pinned
-to a commit SHA; no credentials, arbitrary hosts, branch URLs, redirects, submodules,
-or git hooks are accepted. Ordinary README files are not repository scan targets.
+Supported repository URLs (default branch only, pinned to one commit SHA, `.git` suffix optional):
+
+| Provider | URL | Private repositories |
+|---|---|---|
+| GitHub | `https://github.com/owner/repo` | fine-grained token, Contents: read-only |
+| GitLab | `https://gitlab.com/group/[subgroup/]project` | token with `read_repository` |
+| Azure DevOps | `https://dev.azure.com/org/project/_git/repo` | PAT with Code: Read |
+
+Private repositories need an optional **access token**. It travels in the request body over
+HTTPS, is sent only to the provider's API host in an auth header, is never logged, stored or
+placed in a URL, and a scan that uses a token is **never archived**, whatever the consent
+checkbox says. Use short-lived read-only tokens and revoke them afterwards. Every downloaded
+file is verified against the pinned commit's git object hash. Azure DevOps and GitLab
+listings carry no file sizes, so the 100 files / 256 KiB / 2 MiB limits are enforced during download.
+
+Self-managed servers are **operator-configured**: set `SCM_GITLAB_HOSTS` and/or
+`SCM_AZDO_HOSTS` to comma-separated host names (for example `git.corp.example`). Users cannot
+add hosts, ports or redirects, so the server cannot be pointed at arbitrary addresses. The
+Azure DevOps Server URL form is `https://host/<collection>/<project>/_git/<repo>`.
+The App Service must be able to reach those hosts (VNet integration for internal servers).
+No credentials in the URL, branch URLs, redirects, submodules or git hooks are accepted.
+The GitLab/Azure DevOps adapters are covered by mocked tests only; verify against a real
+instance before relying on them. Ordinary README files are not repository scan targets.
 Links to agent files are skipped and reported as a partial scan.
 
 ### MITRE ATLAS mapping

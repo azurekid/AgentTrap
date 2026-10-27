@@ -67,7 +67,7 @@
       <header class="section-head">
         <p class="label">Scanner</p>
         <h2 id="scanner-title">Inspect before your agent obeys</h2>
-        <p>Drop agent files or point at a public repository. Results appear in seconds.</p>
+        <p>Drop agent files or point at a repository. Results appear in seconds.</p>
       </header>
 
       <div class="scanner-grid">
@@ -79,7 +79,7 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-5 5m5-5 5 5M4 20h16"/></svg>Upload files
                 </button>
                 <button id="repo-tab" role="tab" aria-selected="false" aria-controls="repo-panel" class="tab" type="button" tabindex="-1">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8.5v7M18 10.5c0 4-6 3-11.5 6"/></svg>GitHub repository
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8.5v7M18 10.5c0 4-6 3-11.5 6"/></svg>Repository
                 </button>
               </div>
               <span class="console-state" id="console-state">Ready</span>
@@ -105,16 +105,22 @@
               </div>
 
               <div id="repo-panel" role="tabpanel" aria-labelledby="repo-tab" hidden>
-                <label class="field-label" for="repository">Public GitHub repository URL</label>
+                <label class="field-label" for="repository">Repository URL</label>
                 <div class="url-field">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
-                  <input id="repository" type="url" placeholder="https://github.com/owner/repository" autocomplete="off" spellcheck="false" maxlength="240" disabled>
+                  <input id="repository" type="url" placeholder="GitHub, GitLab or Azure DevOps repository URL" autocomplete="off" spellcheck="false" maxlength="240" disabled>
                 </div>
+                <label class="field-label" for="repo-token">Access token <small>Optional · private repositories only</small></label>
+                <div class="url-field">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                  <input id="repo-token" type="password" placeholder="Read-only token (not stored)" autocomplete="off" spellcheck="false" maxlength="256" disabled>
+                </div>
+                <p class="field-hint">Use a short-lived, read-only token. It is sent once over HTTPS, used in memory, never logged or saved, and nothing from a token scan is archived. Revoke it afterwards.</p>
                 <ul class="repo-facts">
                   <li>Default branch, pinned to one exact commit</li>
                   <li>Only supported agent files are downloaded — never the whole repository</li>
                   <li>Downloads verified against the commit's file hashes</li>
-                  <li>No cloning, submodules, private repositories, or code execution</li>
+                  <li>No cloning, submodules, or code execution</li>
                 </ul>
                 <label class="switch">
                   <input id="workflows" type="checkbox">
@@ -211,7 +217,7 @@
         <li>
           <span class="step-num">01</span>
           <h3>Collect</h3>
-          <p>Upload files or name a public repository. SkillVenom lists the commit's file tree and fetches only files an agent would load.</p>
+          <p>Upload files or name a GitHub, GitLab or Azure DevOps repository. SkillVenom lists the commit's file tree and fetches only files an agent would load.</p>
         </li>
         <li>
           <span class="step-num">02</span>
@@ -235,7 +241,7 @@
         <a class="explore-card" href="/#scanner">
           <span class="explore-num">01</span>
           <h3>Scanner</h3>
-          <p>Upload agent files or point at a public GitHub repository and get a mapped, redacted report.</p>
+          <p>Upload agent files or point at a GitHub, GitLab or Azure DevOps repository and get a mapped, redacted report.</p>
           <span class="explore-go">Start an inspection <span aria-hidden="true">→</span></span>
         </a>
         <a class="explore-card" href="/coverage">

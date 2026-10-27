@@ -34,6 +34,12 @@ param logRetentionDays int = 30
 @maxValue(4)
 param trustedProxyHops int = 1
 
+@description('Comma-separated self-managed GitLab host names users may scan (empty = gitlab.com only).')
+param gitlabHosts string = ''
+
+@description('Comma-separated Azure DevOps Server host names users may scan (empty = dev.azure.com only).')
+param azureDevOpsHosts string = ''
+
 param tags object = {
   application: 'SkillVenom'
 }
@@ -165,6 +171,8 @@ resource site 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'AZURE_ARCHIVE_RETENTION_CONFIRMED', value: 'true' }
         { name: 'TRUSTED_PROXY_HOPS', value: string(trustedProxyHops) }
         { name: 'SCAN_TIMEOUT_SECONDS', value: '60' }
+        { name: 'SCM_GITLAB_HOSTS', value: gitlabHosts }
+        { name: 'SCM_AZDO_HOSTS', value: azureDevOpsHosts }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
         { name: 'WEBSITES_PORT', value: '8000' }
         { name: 'PYTHONUNBUFFERED', value: '1' }

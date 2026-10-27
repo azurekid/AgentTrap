@@ -26,6 +26,7 @@ function changeMode(next) {
     $(`${name}-panel`).hidden = !active;
   }
   $("repository").disabled = next !== "repo";
+  $("repo-token").disabled = next !== "repo";
   $("error").hidden = true;
 }
 const scannerPage = Boolean($("scan-form"));
@@ -407,8 +408,9 @@ if (scannerPage) {
       for (const file of selected) body.append("files", file, file.webkitRelativePath || file.name);
     } else {
       const url = $("repository").value.trim();
-      if (!url) return showError("Enter a public GitHub repository URL.");
-      body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent });
+      if (!url) return showError("Enter a repository URL.");
+      const token = $("repo-token").value.trim();
+      body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent, ...(token && { token }) });
       headers["Content-Type"] = "application/json";
     }
     busy = true;
@@ -416,7 +418,7 @@ if (scannerPage) {
     $("scan-button").disabled = true;
     $("scan-button").textContent = "Inspecting…";
     $("progress").hidden = false;
-    for (const id of ["files", "folder", "repository", "workflows", "archive-consent"]) $(id).disabled = true;
+    for (const id of ["files", "folder", "repository", "repo-token", "workflows", "archive-consent"]) $(id).disabled = true;
     renderFiles();
     try {
       const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(120000) });
@@ -434,8 +436,10 @@ if (scannerPage) {
       $("scan-button").disabled = false;
       $("scan-button").replaceChildren(document.createTextNode("Run inspection "), node("span", "", "→"));
       $("progress").hidden = true;
-      for (const id of ["files", "folder", "repository", "workflows", "archive-consent"]) $(id).disabled = false;
+      for (const id of ["files", "folder", "repository", "repo-token", "workflows", "archive-consent"]) $(id).disabled = false;
       $("repository").disabled = mode !== "repo";
+      $("repo-token").disabled = mode !== "repo";
+      $("repo-token").value = "";
       renderFiles();
     }
   });

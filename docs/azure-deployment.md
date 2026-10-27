@@ -28,7 +28,7 @@ passwords or client secrets are used.
  App Service logs/metrics + Blob audit logs ──▶ Log Analytics workspace (30 days)
 ```
 
-The application serves the site and the API. Public GitHub repositories are read from
+The application serves the site and the API. Public GitHub, GitLab and Azure DevOps repositories (and private ones with a per-request token) are read from
 `api.github.com` and `raw.githubusercontent.com` without a token.
 
 ## What the template creates
@@ -68,6 +68,7 @@ AZURE_STORAGE_ACCOUNT=<generated>
 AZURE_STORAGE_CONTAINER=skillvenom-investigations
 AZURE_ARCHIVE_RETENTION_CONFIRMED=true   # the lifecycle rule is in the same template
 TRUSTED_PROXY_HOPS=1                     # App Service front end appends X-Forwarded-For
+SCM_GITLAB_HOSTS= / SCM_AZDO_HOSTS=      # optional self-managed hosts (Bicep: gitlabHosts, azureDevOpsHosts)
 SCM_DO_BUILD_DURING_DEPLOYMENT=true      # remote build installs requirements.txt
 WEBSITES_PORT=8000
 PYTHONUNBUFFERED=1
