@@ -68,7 +68,7 @@ AZURE_STORAGE_ACCOUNT=<generated>
 AZURE_STORAGE_CONTAINER=skillvenom-investigations
 AZURE_ARCHIVE_RETENTION_CONFIRMED=true   # the lifecycle rule is in the same template
 TRUSTED_PROXY_HOPS=1                     # App Service front end appends X-Forwarded-For
-SCM_GITLAB_HOSTS= / SCM_AZDO_HOSTS=      # optional self-managed hosts (Bicep: gitlabHosts, azureDevOpsHosts)
+SCM_GITLAB_HOSTS= / SCM_AZDO_HOSTS=      # optional extra self-managed hosts (Bicep: gitlabHosts, azureDevOpsHosts); web/allowlist.json is the file-based list
 SCM_DO_BUILD_DURING_DEPLOYMENT=true      # remote build installs requirements.txt
 WEBSITES_PORT=8000
 PYTHONUNBUFFERED=1

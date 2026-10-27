@@ -1,0 +1,4 @@
+{
+  "gitlab": ["gitlab.com"],
+  "azuredevops": ["dev.azure.com"]
+}
