@@ -15,6 +15,12 @@ function node(tag, className, text) {
   if (text !== undefined) element.textContent = text;
   return element;
 }
+function syncToken() {
+  const on = mode === "repo" && $("private-repo").checked;
+  $("token-field").hidden = !on;
+  $("repo-token").disabled = !on;
+  if (!on) $("repo-token").value = "";
+}
 function changeMode(next) {
   if (busy) return;
   mode = next;
@@ -26,10 +32,12 @@ function changeMode(next) {
     $(`${name}-panel`).hidden = !active;
   }
   $("repository").disabled = next !== "repo";
-  $("repo-token").disabled = next !== "repo";
+  $("private-repo").disabled = next !== "repo";
+  syncToken();
   $("error").hidden = true;
 }
 const scannerPage = Boolean($("scan-form"));
+if (scannerPage) $("private-repo").addEventListener("change", syncToken);
 if (scannerPage) {
   $("upload-tab").addEventListener("click", () => changeMode("upload"));
   $("repo-tab").addEventListener("click", () => changeMode("repo"));
@@ -409,7 +417,7 @@ if (scannerPage) {
     } else {
       const url = $("repository").value.trim();
       if (!url) return showError("Enter a repository URL.");
-      const token = $("repo-token").value.trim();
+      const token = $("private-repo").checked ? $("repo-token").value.trim() : "";
       body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent, ...(token && { token }) });
       headers["Content-Type"] = "application/json";
     }
@@ -418,7 +426,7 @@ if (scannerPage) {
     $("scan-button").disabled = true;
     $("scan-button").textContent = "Inspecting…";
     $("progress").hidden = false;
-    for (const id of ["files", "folder", "repository", "repo-token", "workflows", "archive-consent"]) $(id).disabled = true;
+    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent"]) $(id).disabled = true;
     renderFiles();
     try {
       const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(120000) });
@@ -436,10 +444,10 @@ if (scannerPage) {
       $("scan-button").disabled = false;
       $("scan-button").replaceChildren(document.createTextNode("Run inspection "), node("span", "", "→"));
       $("progress").hidden = true;
-      for (const id of ["files", "folder", "repository", "repo-token", "workflows", "archive-consent"]) $(id).disabled = false;
+      for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent"]) $(id).disabled = false;
       $("repository").disabled = mode !== "repo";
-      $("repo-token").disabled = mode !== "repo";
-      $("repo-token").value = "";
+      $("private-repo").disabled = mode !== "repo";
+      syncToken();
       renderFiles();
     }
   });

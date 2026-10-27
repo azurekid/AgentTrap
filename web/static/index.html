@@ -110,12 +110,19 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
                   <input id="repository" type="url" placeholder="GitHub, GitLab or Azure DevOps repository URL" autocomplete="off" spellcheck="false" maxlength="240" disabled>
                 </div>
-                <label class="field-label" for="repo-token">Access token <small>Optional · private repositories only</small></label>
-                <div class="url-field">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                  <input id="repo-token" type="password" placeholder="Read-only token (not stored)" autocomplete="off" spellcheck="false" maxlength="256" disabled>
+                <label class="switch" for="private-repo">
+                  <input id="private-repo" type="checkbox" disabled>
+                  <span class="switch-track" aria-hidden="true"></span>
+                  <span>Private repository <small>Optional · requires a read-only access token</small></span>
+                </label>
+                <div id="token-field" hidden>
+                  <label class="field-label" for="repo-token">Access token</label>
+                  <div class="url-field">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                    <input id="repo-token" type="password" placeholder="Read-only token (not stored)" autocomplete="off" spellcheck="false" maxlength="256" disabled>
+                  </div>
+                  <p class="field-hint">Use a short-lived, read-only token. It is sent once over HTTPS, used in memory, never logged or saved, and nothing from a token scan is archived. Revoke it afterwards.</p>
                 </div>
-                <p class="field-hint">Use a short-lived, read-only token. It is sent once over HTTPS, used in memory, never logged or saved, and nothing from a token scan is archived. Revoke it afterwards.</p>
                 <ul class="repo-facts">
                   <li>Default branch, pinned to one exact commit</li>
                   <li>Only supported agent files are inspected — never the whole repository</li>
@@ -133,7 +140,7 @@
                 <input id="archive-consent" type="checkbox" checked aria-describedby="consent-help">
                 <span class="consent-box" aria-hidden="true"></span>
                 <span><strong>Allow investigation retention</strong>
-                  <small id="consent-help">Keep the original in a private archive for 30 days so it can be investigated. Uncheck to opt out — the scan still runs and nothing is retained.</small></span>
+                  <small id="consent-help">Keep the original so it can be investigated. Uncheck to opt out (the scan still runs and nothing is retained.)</small></span>
               </label>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
