@@ -10,6 +10,13 @@ worker. The same application serves the dashboard and API. Store investigation
 records in a private Azure Blob container; authenticate using the App Service's
 system-assigned managed identity. No connection string, storage key, GitHub token,
 database, or language-model service is needed.
+Site-wide activity counters use a separate `statistics/totals.json` blob in the
+same private container. Conditional ETag writes prevent concurrent lost updates.
+This blob contains only aggregate file and finding counts, not scan content or
+identifiers. Keep it outside the 30-day `investigations/` lifecycle rule: activity
+totals are retained indefinitely. Totals start at feature enablement, count repeat
+inspections again, and do not backfill existing investigations. Failed counter
+writes are reported explicitly; they do not discard the inspection report.
 
 For a public service, front App Service with Azure Front Door/WAF. Restrict App
 Service ingress to your gateway, enforce HTTPS, configure a request size limit,

@@ -19,6 +19,17 @@ python -m uvicorn web.app:app --host 127.0.0.1 --port 8000 --workers 1 --no-prox
 Open http://127.0.0.1:8000. No frontend build, database, or API key is required.
 Uploads and repository contents are **never executed or rendered as Markdown**.
 Findings are text-only, and reports are downloadable as JSON.
+The responsive inspection workspace uses restrained motion for scan activity and
+respects the system's reduced-motion preference.
+Site-wide files-scanned and security-finding counters persist across restarts.
+They count each completed inspection's actual scanned files (including inspected
+files in partial reports); repeats count again. Findings are heuristic signals,
+not confirmed vulnerabilities. Totals start at zero when this feature is enabled;
+older investigations are not backfilled. Only aggregate counts are stored, with
+no filenames, repository URLs, credentials, or content. Locally these live in
+`ARCHIVE_DIRECTORY/statistics/totals.json` (atomic replace, single process); Azure uses
+an ETag-guarded JSON blob, `statistics/totals.json`, in
+the private archive container, outside the investigation retention prefix.
 
 ### Supported files
 
@@ -26,7 +37,8 @@ Findings are text-only, and reports are downloadable as JSON.
   `*.instructions.md`, `*.agent.md`, `*.prompt.md`, `*.chatmode.md`, and editor rules.
 - Claude settings/hooks, Codex TOML, Gemini settings, Cursor MCP/rules, MCP JSON,
   VS Code settings/tasks/MCP, and the other paths supported by the existing scanner.
-- GitHub Actions workflows are **opt-in**.
+- GitHub Actions workflows are **opt-in** for repository scans; the toggle is shown
+  only on the GitHub tab, and folder uploads skip `.github/workflows`.
 - Individual uploads may also be arbitrary Markdown, JSON, or TOML files.
   Folder uploads use agent-aware discovery, not all Markdown/config files.
   Retain parent paths (for example `.claude/settings.json`) using **Select folder**.
@@ -36,6 +48,33 @@ Only public repositories and their default branch are supported. A scan is pinne
 to a commit SHA; no credentials, arbitrary hosts, branch URLs, redirects, submodules,
 or git hooks are accepted. Ordinary README files are not repository scan targets.
 Links to agent files are skipped and reported as a partial scan.
+
+### MITRE ATLAS mapping
+
+Each finding carries the [MITRE ATLAS](https://atlas.mitre.org/) technique IDs its
+rule maps to, and every report includes an `atlas` summary: findings per tactic
+(the 10 tactics observable in static agent files, in ATLAS matrix order) and each
+hit technique with its ATLAS mitigations. The results page draws this as a radar
+("spiderweb") chart with technique and mitigation cards. Where ATLAS lists no
+mitigation for a technique, the card shows clearly labelled **AgentTrap guidance**.
+
+The rule-to-technique mapping in [web/atlas.json](web/atlas.json) is analyst
+judgement; names, tactics, URLs, and mitigations come from the official ATLAS STIX
+release. To refresh it from a newer release:
+
+```bash
+curl -LO https://github.com/mitre-atlas/atlas-data/releases/download/v2026.09/stix-atlas.json
+python tools/build_atlas_mapping.py stix-atlas.json
+```
+
+The generator validates every rule's technique/tactic pairing; a test fails if a
+detector has no mapping.
+
+### Research sources
+
+`/sources` renders [SOURCES.md](SOURCES.md) as a searchable, filterable page in the
+site style (`/api/sources` returns the parsed tables). Finding references link to
+`/sources#source-N`.
 
 ### Secrets and credentials
 
@@ -91,8 +130,14 @@ retention obligations before publicly accepting submissions.
 - Requests are bounded to 3 MiB **before multipart parsing**.
 - Two concurrent scan requests; 10 requests/client/10 minutes,
   60 requests/instance/10 minutes; 15-second isolated scanner timeout.
-- GitHub retrieval: 16 MiB compressed, 64 MiB expanded, 10,000 archive entries,
-  bounded network reads, fixed outbound hosts, no environment proxy or redirects.
+- GitHub retrieval never downloads the whole repository. It resolves the default
+  branch to a commit, lists that commit's file tree (16 MiB listing cap), and
+  fetches **only supported agent files** from `raw.githubusercontent.com`, pinned
+  to the same commit and verified against the tree's git blob hash. File limits
+  are checked from the tree before downloading. Fixed outbound hosts
+  (`api.github.com`, `raw.githubusercontent.com`), bounded reads, a 40-second
+  deadline, no environment proxy or redirects. A tree truncated by GitHub
+  yields a partial report.
 - Exceeding limits is an error, never a successful truncated scan.
 - No targets and skipped links are distinct from a complete scan with no findings.
 
@@ -125,7 +170,7 @@ research-derived rules are preserved; embedded-secret detection is additive.
 pip install -r requirements-dev.txt
 python -m pytest -q tests/test_web.py
 pwsh -NoProfile -File tests/Test-Scanner.ps1
-node --check web/static/app.js
+node --check web/static/app.js && node --check web/static/fx.js
 ```
 
 The parity test in the Python suite requires PowerShell (`pwsh`). Synthetic

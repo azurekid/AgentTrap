@@ -19,8 +19,11 @@ from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from scan_agents_md import SEV
+from scan_agents_md import RULES, SECRET_RULES, SEV
+from web import sources as research
 from web.archive import Archive, ArchiveError
+from web.atlas import annotate
+from web.statistics import Statistics, StatisticsError
 from web.repository import (
     MAX_FILE, MAX_FILES, MAX_TOTAL, ScanInputError, decode_document,
     fetch_repository, is_target, safe_path,
@@ -34,7 +37,7 @@ POLICY = {
                "Original content, including any credentials it contains, is kept in a private archive for 30 days. "
                "Do not submit content you are not authorized to share.",
     "retention_days": 30, "max_files": MAX_FILES, "max_file_bytes": MAX_FILE,
-    "max_total_bytes": MAX_TOTAL,
+    "max_total_bytes": MAX_TOTAL, "detectors": len(RULES) + len(SECRET_RULES),
 }
 
 
@@ -42,6 +45,7 @@ POLICY = {
 async def lifespan(app: FastAPI):
     app.state.archive = await run_in_threadpool(Archive)
     app.state.archive.prune()
+    app.state.statistics = await run_in_threadpool(Statistics, app.state.archive)
     async def cleanup() -> None:
         while True:
             await asyncio.sleep(3600)
@@ -159,7 +163,7 @@ def index():
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "style.css"):
+    if name not in ("app.js", "fx.js", "research.js", "style.css"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 
@@ -176,7 +180,12 @@ def health():
 
 @app.get("/sources")
 def sources():
-    return FileResponse(ROOT.parent / "SOURCES.md", media_type="text/plain")
+    return FileResponse(ROOT / "static" / "sources.html")
+
+
+@app.get("/api/sources")
+def sources_data():
+    return research.load()
 
 
 def scan_documents(documents: list[dict[str, str]]) -> list[dict]:
@@ -197,6 +206,7 @@ def scan_documents(documents: list[dict[str, str]]) -> list[dict]:
 
 def make_report(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None, archive: Archive) -> dict:
     files = scan_documents(documents)
+    atlas = annotate(files)
     counts = Counter(f["severity"] for file in files for f in file["findings"])
     worst = max((SEV[s] for s in counts), default=0)
     verdict = "REVIEW REQUIRED" if worst >= SEV["HIGH"] else "NO HIGH-RISK SIGNALS DETECTED"
@@ -211,6 +221,7 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
         "summary": {"files": len(files), "findings": sum(counts.values()),
                     "severities": {s: counts[s] for s in reversed(SEV)},
                     "verdict": verdict},
+        "atlas": atlas,
         "disclaimer": "Static heuristics, not a safety certification. False positives and missed threats are possible. "
                       "Secret values are not validated with providers. Revoke and rotate real exposed credentials.",
     }
@@ -226,12 +237,32 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
 
 async def execute(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None, request: Request):
     try:
-        return await run_in_threadpool(make_report, documents, source, skipped, commit, request.app.state.archive)
+        report = await run_in_threadpool(make_report, documents, source, skipped, commit, request.app.state.archive)
     except ScanInputError as exc:
         raise HTTPException(422, str(exc)) from exc
     except RuntimeError as exc:
         LOG.error("Scanner process failed")
         raise HTTPException(500, "Scanner failed. No complete result is available.") from exc
+    try:
+        await run_in_threadpool(
+            request.app.state.statistics.add, report["summary"]["files"], report["summary"]["findings"],
+        )
+        report["statistics"] = {"status": "recorded"}
+    except StatisticsError:
+        LOG.error("Statistics update failed; scan_id=%s", report["id"])
+        report["statistics"] = {
+            "status": "failed", "message": "Scan completed, but site-wide activity totals could not be updated.",
+        }
+    return report
+
+
+@app.get("/api/statistics")
+def statistics(request: Request):
+    try:
+        return request.app.state.statistics.read()
+    except StatisticsError as exc:
+        LOG.error("Statistics read failed")
+        raise HTTPException(503, "Activity totals are temporarily unavailable.") from exc
 
 
 @app.post("/api/scan/files")

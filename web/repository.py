@@ -1,10 +1,10 @@
 """Allowlisted GitHub retrieval; never clone, extract, or run repository content."""
-import gzip
-import io
+import hashlib
 import json
 import re
-import tarfile
 import time
+from concurrent.futures import ThreadPoolExecutor
+from urllib.parse import quote
 from pathlib import PurePosixPath
 
 import httpx
@@ -14,8 +14,9 @@ from scan_agents_md import NAMES, PATHS, WORKFLOWS
 MAX_FILE = 256 * 1024
 MAX_TOTAL = 2 * 1024 * 1024
 MAX_FILES = 100
-MAX_ARCHIVE = 16 * 1024 * 1024
-MAX_EXPANDED = 64 * 1024 * 1024
+MAX_TREE = 16 * 1024 * 1024
+SHA = re.compile(r"[a-f0-9]{40}")
+LIMITS = "Repository target files exceed limits (100 files, 256 KiB/file, 2 MiB total). Upload a smaller selection."
 
 
 class ScanInputError(ValueError):
@@ -65,8 +66,10 @@ def parse_repository(url: str) -> tuple[str, str]:
     return owner, repo
 
 
-def fetch_bytes(client: httpx.Client, url: str, limit: int, deadline: float) -> bytes:
-    with client.stream("GET", url) as response:
+def fetch_bytes(client: httpx.Client, url: str, limit: int, deadline: float,
+                too_large: str = "GitHub response exceeds the size limit.",
+                headers: dict[str, str] | None = None) -> bytes:
+    with client.stream("GET", url, headers=headers) as response:
         if response.status_code == 404:
             raise ScanInputError("Repository not found or not public.")
         if response.status_code in (403, 429):
@@ -76,64 +79,71 @@ def fetch_bytes(client: httpx.Client, url: str, limit: int, deadline: float) -> 
         chunks = bytearray()
         for chunk in response.iter_bytes(chunk_size=65536):
             if time.monotonic() > deadline:
-                raise ScanInputError("Repository download exceeded the 40-second deadline.")
+                raise ScanInputError("Repository retrieval exceeded the 40-second deadline.")
             if len(chunks) + len(chunk) > limit:
-                raise ScanInputError("Repository download exceeds the size limit. Upload selected files instead.")
+                raise ScanInputError(too_large)
             chunks.extend(chunk)
         return bytes(chunks)
 
 
-def read_archive(data: bytes, workflows: bool) -> tuple[list[dict[str, str]], list[str]]:
-    try:
-        with gzip.GzipFile(fileobj=io.BytesIO(data)) as compressed:
-            expanded = compressed.read(MAX_EXPANDED + 1)
-        if len(expanded) > MAX_EXPANDED:
-            raise ScanInputError("Repository exceeds the 64 MiB expanded archive limit.")
-        documents, skipped = [], []
-        total, entries = 0, 0
-        with tarfile.open(fileobj=io.BytesIO(expanded), mode="r:") as archive:
-            for member in archive:
-                entries += 1
-                if entries > 10000:
-                    raise ScanInputError("Repository exceeds the 10,000 archive entry limit.")
-                parts = member.name.split("/", 1)
-                if len(parts) != 2 or not parts[1] or member.isdir():
-                    continue
-                path = safe_path(parts[1])
-                if ".git" in PurePosixPath(path).parts or "node_modules" in PurePosixPath(path).parts:
-                    continue
-                if not is_target(path, workflows):
-                    continue
-                if not member.isfile():
-                    skipped.append(path + " (link or non-regular file)")
-                    continue
-                if len(documents) >= MAX_FILES or member.size > MAX_FILE or total + member.size > MAX_TOTAL:
-                    raise ScanInputError("Repository target files exceed limits (100 files, 256 KiB/file, 2 MiB total). Upload a smaller selection.")
-                stream = archive.extractfile(member)
-                if stream is None:
-                    raise ScanInputError("Unable to read a selected archive member.")
-                with stream:
-                    content = stream.read(MAX_FILE + 1)
-                documents.append(decode_document(path, content))
-                total += len(content)
-        return documents, skipped
-    except (tarfile.TarError, OSError, EOFError) as exc:
-        raise ScanInputError("GitHub returned an unreadable repository archive.") from exc
+def select_targets(tree: dict, workflows: bool) -> tuple[list[dict], list[str]]:
+    """Pick supported agent files from a git tree listing without downloading anything."""
+    entries = tree.get("tree") if isinstance(tree, dict) else None
+    if not isinstance(entries, list):
+        raise ScanInputError("GitHub returned an invalid repository tree.")
+    selected, skipped, total = [], [], 0
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+            raise ScanInputError("GitHub returned an invalid repository tree.")
+        path = safe_path(entry["path"])
+        parts = PurePosixPath(path).parts
+        if ".git" in parts or "node_modules" in parts or entry.get("type") == "tree":
+            continue
+        if not is_target(path, workflows):
+            continue
+        if entry.get("type") != "blob" or entry.get("mode") not in ("100644", "100755"):
+            skipped.append(path + " (link or non-regular file)")
+            continue
+        size, sha = entry.get("size"), entry.get("sha")
+        if not isinstance(size, int) or size < 0 or not isinstance(sha, str) or not SHA.fullmatch(sha):
+            raise ScanInputError("GitHub returned an invalid repository tree.")
+        total += size
+        if len(selected) >= MAX_FILES or size > MAX_FILE or total > MAX_TOTAL:
+            raise ScanInputError(LIMITS)
+        selected.append({"path": path, "size": size, "sha": sha})
+    if tree.get("truncated"):
+        skipped.append("Repository tree truncated by GitHub; some files were not inspected (upload them instead)")
+    return selected, skipped
 
 
 def fetch_repository(url: str, workflows: bool) -> tuple[list[dict[str, str]], list[str], str]:
     owner, repo = parse_repository(url)
     deadline = time.monotonic() + 40
+    api = f"https://api.github.com/repos/{owner}/{repo}"
     # Environment proxies and redirects are disabled; all outbound hosts are fixed.
     with httpx.Client(timeout=httpx.Timeout(10, connect=5), follow_redirects=False,
                       trust_env=False, headers={"User-Agent": "AgentTrap/1.0"}) as client:
-        metadata = fetch_bytes(client, f"https://api.github.com/repos/{owner}/{repo}/commits/HEAD", 65536, deadline)
-        try:
-            sha = json.loads(metadata)["sha"]
-        except (ValueError, KeyError, TypeError) as exc:
-            raise ScanInputError("GitHub returned invalid commit metadata.") from exc
-        if not isinstance(sha, str) or not re.fullmatch(r"[a-f0-9]{40}", sha):
+        sha = fetch_bytes(client, f"{api}/commits/HEAD", 128, deadline,
+                          headers={"Accept": "application/vnd.github.sha"}).decode("ascii", "replace").strip()
+        if not SHA.fullmatch(sha):
             raise ScanInputError("GitHub returned an invalid commit ID.")
-        data = fetch_bytes(client, f"https://codeload.github.com/{owner}/{repo}/tar.gz/{sha}", MAX_ARCHIVE, deadline)
-    documents, skipped = read_archive(data, workflows)
+        listing = fetch_bytes(client, f"{api}/git/trees/{sha}?recursive=1", MAX_TREE, deadline,
+                              "Repository file tree exceeds the 16 MiB listing limit. Upload selected files instead.",
+                              headers={"Accept": "application/vnd.github+json"})
+        try:
+            tree = json.loads(listing)
+        except ValueError as exc:
+            raise ScanInputError("GitHub returned an invalid repository tree.") from exc
+        selected, skipped = select_targets(tree, workflows)
+
+        def download(entry: dict) -> dict[str, str]:
+            raw = f"https://raw.githubusercontent.com/{owner}/{repo}/{sha}/{quote(entry['path'], safe='/')}"
+            content = fetch_bytes(client, raw, MAX_FILE, deadline, LIMITS)
+            blob = hashlib.sha1(b"blob %d\0" % len(content) + content).hexdigest()
+            if blob != entry["sha"]:
+                raise ScanInputError(f"Downloaded content did not match the pinned commit: {entry['path']}")
+            return decode_document(entry["path"], content)
+
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            documents = list(pool.map(download, selected))
     return documents, skipped, sha

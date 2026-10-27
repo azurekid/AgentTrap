@@ -1,0 +1,999 @@
+{
+ "source": "MITRE ATLAS v2026.09",
+ "tactics": {
+  "ai-model-access": {
+   "id": "AML.TA0000",
+   "name": "AI Model Access"
+  },
+  "ai-attack-adaptation": {
+   "id": "AML.TA0001",
+   "name": "AI Attack Adaptation"
+  },
+  "reconnaissance": {
+   "id": "AML.TA0002",
+   "name": "Reconnaissance"
+  },
+  "resource-development": {
+   "id": "AML.TA0003",
+   "name": "Resource Development"
+  },
+  "initial-access": {
+   "id": "AML.TA0004",
+   "name": "Initial Access"
+  },
+  "execution": {
+   "id": "AML.TA0005",
+   "name": "Execution"
+  },
+  "persistence": {
+   "id": "AML.TA0006",
+   "name": "Persistence"
+  },
+  "defense-evasion": {
+   "id": "AML.TA0007",
+   "name": "Defense Evasion"
+  },
+  "discovery": {
+   "id": "AML.TA0008",
+   "name": "Discovery"
+  },
+  "collection": {
+   "id": "AML.TA0009",
+   "name": "Collection"
+  },
+  "exfiltration": {
+   "id": "AML.TA0010",
+   "name": "Exfiltration"
+  },
+  "impact": {
+   "id": "AML.TA0011",
+   "name": "Impact"
+  },
+  "privilege-escalation": {
+   "id": "AML.TA0012",
+   "name": "Privilege Escalation"
+  },
+  "credential-access": {
+   "id": "AML.TA0013",
+   "name": "Credential Access"
+  },
+  "command-and-control": {
+   "id": "AML.TA0014",
+   "name": "Command and Control"
+  },
+  "lateral-movement": {
+   "id": "AML.TA0015",
+   "name": "Lateral Movement"
+  }
+ },
+ "techniques": {
+  "AML.T0010": {
+   "name": "AI Supply Chain Compromise",
+   "tactics": [
+    "initial-access"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0014",
+    "AML.M0023",
+    "AML.M0035"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0010"
+  },
+  "AML.T0010.001": {
+   "name": "AI Software",
+   "tactics": [
+    "initial-access"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0014",
+    "AML.M0013",
+    "AML.M0023"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0010.001",
+   "parent": "AI Supply Chain Compromise"
+  },
+  "AML.T0010.005": {
+   "name": "AI Agent Tool",
+   "tactics": [
+    "initial-access"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0014",
+    "AML.M0023",
+    "AML.M0035"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0010.005",
+   "parent": "AI Supply Chain Compromise"
+  },
+  "AML.T0011": {
+   "name": "User Execution",
+   "tactics": [
+    "execution"
+   ],
+   "mitigations": [
+    "AML.M0011",
+    "AML.M0014",
+    "AML.M0023",
+    "AML.M0016"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0011"
+  },
+  "AML.T0011.001": {
+   "name": "Malicious Package",
+   "tactics": [
+    "execution"
+   ],
+   "mitigations": [
+    "AML.M0011",
+    "AML.M0014",
+    "AML.M0013",
+    "AML.M0023"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0011.001",
+   "parent": "User Execution"
+  },
+  "AML.T0025": {
+   "name": "Exfiltration via Cyber Means",
+   "tactics": [
+    "exfiltration"
+   ],
+   "mitigations": [
+    "AML.M0005"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0025"
+  },
+  "AML.T0036": {
+   "name": "Data from Information Repositories",
+   "tactics": [
+    "collection"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0036",
+   "guidance": "Limit agent tokens to least privilege and require approval before creating repos, gists, or reading secrets."
+  },
+  "AML.T0037": {
+   "name": "Data from Local System",
+   "tactics": [
+    "collection"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0037",
+   "guidance": "Scope agent file access to the workspace and deny reads of credential stores and home-directory secrets."
+  },
+  "AML.T0050": {
+   "name": "Command and Scripting Interpreter",
+   "tactics": [
+    "execution"
+   ],
+   "mitigations": [
+    "AML.M0011"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0050"
+  },
+  "AML.T0051.001": {
+   "name": "Indirect",
+   "tactics": [
+    "execution"
+   ],
+   "mitigations": [
+    "AML.M0033",
+    "AML.M0020",
+    "AML.M0021",
+    "AML.M0024"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0051.001",
+   "parent": "LLM Prompt Injection"
+  },
+  "AML.T0053": {
+   "name": "AI Agent Tool Invocation",
+   "tactics": [
+    "execution",
+    "privilege-escalation",
+    "lateral-movement"
+   ],
+   "mitigations": [
+    "AML.M0033",
+    "AML.M0030",
+    "AML.M0029",
+    "AML.M0026"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0053"
+  },
+  "AML.T0054": {
+   "name": "LLM Jailbreak",
+   "tactics": [
+    "defense-evasion",
+    "privilege-escalation"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0021",
+    "AML.M0022",
+    "AML.M0035"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0054"
+  },
+  "AML.T0055": {
+   "name": "Unsecured Credentials",
+   "tactics": [
+    "credential-access"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0055",
+   "guidance": "Remove credentials from agent-readable files; use a secret manager and short-lived tokens, then rotate anything exposed."
+  },
+  "AML.T0061": {
+   "name": "LLM Prompt Self-Replication",
+   "tactics": [
+    "persistence"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0021",
+    "AML.M0022"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0061"
+  },
+  "AML.T0068": {
+   "name": "LLM Prompt Obfuscation",
+   "tactics": [
+    "defense-evasion"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0035"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0068"
+  },
+  "AML.T0072": {
+   "name": "Cyber Communication Channel",
+   "tactics": [
+    "command-and-control"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0072",
+   "guidance": "Restrict agent network egress to an allowlist and review every external endpoint referenced in instructions."
+  },
+  "AML.T0077": {
+   "name": "LLM Response Rendering",
+   "tactics": [
+    "exfiltration"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0077",
+   "guidance": "Disable automatic rendering of remote images and links in agent output, or restrict them to an allowlist."
+  },
+  "AML.T0078": {
+   "name": "Drive-by Compromise",
+   "tactics": [
+    "initial-access"
+   ],
+   "mitigations": [
+    "AML.M0020"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0078"
+  },
+  "AML.T0081": {
+   "name": "Modify AI Agent Configuration",
+   "tactics": [
+    "persistence",
+    "defense-evasion"
+   ],
+   "mitigations": [
+    "AML.M0035"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0081",
+   "guidance": "Treat agent configuration as code: review changes, pin settings centrally, and keep approvals and sandboxing enabled."
+  },
+  "AML.T0083": {
+   "name": "Credentials from AI Agent Configuration",
+   "tactics": [
+    "credential-access"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0083",
+   "guidance": "Never store secrets in agent instructions or configuration; reference environment or vault lookups and rotate exposed values."
+  },
+  "AML.T0086": {
+   "name": "Exfiltration via AI Agent Tool Invocation",
+   "tactics": [
+    "exfiltration"
+   ],
+   "mitigations": [
+    "AML.M0033",
+    "AML.M0030",
+    "AML.M0029",
+    "AML.M0026"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0086"
+  },
+  "AML.T0089": {
+   "name": "Enterprise Environment Discovery",
+   "tactics": [
+    "discovery"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0089",
+   "guidance": "Block instance-metadata endpoints from agent sandboxes and require IMDSv2 or equivalent."
+  },
+  "AML.T0098": {
+   "name": "AI Agent Tool Credential Harvesting",
+   "tactics": [
+    "credential-access"
+   ],
+   "mitigations": [
+    "AML.M0032"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0098",
+   "guidance": "Avoid credential helpers that execute scripts; supply keys through a vetted secret manager."
+  },
+  "AML.T0101": {
+   "name": "Data Destruction via AI Agent Tool Invocation",
+   "tactics": [
+    "impact"
+   ],
+   "mitigations": [
+    "AML.M0030",
+    "AML.M0029",
+    "AML.M0026",
+    "AML.M0027"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0101"
+  },
+  "AML.T0112.000": {
+   "name": "Local AI Agent",
+   "tactics": [
+    "impact"
+   ],
+   "mitigations": [
+    "AML.M0020"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0112.000",
+   "guidance": "Run agents in disposable sandboxes with backups and deny destructive commands without human approval.",
+   "parent": "Machine Compromise"
+  },
+  "AML.T0113": {
+   "name": "Steal Web Session Cookie",
+   "tactics": [
+    "credential-access"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0113",
+   "guidance": "Deny agents access to browser profiles, keychains, and wallet stores."
+  },
+  "AML.T0123": {
+   "name": "Obfuscated Files or Information",
+   "tactics": [
+    "defense-evasion"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0123",
+   "guidance": "Reject encoded or obfuscated content in instruction files; decode and review it before use."
+  }
+ },
+ "mitigations": {
+  "AML.M0005": {
+   "name": "Control Access to AI Models and Data at Rest",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0005"
+  },
+  "AML.M0011": {
+   "name": "Restrict Library Loading",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0011"
+  },
+  "AML.M0013": {
+   "name": "Code Signing",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0013"
+  },
+  "AML.M0014": {
+   "name": "Verify AI Artifacts",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0014"
+  },
+  "AML.M0016": {
+   "name": "Vulnerability Scanning",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0016"
+  },
+  "AML.M0020": {
+   "name": "Generative AI Guardrails",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0020"
+  },
+  "AML.M0021": {
+   "name": "Generative AI Guidelines",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0021"
+  },
+  "AML.M0022": {
+   "name": "Generative AI Model Alignment",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0022"
+  },
+  "AML.M0023": {
+   "name": "AI Bill of Materials",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0023"
+  },
+  "AML.M0024": {
+   "name": "AI Telemetry Logging",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0024"
+  },
+  "AML.M0026": {
+   "name": "Privileged AI Agent Permissions Configuration",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0026"
+  },
+  "AML.M0027": {
+   "name": "Single-User AI Agent Permissions Configuration",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0027"
+  },
+  "AML.M0029": {
+   "name": "Human In-the-Loop for AI Agent Actions",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0029"
+  },
+  "AML.M0030": {
+   "name": "Restrict AI Agent Tool Invocation on Untrusted Data",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0030"
+  },
+  "AML.M0032": {
+   "name": "Segmentation of AI Agent Components",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0032"
+  },
+  "AML.M0033": {
+   "name": "Input and Output Validation for AI Agent Components",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0033"
+  },
+  "AML.M0035": {
+   "name": "AI Red Team",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0035"
+  }
+ },
+ "rules": {
+  "AI-CLI-SAFETY-BYPASS": [
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0054",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "ANSI-ESCAPE-EXFIL": [
+   {
+    "technique": "AML.T0077",
+    "tactic": "exfiltration"
+   }
+  ],
+  "AUTH-HEADER": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "AUTHORITATIVE-INSTALL": [
+   {
+    "technique": "AML.T0011.001",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0010.001",
+    "tactic": "initial-access"
+   }
+  ],
+  "BASE64-BLOB": [
+   {
+    "technique": "AML.T0123",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "BASE64-PAYLOAD": [
+   {
+    "technique": "AML.T0123",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0068",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "CI-SECRET-LEAK": [
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0086",
+    "tactic": "exfiltration"
+   }
+  ],
+  "CI-WORKFLOW-WRITE": [
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   }
+  ],
+  "CLAUDE-APIKEYHELPER": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0098",
+    "tactic": "credential-access"
+   }
+  ],
+  "CLAUDE-HOOKS": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
+   }
+  ],
+  "CLOUD-METADATA": [
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0089",
+    "tactic": "discovery"
+   }
+  ],
+  "CODEX-FULL-ACCESS": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "CRED-FILES": [
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0037",
+    "tactic": "collection"
+   }
+  ],
+  "DESTRUCTIVE": [
+   {
+    "technique": "AML.T0101",
+    "tactic": "impact"
+   }
+  ],
+  "DISABLE-SAFEGUARDS": [
+   {
+    "technique": "AML.T0054",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0081",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "DNS-EXFIL": [
+   {
+    "technique": "AML.T0025",
+    "tactic": "exfiltration"
+   },
+   {
+    "technique": "AML.T0086",
+    "tactic": "exfiltration"
+   }
+  ],
+  "EXEC-HIJACK": [
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
+   }
+  ],
+  "EXFIL-ENV": [
+   {
+    "technique": "AML.T0086",
+    "tactic": "exfiltration"
+   },
+   {
+    "technique": "AML.T0037",
+    "tactic": "collection"
+   }
+  ],
+  "FAKE-SYSTEM-TAG": [
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0054",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "GEMINI-TRUST-OFF": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "GH-CLI-EXFIL": [
+   {
+    "technique": "AML.T0086",
+    "tactic": "exfiltration"
+   },
+   {
+    "technique": "AML.T0036",
+    "tactic": "collection"
+   }
+  ],
+  "HIDDEN-COMMENT": [
+   {
+    "technique": "AML.T0068",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "HIDDEN-UNICODE": [
+   {
+    "technique": "AML.T0068",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "INSTALL-FROM-URL": [
+   {
+    "technique": "AML.T0011.001",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0010.001",
+    "tactic": "initial-access"
+   }
+  ],
+  "INSTALL-SCRIPTS": [
+   {
+    "technique": "AML.T0011.001",
+    "tactic": "execution"
+   }
+  ],
+  "KNOWN-IOC": [
+   {
+    "technique": "AML.T0010",
+    "tactic": "initial-access"
+   }
+  ],
+  "MARKDOWN-IMAGE-EXFIL": [
+   {
+    "technique": "AML.T0077",
+    "tactic": "exfiltration"
+   }
+  ],
+  "MCP-CONFIG": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0010.005",
+    "tactic": "initial-access"
+   }
+  ],
+  "NPM-INSTALL": [
+   {
+    "technique": "AML.T0011.001",
+    "tactic": "execution"
+   }
+  ],
+  "NPX-YES": [
+   {
+    "technique": "AML.T0011.001",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   }
+  ],
+  "OAUTH-TOKEN": [
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "OBFUSCATION": [
+   {
+    "technique": "AML.T0123",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
+   }
+  ],
+  "PERMISSION-WILDCARD": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "defense-evasion"
+   }
+  ],
+  "PERSISTENCE": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   }
+  ],
+  "PIPE-TO-SHELL": [
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   }
+  ],
+  "PLAIN-HTTP": [
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   }
+  ],
+  "PROMPT-INJECTION": [
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "RAW-IP-URL": [
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   }
+  ],
+  "REGISTRY-REDIRECT": [
+   {
+    "technique": "AML.T0010.001",
+    "tactic": "initial-access"
+   }
+  ],
+  "SECRET-AI-API": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-ASSIGNMENT": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-AUTH-VALUE": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-AWS": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-GITHUB": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-GOOGLE": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-JWT": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-NPM": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-PRIVATE-KEY": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-SLACK": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SECRET-URL": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "SUSPICIOUS-TLD": [
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   }
+  ],
+  "TRAFFIC-REDIRECT": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   }
+  ],
+  "TUNNEL-OAST": [
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   },
+   {
+    "technique": "AML.T0025",
+    "tactic": "exfiltration"
+   }
+  ],
+  "UNICODE-TAG-SMUGGLING": [
+   {
+    "technique": "AML.T0068",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "UNLISTED-DOMAIN": [
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   }
+  ],
+  "UNTRUSTED-LOCATION": [
+   {
+    "technique": "AML.T0078",
+    "tactic": "initial-access"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "URL-CREDENTIALS": [
+   {
+    "technique": "AML.T0083",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   }
+  ],
+  "VARIATION-SELECTOR-SMUGGLING": [
+   {
+    "technique": "AML.T0068",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "VSCODE-AUTOAPPROVE": [
+   {
+    "technique": "AML.T0081",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   }
+  ],
+  "VSCODE-TASK-AUTORUN": [
+   {
+    "technique": "AML.T0011",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0081",
+    "tactic": "persistence"
+   }
+  ],
+  "WALLET-BROWSER-THEFT": [
+   {
+    "technique": "AML.T0113",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0037",
+    "tactic": "collection"
+   }
+  ],
+  "WIPER-INSTRUCTION": [
+   {
+    "technique": "AML.T0101",
+    "tactic": "impact"
+   },
+   {
+    "technique": "AML.T0112.000",
+    "tactic": "impact"
+   }
+  ],
+  "WORM-PROPAGATION": [
+   {
+    "technique": "AML.T0061",
+    "tactic": "persistence"
+   }
+  ]
+ }
+}
