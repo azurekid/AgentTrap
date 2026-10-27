@@ -272,7 +272,7 @@ def test_risky_upload_archived_original_redacted_report(client):
 @pytest.mark.parametrize("path,title", [
     ("/", "SkillVenom | AI agent security inspection"),
     ("/coverage", "Detection coverage | SkillVenom"), ("/samples", "Use-case catalogue | SkillVenom"),
-    ("/sources", "Research sources | SkillVenom"),
+    ("/sources", "Research sources | SkillVenom"), ("/report", "Inspection report | SkillVenom"),
 ])
 def test_pages_share_navigation_and_credit(client, path, title):
     page = client.get(path)
@@ -281,7 +281,7 @@ def test_pages_share_navigation_and_credit(client, path, title):
     for href in ("/#scanner", "/coverage", "/samples", "/sources"):
         assert f'href="{href}"' in page.text
     assert 'href="https://github.com/azurekid"' in page.text
-    if path != "/":
+    if path not in ("/", "/report"):
         assert f'<a href="{path}" aria-current="page">' in page.text
 
 

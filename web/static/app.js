@@ -37,6 +37,8 @@ function changeMode(next) {
   $("error").hidden = true;
 }
 const scannerPage = Boolean($("scan-form"));
+const reportPage = Boolean($("findings"));
+const REPORT_KEY = "skillvenom:report";
 if (scannerPage) $("private-repo").addEventListener("change", syncToken);
 if (scannerPage) {
   $("upload-tab").addEventListener("click", () => changeMode("upload"));
@@ -300,10 +302,6 @@ function renderResults() {
   renderAtlas(report.atlas);
   renderFindings();
   $("results").hidden = false;
-  $("results").scrollIntoView({
-    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
-    block: "start",
-  });
 }
 function renderFindings() {
   $("findings").replaceChildren();
@@ -374,7 +372,7 @@ function renderFindings() {
   }
   if (clean) $("findings").append(node("p", "clean-note", `${clean} scanned ${clean === 1 ? "file" : "files"} with no findings ${clean === 1 ? "is" : "are"} not listed.`));
 }
-if (scannerPage) {
+if (reportPage) {
   $("severity").addEventListener("change", renderFindings);
 
   fetch("/api/sources", { headers: { Accept: "application/json" } })
@@ -394,11 +392,21 @@ if (scannerPage) {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
+  let stored = null;
+  try { stored = JSON.parse(sessionStorage.getItem(REPORT_KEY)); } catch { /* ignore */ }
+  if (stored?.files && stored?.atlas) {
+    report = stored;
+    renderResults();
+  } else {
+    $("results").hidden = true;
+    $("no-report").hidden = false;
+  }
+}
+if (scannerPage) {
   $("scan-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     if (busy) return;
     $("error").hidden = true;
-    $("results").hidden = true;
     let body;
     const headers = {};
     const workflows = mode === "repo" && $("workflows").checked;
@@ -434,8 +442,13 @@ if (scannerPage) {
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "The request was rejected. Check your selected files.");
       report = data;
-      renderResults();
       document.dispatchEvent(new Event("skillvenom:scan-complete"));
+      try {
+        sessionStorage.setItem(REPORT_KEY, JSON.stringify(report));
+      } catch {
+        throw new Error("The report is too large to open on its own page. Narrow the scan and try again.");
+      }
+      location.assign("/report");
     } catch (error) {
       showError(error.name === "TimeoutError" ? "The request timed out. No complete result is available." : error.message || "Unable to reach the scanner.");
     } finally {

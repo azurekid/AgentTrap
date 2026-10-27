@@ -162,48 +162,6 @@
       </div>
     </section>
 
-    <section id="results" class="results" aria-labelledby="results-title" hidden>
-      <header class="results-head">
-        <div><p class="label">Inspection report</p><h2 id="results-title">Security findings</h2></div>
-        <button id="download" class="btn btn-ghost btn-small" type="button">Export JSON <span aria-hidden="true">↓</span></button>
-      </header>
-      <div id="verdict" class="verdict"></div>
-      <div class="report-grid">
-        <div class="card donut-card">
-          <div class="donut" id="donut"><div class="donut-center"><strong id="donut-total">0</strong><span>findings</span></div></div>
-        </div>
-        <div id="metrics" class="card metrics"></div>
-        <div id="report-notes" class="card report-notes"></div>
-      </div>
-      <section class="atlas" aria-labelledby="atlas-title">
-        <header class="atlas-head">
-          <div>
-            <p class="label">Threat mapping</p>
-            <h3 id="atlas-title">MITRE ATLAS<span class="tm" aria-hidden="true">™</span> attack surface</h3>
-            <p id="atlas-summary" class="atlas-summary"></p>
-          </div>
-          <a class="btn btn-ghost btn-small" href="https://atlas.mitre.org/matrices/ATLAS" target="_blank" rel="noopener">Open ATLAS matrix <span aria-hidden="true">↗</span></a>
-        </header>
-        <div class="atlas-grid">
-          <div class="card radar-card">
-            <svg id="atlas-radar" class="radar" viewBox="0 0 460 420" role="img" aria-labelledby="atlas-radar-title"><title id="atlas-radar-title">Findings per MITRE ATLAS tactic</title></svg>
-          </div>
-          <ol id="atlas-tactics" class="card tactic-list" aria-label="Findings per ATLAS tactic"></ol>
-        </div>
-        <details id="atlas-details" class="atlas-details">
-          <summary><span class="atlas-subhead">Techniques &amp; mitigations</span><span id="atlas-technique-count" class="atlas-pill"></span><span class="atlas-toggle" aria-hidden="true"></span></summary>
-          <div id="atlas-techniques" class="technique-grid"></div>
-        </details>
-        <p class="atlas-note">Mapping is SkillVenom analyst judgement against <span id="atlas-version">MITRE ATLAS</span>. Mitigations are ATLAS mitigations linked to each technique; where ATLAS lists none, SkillVenom guidance is shown instead.</p>
-      </section>
-
-      <div class="findings-toolbar">
-        <h3>File findings <span id="finding-count"></span></h3>
-        <label>Severity <select id="severity"><option value="ALL">All severities</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label>
-      </div>
-      <div id="findings"></div>
-      <p class="disclaimer" id="disclaimer"></p>
-    </section>
     <section class="stats" aria-labelledby="stats-title">
       <h2 id="stats-title" class="visually-hidden">Inspection activity</h2>
       <dl class="stat-grid" aria-live="polite">

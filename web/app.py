@@ -198,6 +198,11 @@ def coverage_page():
     return FileResponse(ROOT / "static" / "coverage.html")
 
 
+@app.get("/report")
+def report_page():
+    return FileResponse(ROOT / "static" / "report.html")
+
+
 @app.get("/samples")
 def samples_page():
     return FileResponse(ROOT / "static" / "samples.html")
