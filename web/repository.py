@@ -141,11 +141,11 @@ def fetch_response(client: httpx.Client, url: str, limit: int, deadline: float,
             raise ScanInputError(f"{who} denied access or rate limit reached. Check the token's read scope or try later."
                                  if authed else f"{who} rate limit reached. Try later or upload files instead.")
         if status != 200:
-            raise ScanInputError(f"{who} retrieval failed (HTTP {status}).")
+            raise ScanInputError(f"{who} could not be read (HTTP {status}).")
         chunks = bytearray()
         for chunk in response.iter_bytes(chunk_size=65536):
             if time.monotonic() > deadline:
-                raise ScanInputError("Repository retrieval exceeded the 40-second deadline.")
+                raise ScanInputError("Repository inspection exceeded the 40-second deadline.")
             if len(chunks) + len(chunk) > limit:
                 raise ScanInputError(too_large)
             chunks.extend(chunk)
@@ -308,7 +308,7 @@ def fetch_repository(url: str, workflows: bool, token: str | None = None) -> tup
             content = blob(entry)
             digest = hashlib.sha1(b"blob %d\0" % len(content) + content).hexdigest()
             if digest != entry["sha"]:
-                raise ScanInputError(f"Downloaded content did not match the pinned commit: {entry['path']}")
+                raise ScanInputError(f"Content did not match the pinned commit: {entry['path']}")
             return decode_document(entry["path"], content)
 
         with ThreadPoolExecutor(max_workers=6) as pool:

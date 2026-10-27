@@ -118,8 +118,8 @@
                 <p class="field-hint">Use a short-lived, read-only token. It is sent once over HTTPS, used in memory, never logged or saved, and nothing from a token scan is archived. Revoke it afterwards.</p>
                 <ul class="repo-facts">
                   <li>Default branch, pinned to one exact commit</li>
-                  <li>Only supported agent files are downloaded — never the whole repository</li>
-                  <li>Downloads verified against the commit's file hashes</li>
+                  <li>Only supported agent files are inspected — never the whole repository</li>
+                  <li>File contents verified against the commit's file hashes</li>
                   <li>No cloning, submodules, or code execution</li>
                 </ul>
                 <label class="switch">
@@ -217,7 +217,7 @@
         <li>
           <span class="step-num">01</span>
           <h3>Collect</h3>
-          <p>Upload files or name a GitHub, GitLab or Azure DevOps repository. SkillVenom lists the commit's file tree and fetches only files an agent would load.</p>
+          <p>Upload files or name a GitHub, GitLab or Azure DevOps repository. SkillVenom lists the commit's file tree and inspects only files an agent would load.</p>
         </li>
         <li>
           <span class="step-num">02</span>

@@ -59,9 +59,9 @@ Supported repository URLs (default branch only, pinned to one commit SHA, `.git`
 Private repositories need an optional **access token**. It travels in the request body over
 HTTPS, is sent only to the provider's API host in an auth header, is never logged, stored or
 placed in a URL, and a scan that uses a token is **never archived**, whatever the consent
-checkbox says. Use short-lived read-only tokens and revoke them afterwards. Every downloaded
+checkbox says. Use short-lived read-only tokens and revoke them afterwards. Every inspected
 file is verified against the pinned commit's git object hash. Azure DevOps and GitLab
-listings carry no file sizes, so the 100 files / 256 KiB / 2 MiB limits are enforced during download.
+listings carry no file sizes, so the 100 files / 256 KiB / 2 MiB limits are enforced while reading files.
 
 Self-managed servers are **operator-configured**: set `SCM_GITLAB_HOSTS` and/or
 `SCM_AZDO_HOSTS` to comma-separated host names (for example `git.corp.example`). Users cannot
