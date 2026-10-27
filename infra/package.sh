@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 out="${1:-dist/skillvenom.zip}"
 mkdir -p "$(dirname "$out")"
 rm -f "$out"
-inputs=(requirements.txt scan_agents_md.py credential_rules.json SOURCES.md web)
+inputs=(requirements.txt scan_agents_md.py credential_rules.json allowlist.json SOURCES.md web)
 if command -v zip >/dev/null; then
   zip -q -r "$out" "${inputs[@]}" -x '*/__pycache__/*' '*.pyc' '.DS_Store' '*/.DS_Store'
 else

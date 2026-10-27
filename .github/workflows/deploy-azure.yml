@@ -7,6 +7,7 @@ on:
       - "web/**"
       - "scan_agents_md.py"
       - "credential_rules.json"
+      - "allowlist.json"
       - "SOURCES.md"
       - "requirements.txt"
       - "infra/package.sh"

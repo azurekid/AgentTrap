@@ -204,6 +204,14 @@ site style (`/api/sources` returns the parsed tables). Each finding's research
 references link directly to the source article; `/sources#source-N` is the fallback
 when a source has no URL.
 
+### Trusted domains
+
+Links to hosts not on the allowlist raise a LOW `UNLISTED-DOMAIN` finding. The list lives in
+[allowlist.json](allowlist.json) (`{"domains": [...]}`; a host matches an entry or any
+subdomain of it) and is read by both `scan_agents_md.py` and `Scan-AgentsMd.ps1`, so edit
+that one file to trust another domain. The Python CLI also accepts `--allow DOMAIN` and the
+PowerShell script `-ExtraAllow` for one-off additions. The web app uses the file as shipped.
+
 ### Secrets and credentials
 
 Both CLI scanners load [credential_rules.json](credential_rules.json). New

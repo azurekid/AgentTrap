@@ -77,6 +77,22 @@ def test_new_secret_rules_powershell_parity(tmp_path):
     assert sorted(map(key, ps_findings)) == sorted(map(key, python_findings))
 
 
+def test_allowlist_json_shared_by_both_scanners(tmp_path):
+    domains = json.loads((ROOT / "allowlist.json").read_text())["domains"]
+    assert DEFAULT_ALLOW == domains and "attack.mitre.org".endswith("." + "mitre.org") and "mitre.org" in domains
+    file = tmp_path / "AGENTS.md"
+    file.write_text("See https://attack.mitre.org/x and https://unlisted.invalid/y\n")
+    completed = subprocess.run(
+        ["pwsh", "-NoProfile", "-File", str(ROOT / "Scan-AgentsMd.ps1"), "-Json", "-Path", str(file)],
+        capture_output=True, text=True, check=False,
+    )
+    ps = next(iter(json.loads(completed.stdout).values()))
+    py = scan_file(str(file), file.read_text(), DEFAULT_ALLOW)
+    for findings in (ps, py):
+        unlisted = [f["message"] for f in findings if f["rule"] == "UNLISTED-DOMAIN"]
+        assert unlisted == ["Domain not on allowlist: unlisted.invalid"]
+
+
 def test_static_page_and_policy(client):
     response = client.get("/")
     assert response.status_code == 200

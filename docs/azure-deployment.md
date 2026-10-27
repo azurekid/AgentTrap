@@ -118,7 +118,7 @@ What `deploy.sh` does:
 1. Creates the resource group (tag `application=SkillVenom`).
 2. Deploys `main.bicep` as deployment `skillvenom-<UTC timestamp>`.
 3. Runs `package.sh`, which zips only `requirements.txt`, `scan_agents_md.py`,
-   `credential_rules.json`, `SOURCES.md` and `web/` (no `__pycache__`, tests, fixtures,
+   `credential_rules.json`, `allowlist.json`, `SOURCES.md` and `web/` (no `__pycache__`, tests, fixtures,
    `poc/`, `.venv/`, `.archive/` or `.env`) into `dist/skillvenom.zip`.
 4. Runs `deploy-code.sh`, which uploads the ZIP with `az webapp deploy --type zip --async true`.
    App Service then builds it remotely (Oryx installs `requirements.txt`; about 4 minutes
@@ -210,7 +210,7 @@ Add required reviewers to the `production` environment in the repository setting
 releases should be approved.
 
 The workflow runs on pushes to `main` that change `web/**`, `scan_agents_md.py`,
-`credential_rules.json`, `SOURCES.md`, `requirements.txt`, `infra/package.sh`,
+`credential_rules.json`, `allowlist.json`, `SOURCES.md`, `requirements.txt`, `infra/package.sh`,
 `infra/deploy-code.sh` or the
 workflow itself, and on manual **Run workflow**:
 

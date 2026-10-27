@@ -1,0 +1,26 @@
+{
+  "description": "Domains that do not raise UNLISTED-DOMAIN findings. A host matches if it equals an entry or is a subdomain of it. Shared by scan_agents_md.py and Scan-AgentsMd.ps1.",
+  "domains": [
+    "github.com",
+    "githubusercontent.com",
+    "npmjs.com",
+    "npmjs.org",
+    "nodejs.org",
+    "python.org",
+    "pypi.org",
+    "microsoft.com",
+    "learn.microsoft.com",
+    "azure.com",
+    "docs.github.com",
+    "w3.org",
+    "mozilla.org",
+    "shields.io",
+    "readthedocs.io",
+    "localhost",
+    "127.0.0.1",
+    "example.com",
+    "example.org",
+    "mitre.org",
+    "owasp.org"
+  ]
+}

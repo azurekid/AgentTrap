@@ -42,6 +42,7 @@ param(
 #region Configuration -----------------------------------------------------------
 
 $script:Severity = @{ LOW = 1; MEDIUM = 2; HIGH = 3; CRITICAL = 4 }
+$script:AllowDomains = @((Get-Content -LiteralPath (Join-Path $PSScriptRoot 'allowlist.json') -Raw | ConvertFrom-Json).domains | ForEach-Object { $_.Trim().ToLowerInvariant() })
 $script:SecretRules = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'credential_rules.json') -Raw | ConvertFrom-Json
 
 function Get-ScannerConfig {
@@ -89,9 +90,7 @@ function Get-ScannerConfig {
             'WORM-PROPAGATION' = '59,63'
         }
         UntrustedDirs = '[/\\](Downloads|Desktop|Temp|tmp|var[/\\]folders)([/\\]|$)'
-        AllowList     = @('github.com', 'githubusercontent.com', 'npmjs.com', 'npmjs.org', 'nodejs.org', 'python.org',
-            'pypi.org', 'microsoft.com', 'learn.microsoft.com', 'azure.com', 'docs.github.com', 'w3.org',
-            'mozilla.org', 'shields.io', 'readthedocs.io', 'localhost', '127.0.0.1', 'example.com', 'example.org') + $ExtraAllow
+        AllowList     = @($script:AllowDomains) + $ExtraAllow
         UrlRx         = & $rx '(?:https?|wss?|ftp)://[^\s<>"'')\]`]+'
         IpRx          = & $rx '^\d{1,3}(\.\d{1,3}){3}$|^\[?[0-9a-f:]+\]?$'
         TldRx         = & $rx '\.(zip|mov|tk|ml|ga|cf|gq|top|xyz|click|work|support|cc|ru|su)$'
