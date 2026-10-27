@@ -103,6 +103,7 @@ class PublicGuard:
         self.visitors: dict[str, deque[float]] = defaultdict(deque)
         self.global_requests: deque[float] = deque()
         self.feedback: dict[str, deque[float]] = defaultdict(deque)
+        self.feedback_global: deque[float] = deque()
         self.active = 0
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -121,13 +122,22 @@ class PublicGuard:
             if origin and origin.decode("latin-1") not in (f"https://{host}", f"http://{host}"):
                 return await JSONResponse({"detail": "Cross-origin requests are not accepted."}, 403)(scope, receive, send)
             now = time.monotonic()
-            window = self.feedback[client_key(scope, self.trusted_hops)]
+            for key in list(self.feedback):
+                if not self.feedback[key] or now - self.feedback[key][-1] > 600:
+                    del self.feedback[key]
+            while self.feedback_global and now - self.feedback_global[0] > 3600:
+                self.feedback_global.popleft()
+            key = client_key(scope, self.trusted_hops)
+            if key not in self.feedback and len(self.feedback) >= 5000:
+                return await JSONResponse({"detail": "Service is busy. Try later."}, 429)(scope, receive, send)
+            window = self.feedback[key]
             while window and now - window[0] > 600:
                 window.popleft()
-            if len(window) >= 5 or len(self.feedback) > 5000:
+            if len(window) >= 5 or len(self.feedback_global) >= 200:
                 return await JSONResponse({"detail": "Feedback limit reached. Try again later."}, 429,
                                           headers={"Retry-After": "600"})(scope, receive, send)
             window.append(now)
+            self.feedback_global.append(now)
         if is_scan:
             if scope["method"] != "POST":
                 return await JSONResponse({"detail": "POST required."}, 405)(scope, receive, send)

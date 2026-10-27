@@ -1082,3 +1082,14 @@ def test_feedback_limits_size_origin_and_rate(client):
     assert client.post("/api/feedback", json=feedback_body(), headers={"origin": "https://evil.example"}).status_code == 403
     codes = [client.post("/api/feedback", json=feedback_body()).status_code for _ in range(7)]
     assert 429 in codes
+
+
+def test_feedback_has_global_hourly_budget(monkeypatch, tmp_path):
+    monkeypatch.setenv("ARCHIVE_BACKEND", "local")
+    monkeypatch.setenv("ARCHIVE_DIRECTORY", str(tmp_path / "archive"))
+    codes = []
+    # Every request comes from a fresh address, so only the global budget can stop them.
+    for _ in range(205):
+        with TestClient(app, client=(uuid4().hex, 50000)) as client:
+            codes.append(client.post("/api/feedback", json=feedback_body()).status_code)
+    assert 429 in codes and codes.count(201) <= 200

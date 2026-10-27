@@ -24,7 +24,7 @@ passwords or client secrets are used.
                     Storage account (shared keys off, no public access)
                       └─ skillvenom-investigations/
                            ├─ investigations/…   deleted after 30 days (lifecycle rule)
-                           ├─ feedback/…         false-positive reports, kept (not deleted by lifecycle)
+                           ├─ feedback/…         false-positive reports, deleted after 180 days (lifecycle rule)
                            └─ statistics/totals.json   aggregate counts, kept
  App Service logs/metrics + Blob audit logs ──▶ Log Analytics workspace (30 days)
 ```
@@ -237,7 +237,7 @@ existing resources are updated, not duplicated.
 
 ### Reading false-positive reports
 
-The **Report false positives** button on `/report` posts to `/api/feedback` (5 per 10 minutes per client, 64 KiB max). Each report is one JSON blob under `feedback/` in the archive container: rule, severity, path, line, an optional comment and, only if the user opts in, the matched line (never for `SECRET-*` rules). There is no admin page; read them with Storage Explorer or:
+The **Report false positives** button on `/report` posts to `/api/feedback` (5 per 10 minutes per client, 200 per hour overall, 64 KiB max; blobs are deleted after `feedbackRetentionDays`, default 180). Each report is one JSON blob under `feedback/` in the archive container: rule, severity, path, line, an optional comment and, only if the user opts in, the matched line (never for `SECRET-*` rules). There is no admin page; read them with Storage Explorer or:
 
 ```bash
 az storage blob list --account-name <storage> -c skillvenom-investigations --prefix feedback/ --auth-mode login -o table

@@ -24,6 +24,11 @@ param archiveContainerName string = 'skillvenom-investigations'
 @maxValue(365)
 param archiveRetentionDays int = 30
 
+@description('Days after which false-positive reports (feedback/) are deleted.')
+@minValue(1)
+@maxValue(730)
+param feedbackRetentionDays int = 180
+
 @description('Log Analytics retention in days.')
 @minValue(30)
 @maxValue(730)
@@ -120,6 +125,22 @@ resource retention 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05
             actions: {
               baseBlob: {
                 delete: { daysAfterModificationGreaterThan: archiveRetentionDays }
+              }
+            }
+          }
+        }
+        {
+          enabled: true
+          name: 'expire-skillvenom-feedback'
+          type: 'Lifecycle'
+          definition: {
+            filters: {
+              blobTypes: ['blockBlob']
+              prefixMatch: ['${archiveContainerName}/feedback/']
+            }
+            actions: {
+              baseBlob: {
+                delete: { daysAfterModificationGreaterThan: feedbackRetentionDays }
               }
             }
           }
