@@ -95,7 +95,7 @@ RULES = [
     ('GH-CLI-EXFIL', 'HIGH', 'GitHub CLI/API used to create repos/gists or read secrets (exfil channel)',
      R(r"\bgh\s+(gist\s+create|repo\s+create|secret\s+(set|list)|auth\s+token)|\bgh\s+api\b[^\n]*(user/repos|gists)|api\.github\.com/(user/repos|gists)")),
     ('DNS-EXFIL', 'CRITICAL', 'DNS lookup with variable/placeholder in hostname (DNS exfiltration)',
-     R(r"\b(ping(\s+-[a-z]\s*\d*)*|nslookup|dig|host)\s+[^\s|;]*(\$\{?[A-Za-z_]|\$\(|`|<[A-Za-z_-]+>|\{[A-Za-z_]+\})")),
+     R(r"(?<![\w.-])(ping(\s+-[a-z]\s*\d*)*|nslookup|dig|host)\s+[^\s|;]*(\$\{?[A-Za-z_]|\$\(|`|<[A-Za-z_-]+>|\{[A-Za-z_]+\})")),
     ('ANSI-ESCAPE-EXFIL', 'HIGH', 'Terminal OSC/ANSI escape sequence (link/DNS exfiltration via terminal)',
      re.compile(r"(\x1b|\\x1b|\\e|\\033|\\u001b)\](7|8);")),
     ('MARKDOWN-IMAGE-EXFIL', 'HIGH', 'Markdown image whose URL carries data placeholders (image-based exfiltration)',
