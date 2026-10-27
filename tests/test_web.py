@@ -107,6 +107,20 @@ def test_dns_exfil_ignores_write_host_but_keeps_real_lookups(tmp_path):
             assert sum(f["rule"] == "DNS-EXFIL" for f in findings) == expected
 
 
+def test_secret_assignment_ignores_powershell_command_calls(tmp_path):
+    cases = [("$script:AccessToken = Get-LaAccessToken", 0), ("$token = Ensure-Token", 0),
+             ('token = "Get-LaAccessToken"', 1), ("api_key = ghp-abcdefgh12345", 1), ("password: hunter2hunter2", 1)]
+    file = tmp_path / "AGENTS.md"
+    for text, expected in cases:
+        file.write_text(text + "\n")
+        completed = subprocess.run(
+            ["pwsh", "-NoProfile", "-File", str(ROOT / "Scan-AgentsMd.ps1"), "-Json", "-Path", str(file)],
+            capture_output=True, text=True, check=False)
+        ps = next(iter(json.loads(completed.stdout).values()))
+        for findings in (ps, scan_file(str(file), text + "\n", DEFAULT_ALLOW)):
+            assert sum(f["rule"] == "SECRET-ASSIGNMENT" for f in findings) == expected, text
+
+
 def test_static_page_and_policy(client):
     response = client.get("/")
     assert response.status_code == 200
