@@ -10,6 +10,7 @@ on:
       - "SOURCES.md"
       - "requirements.txt"
       - "infra/package.sh"
+      - "infra/deploy-code.sh"
       - ".github/workflows/deploy-azure.yml"
   workflow_dispatch:
 
@@ -46,7 +47,7 @@ jobs:
     # Skipped until infra/setup-github-oidc.sh has configured the repository variables.
     if: vars.AZURE_CLIENT_ID != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     environment:
       name: production
       url: ${{ steps.health.outputs.url }}
@@ -64,26 +65,9 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - name: Deploy to App Service
-        env:
-          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-          APP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
-        run: |
-          az webapp deploy --resource-group "$RESOURCE_GROUP" --name "$APP_NAME" \
-            --src-path dist/skillvenom.zip --type zip --track-status false --output none
-      - name: Smoke test
+      - name: Deploy to App Service and wait until healthy
         id: health
         env:
           RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           APP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
-        run: |
-          url="https://$(az webapp show -g "$RESOURCE_GROUP" -n "$APP_NAME" --query defaultHostName -o tsv)"
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          for attempt in $(seq 1 30); do
-            if curl --silent --fail --max-time 10 "$url/healthz" | grep -q '"ok"' \
-              && curl --silent --fail --max-time 10 "$url/" | grep -q 'id="scan-form"'; then
-              echo "Healthy: $url"; exit 0
-            fi
-            sleep 10
-          done
-          echo "::error::Deployment did not become healthy"; exit 1
+        run: infra/deploy-code.sh "$RESOURCE_GROUP" "$APP_NAME" dist/skillvenom.zip

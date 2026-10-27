@@ -5,3 +5,4 @@ __pycache__/
 .env
 .archive/
 .playwright-mcp/
+dist/
