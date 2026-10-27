@@ -1,0 +1,40 @@
+{
+  "id": "PA-002",
+  "title": "Codex config grants full access and disables approvals",
+  "summary": "Codex config grants full access and disables approvals",
+  "category": "PA",
+  "platforms": [
+    "codex"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/PA-002.inert",
+      "scan_as": ".codex/config.toml"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "CODEX-FULL-ACCESS"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0081"
+  ],
+  "owasp_asi": [
+    "ASI03"
+  ],
+  "why_it_works": "danger-full-access with approval_policy=never removes the sandbox and all human confirmation.",
+  "mitigations": [
+    "Keep Codex sandbox on and approvals required.",
+    "Flag danger-full-access in config."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/PA-002.inert",
+    "scan_as": ".codex/config.toml"
+  }
+}

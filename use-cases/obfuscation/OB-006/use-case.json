@@ -1,0 +1,38 @@
+{
+  "id": "OB-006",
+  "title": "Base64 command blob decoded and piped to shell",
+  "summary": "Base64 command blob decoded and piped to shell",
+  "category": "OB",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/OB-006.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "BASE64-PAYLOAD"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0068",
+    "AML.T0123"
+  ],
+  "owasp_asi": [
+    "ASI01",
+    "ASI05"
+  ],
+  "why_it_works": "A base64 blob that decodes to a curl-pipe-sh command hides the payload from casual review.",
+  "mitigations": [
+    "Decode and inspect base64 blobs.",
+    "Block decode-and-execute chains."
+  ],
+  "references": [],
+  "tags": []
+}

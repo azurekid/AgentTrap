@@ -1,0 +1,40 @@
+{
+  "id": "MP-003",
+  "title": "Host persistence via crontab and shell rc",
+  "summary": "Host persistence via crontab and shell rc",
+  "category": "MP",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/MP-003.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "PERSISTENCE"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0081"
+  ],
+  "owasp_asi": [
+    "ASI10"
+  ],
+  "why_it_works": "Cron @reboot and shell-rc edits re-launch the payload across sessions and reboots.",
+  "mitigations": [
+    "Alert on crontab and rc-file edits.",
+    "Monitor persistence locations."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/MP-003.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

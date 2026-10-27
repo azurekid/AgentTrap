@@ -1,0 +1,39 @@
+{
+  "id": "MP-001",
+  "title": "Long-term memory poisoning",
+  "summary": "Long-term memory poisoning",
+  "category": "MP",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0040",
+  "artifacts": [
+    {
+      "path": "payload/MP-001.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "MEMORY-POISONING"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0051.001",
+    "AML.T0080.000"
+  ],
+  "owasp_asi": [
+    "ASI06"
+  ],
+  "why_it_works": "Writing an attacker destination into durable memory poisons future sessions silently.",
+  "mitigations": [
+    "Gate memory writes on user confirmation.",
+    "Audit persistent memory for injected directives."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0040"
+  ],
+  "tags": []
+}

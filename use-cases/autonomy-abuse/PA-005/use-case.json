@@ -1,0 +1,40 @@
+{
+  "id": "PA-005",
+  "title": "Gemini CLI trust and auto-accept disabled",
+  "summary": "Gemini CLI trust and auto-accept disabled",
+  "category": "PA",
+  "platforms": [
+    "gemini-cli"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/PA-005.inert",
+      "scan_as": ".gemini/settings.json"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "GEMINI-TRUST-OFF"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0081"
+  ],
+  "owasp_asi": [
+    "ASI03"
+  ],
+  "why_it_works": "Disabling folder trust and enabling autoAccept removes Gemini CLI's execution safeguards.",
+  "mitigations": [
+    "Keep folderTrust on and autoAccept off.",
+    "Review .gemini/settings.json."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/PA-005.inert",
+    "scan_as": ".gemini/settings.json"
+  }
+}

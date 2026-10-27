@@ -1,9 +1,14 @@
-# AgentTrap
+# SkillVenom
 
 A cybersecurity dashboard and static scanner for the files that guide AI agents.
 Inspect uploaded files or a public GitHub repository for prompt injection, hidden
 instructions, unsafe commands, agent permission changes, credential theft patterns,
 and potentially embedded secrets.
+
+SkillVenom was previously named AgentTrap; the GitHub repository is still
+`azurekid/AgentTrap`. The separate
+[SkillVenom research repository](https://github.com/azurekid/SkillVenom) holds the
+original malicious-skill use cases this scanner detects.
 
 ## Run locally
 
@@ -56,7 +61,7 @@ rule maps to, and every report includes an `atlas` summary: findings per tactic
 (the 10 tactics observable in static agent files, in ATLAS matrix order) and each
 hit technique with its ATLAS mitigations. The results page draws this as a radar
 ("spiderweb") chart with technique and mitigation cards. Where ATLAS lists no
-mitigation for a technique, the card shows clearly labelled **AgentTrap guidance**.
+mitigation for a technique, the card shows clearly labelled **SkillVenom guidance**.
 
 The rule-to-technique mapping in [web/atlas.json](web/atlas.json) is analyst
 judgement; names, tactics, URLs, and mitigations come from the official ATLAS STIX
@@ -70,11 +75,115 @@ python tools/build_atlas_mapping.py stix-atlas.json
 The generator validates every rule's technique/tactic pairing; a test fails if a
 detector has no mapping.
 
+### MITRE ATLAS case-study coverage
+
+All 73 case studies in ATLAS v2026.09 are classified in
+[tools/atlas_case_studies.json](tools/atlas_case_studies.json):
+
+| Scope | Count | Meaning |
+|---|---|---|
+| `file` | 21 | Detected; a defanged payload per case study in [tests/atlas_cases/cases.json](tests/atlas_cases/cases.json) is regression-tested in Python and PowerShell |
+| `partial` | 5 | A related artifact is detected (leaked keys, worm text, URLs in a model template) |
+| `channel` | 12 | Injection delivered by web, email, chat, tickets or calendars; the payload is detected only if it lands in a scanned file |
+| `out` | 35 | Model evasion, data poisoning, deepfakes, model files, exposed infrastructure, or non-agent malware |
+
+The case studies added the `MEMORY-POISONING`, `FILE-EXFIL`, `REMOTE-COMMANDS`,
+`CLICKFIX`, `OFFENSIVE-TASKING` and `AI-PREFILL-LINK` rules and extended
+`WORM-PROPAGATION` and `WIPER-INSTRUCTION`.
+
+### Keeping detection current
+
+1. **Watch.** [.github/workflows/atlas-update-check.yml](.github/workflows/atlas-update-check.yml)
+   runs [tools/check_atlas_updates.py](tools/check_atlas_updates.py) weekly. It opens
+   (or comments on) one issue when a new ATLAS release appears, a case study is not yet
+   classified, or a mapped technique is revoked, deprecated or removed. Run it locally
+   with `python tools/check_atlas_updates.py`.
+2. **Triage.** Classify each new case study in `tools/atlas_case_studies.json`. For a
+   `file` case study, add a defanged payload with its expected rules to
+   `tests/atlas_cases/cases.json`; the test fails until both files agree.
+3. **Detect.** If the payload is missed, add or extend a rule in `scan_agents_md.py`,
+   add `RULE_REFS`, and cite the case study in [SOURCES.md](SOURCES.md). Regenerate the
+   PowerShell rule table from the Python source with
+   `python tools/sync_powershell_rules.py` (the parity tests enforce identical findings;
+   `--check` fails if `Scan-AgentsMd.ps1` is stale). Check new rules against benign agent
+   files for false positives.
+4. **Map.** Add the rule to `tools/build_atlas_mapping.py`, bump `VERSION`, and
+   regenerate `web/atlas.json` from the new release.
+5. **Sample.** Add the case to [use-cases/](use-cases) (validated by
+   `python tools/use_cases.py validate`) and regenerate the public sample library with
+   `python tools/build_sample_catalog.py` (a test fails while `web/samples.json` is stale).
+6. **Verify.** Run the test suite and redeploy.
+
+Beyond ATLAS, [.github/workflows/research-watch.yml](.github/workflows/research-watch.yml)
+runs [tools/check_research_feeds.py](tools/check_research_feeds.py) weekly. It reads the
+feeds in [tools/research_feeds.json](tools/research_feeds.json) (arXiv cs.CR, NVD CVEs,
+Embrace The Red, Simon Willison's prompt-injection tag, BleepingComputer and a Google
+News search), keeps items that mention an agent subject (AGENTS.md, MCP, Claude Code,
+Copilot, …) and a risk term, drops anything already cited in `SOURCES.md`, and opens a
+dated triage issue with a checklist. Run it locally with
+`python tools/check_research_feeds.py --days 30`. Each relevant item follows the same
+loop: cite it in `SOURCES.md`, add a defanged sample to `tests/rule_samples.json` (or an
+ATLAS case), then add or extend a rule. Feed text is untrusted: the report strips
+markup and links from titles, and should be triaged by a person, not handed to an agent
+with tool access. Tune noisy terms in the JSON config.
+
+### OWASP Agentic (ASI) mapping
+
+Alongside MITRE ATLAS, every finding is also mapped to the
+[OWASP Agentic Security Initiative](https://genai.owasp.org/initiatives/#agenticsecurity)
+threat taxonomy (for example `ASI01 Agent Goal Hijack`). Findings carry a teal OWASP
+chip next to the purple ATLAS chips, and the report includes an `owasp_asi` summary of
+risks and the findings per risk. The mapping lives in
+[tools/build_atlas_mapping.py](tools/build_atlas_mapping.py) and is regenerated into
+`web/atlas.json` with the ATLAS build.
+
+### Use-case catalogue and threat sample library
+
+The [use-cases/](use-cases) directory is a test-backed catalogue of defanged
+agent-file attacks, organised into nine categories (prompt injection, data
+exfiltration, command execution, obfuscation, autonomy abuse, supply chain,
+memory/persistence, tool misuse, credentials) and tagged by target platform (Claude
+Code, GitHub Copilot, Cursor, Codex, Gemini CLI, VS Code, Windsurf, Cline, GitHub
+Actions, MCP, any-agent). Each case folder carries a `use-case.json`, an inert
+`payload/<ID>.inert`, an optional benign look-alike, and a generated `README.md`;
+[use-cases/CATALOG.md](use-cases/CATALOG.md) is the generated index.
+
+- [use-cases/taxonomy.json](use-cases/taxonomy.json) and
+  [use-cases/schema.json](use-cases/schema.json) define categories, platforms and the
+  per-case schema.
+- [tools/use_cases.py](tools/use_cases.py) validates the catalogue, renders the
+  `README.md`/`CATALOG.md` files (`render --check` in tests), and can `materialize` a
+  case to a scratch directory. Validation asserts each payload is discoverable by the
+  web scanner and triggers its expected rules, and that each benign look-alike is clean.
+- [tools/build_sample_catalog.py](tools/build_sample_catalog.py) turns the catalogue
+  (plus synthetic secrets) into `web/samples.json`; a test fails while it is stale.
+
+The **Samples** page (`/samples`) renders this catalogue grouped by category and
+filterable by text, severity, category and platform. Each card shows the defanged
+payload, the rules it triggers with file/line, its ATLAS and OWASP chips, why it works,
+mitigations, and a link back to the source case. It is served from `web/samples.json`
+(`/api/samples`); snippets are the scanner's redacted output, and synthetic credential
+values are never published.
+
+### Site pages
+
+| Path | Content |
+| --- | --- |
+| `/` | Landing page with the scanner (upload or GitHub repository, consent, results), live statistics, how it works, links to each page. `?mode=repo` opens the repository tab |
+| `/scan` | Redirects to `/#scanner` (keeps `?mode=repo`) |
+| `/coverage` | Threat classes, ecosystems and file types inspected |
+| `/samples` | Use-case catalogue |
+| `/sources` | Research sources |
+
+Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. Every page shares the navigation and the footer credit to
+[azurekid](https://github.com/azurekid).
+
 ### Research sources
 
 `/sources` renders [SOURCES.md](SOURCES.md) as a searchable, filterable page in the
-site style (`/api/sources` returns the parsed tables). Finding references link to
-`/sources#source-N`.
+site style (`/api/sources` returns the parsed tables). Each finding's research
+references link directly to the source article; `/sources#source-N` is the fallback
+when a source has no URL.
 
 ### Secrets and credentials
 
@@ -93,9 +202,14 @@ Real exposures require revocation/rotation and access-log review.
 
 ### Investigation archive and disclosure
 
-The page displays a notice **before submission**. Files with HIGH or CRITICAL
-findings are automatically retained for investigation without a consent checkbox,
-as requested. Only those risky files are archived; clean files are not retained.
+The scanner page displays a notice **before submission** and an *Allow investigation
+retention* checkbox that is **checked by default**. Users may uncheck it to opt out:
+the scan still runs, nothing is archived, and the report shows
+`archive.status = "opted_out"` (form field / JSON property `archive_consent`).
+With consent, only files with HIGH or CRITICAL findings are archived; clean files are
+not retained. Anonymous statistics (file and finding counts, no names, content or
+URLs) are always recorded. A pre-ticked box may not count as valid consent under
+GDPR/ePrivacy (CJEU *Planet49*); review this with your privacy counsel before going live.
 The archive contains original text (including any secrets), paths, hashes,
 redacted findings, and source/commit metadata. It is not anonymized.
 Scan reports remain in browser memory until a rescan, reload, or export.
@@ -121,7 +235,7 @@ retention obligations before publicly accepting submissions.
 | `ARCHIVE_DIRECTORY` | `.archive/`, outside the public web routes |
 | `ARCHIVE_MAX_BYTES` | `268435456`, local retained-payload quota |
 | `AZURE_STORAGE_ACCOUNT` | Required for Azure mode |
-| `AZURE_STORAGE_CONTAINER` | `agenttrap-investigations` |
+| `AZURE_STORAGE_CONTAINER` | `skillvenom-investigations` |
 | `AZURE_ARCHIVE_RETENTION_CONFIRMED` | Must be `true` for Azure mode, after lifecycle setup |
 
 ## Limits and public-service operation
@@ -142,8 +256,10 @@ retention obligations before publicly accepting submissions.
 - No targets and skipped links are distinct from a complete scan with no findings.
 
 Use **one Uvicorn worker**. Limits are per process, not distributed. Forwarded
-client headers are intentionally not trusted; behind a reverse proxy, clients
-may share the proxy's bucket. Before public Azure exposure, put the service behind
+client headers are not trusted by default. Set `TRUSTED_PROXY_HOPS` to the number of
+reverse proxies that append `X-Forwarded-For` (Azure App Service: `1`; with Front Door
+in front: `2`); the limiter then keys on the entry that many hops from the right, which
+clients cannot forge. Without it, clients behind a proxy share the proxy's bucket. Before public Azure exposure, put the service behind
 Azure Front Door/WAF (or an equivalent controlled gateway), add shared edge rate
 limits and body/time limits, prevent direct backend bypass, monitor spend, and
 configure alerts. In-process controls are a safety net, not DDoS protection.
@@ -155,14 +271,35 @@ trigger detections; missed threats are possible. See [SOURCES.md](SOURCES.md).
 
 ## Command-line scanners
 
+Hostile fixtures in `tests/repo`, `samples` and `poc/Downloads` are stored under
+inert names (`AGENTS.md.inert`, `dot-claude/settings.json.inert`) so coding agents
+working in this repository never auto-load them. Restore the real names in a
+scratch directory outside the repository before scanning them:
+
 ```bash
-python3 scan_agents_md.py --json tests/repo
-python3 scan_agents_md.py --include-workflows --fail-on HIGH tests/repo
-pwsh -NoProfile -File Scan-AgentsMd.ps1 -Path tests/repo -Json
+python3 tools/fixtures.py /tmp/skillvenom-fixtures
+python3 scan_agents_md.py --json /tmp/skillvenom-fixtures/tests/repo
+python3 scan_agents_md.py --include-workflows --fail-on HIGH /tmp/skillvenom-fixtures/tests/repo
+pwsh -NoProfile -File Scan-AgentsMd.ps1 -Path /tmp/skillvenom-fixtures/tests/repo -Json
 ```
 
 Exit code 1 means findings meet the configured threshold. Discovery and existing
 research-derived rules are preserved; embedded-secret detection is additive.
+
+The `Rules` and `RuleRefs` tables in `Scan-AgentsMd.ps1` are **generated** from
+`scan_agents_md.py` by `python tools/sync_powershell_rules.py`; edit the Python source,
+not the generated blocks.
+
+### External research adopted
+
+Detectors and catalogue ideas were drawn from public agent-security research and
+attributed in [SOURCES.md](SOURCES.md). Adopted: the category/platform catalogue layout of the
+[SkillVenom research use-cases](https://github.com/azurekid/SkillVenom/tree/main/use-cases) and three missed payloads; Cisco skill-scanner's tool-shadowing idea
+(`TOOL-SHADOWING`); and NVIDIA SkillSpector's broad-trigger idea
+(`SKILL-TRIGGER-HIJACK`). Not adopted (by design or as future work): a numeric risk
+score or verdict, LLM semantic review, and a SARIF/coverage-ledger output. The older
+`tests/repo`, `samples/`, `tests/atlas_cases` and `tests/rule_samples.json` fixtures are
+kept as internal regression guards and are not part of the user-facing catalogue.
 
 ## Tests
 
@@ -175,8 +312,13 @@ node --check web/static/app.js && node --check web/static/fx.js
 
 The parity test in the Python suite requires PowerShell (`pwsh`). Synthetic
 credential fixtures are assembled at runtime; no real credentials are checked in.
+Both suites restore the inert fixtures in a temporary directory and fail if a
+fixture is ever committed under an agent-loaded name.
 
 ## Deploy to Azure
 
-See [Azure deployment instructions](docs/azure-deployment.md). No Azure resources
-are provisioned by this repository or by running the local application.
+Infrastructure as code is in [infra/](infra/): a Bicep template for Linux App Service
+(B1, Python 3.14), a private keyless Storage account with the 30-day lifecycle rule,
+managed-identity RBAC and Log Analytics, plus `infra/deploy.sh` and a GitHub Actions
+workflow using OIDC. See [Azure deployment](docs/azure-deployment.md). Nothing is
+provisioned until you run the script.

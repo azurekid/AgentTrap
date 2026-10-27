@@ -1,0 +1,376 @@
+{
+  "atlas_version": "2026.09",
+  "scopes": {
+    "file": "Detected by SkillVenom rules, regression-tested",
+    "partial": "Related artifacts detected",
+    "channel": "Payload detectable only when written to a scanned file",
+    "out": "Not applicable to static instruction-file scanning"
+  },
+  "case_studies": {
+    "AML.CS0000": {
+      "name": "Evasion of Deep Learning Detector for Malware C&C Traffic",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0001": {
+      "name": "Botnet Domain Generation Algorithm (DGA) Detection Evasion",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0002": {
+      "name": "VirusTotal Poisoning",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0003": {
+      "name": "Bypassing Cylance's AI Malware Detection",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0004": {
+      "name": "Camera Hijack Attack on Facial Recognition System",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0005": {
+      "name": "Attack on Machine Translation Services",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0006": {
+      "name": "ClearviewAI Misconfiguration",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0007": {
+      "name": "GPT-2 Model Replication",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0008": {
+      "name": "ProofPoint Evasion",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0009": {
+      "name": "Tay Poisoning",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0010": {
+      "name": "Microsoft Azure Service Disruption",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0011": {
+      "name": "Microsoft Edge AI Evasion",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0012": {
+      "name": "Face Identification System Evasion via Physical Countermeasures",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0013": {
+      "name": "Backdoor Attack on Deep Learning Models in Mobile Apps",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0014": {
+      "name": "Confusing Antimalware Neural Networks",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0015": {
+      "name": "Compromised PyTorch Dependency Chain",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0016": {
+      "name": "Achieving Code Execution in MathGPT via Prompt Injection",
+      "scope": "channel",
+      "note": "Prompt injection via app input; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0017": {
+      "name": "Bypassing ID.me Identity Verification",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0018": {
+      "name": "Arbitrary Code Execution with Google Colab",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0019": {
+      "name": "PoisonGPT",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0020": {
+      "name": "Indirect Prompt Injection Threats: Bing Chat Data Pirate",
+      "scope": "channel",
+      "note": "Injection via web page; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0021": {
+      "name": "ChatGPT Conversation Exfiltration",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0022": {
+      "name": "ChatGPT Package Hallucination",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0023": {
+      "name": "ShadowRay: Hijacking Exposed Ray Clusters",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0024": {
+      "name": "Morris II Worm: RAG-Based Attack",
+      "scope": "partial",
+      "note": "Morris II: WORM-PROPAGATION catches self-replicating instructions if they reach a scanned file; RAG delivery is out of scope."
+    },
+    "AML.CS0025": {
+      "name": "Web-Scale Data Poisoning: Split-View Attack",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0026": {
+      "name": "Financial Transaction Hijacking with M365 Copilot as an Insider",
+      "scope": "channel",
+      "note": "Injection via email; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0027": {
+      "name": "Organization Confusion on Hugging Face",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0028": {
+      "name": "AI Model Tampering via Supply Chain Attack",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0029": {
+      "name": "Google Bard Conversation Exfiltration",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0030": {
+      "name": "LLM Jacking",
+      "scope": "partial",
+      "note": "Stolen cloud/AI keys: credential rules flag exposed keys, not the abuse."
+    },
+    "AML.CS0031": {
+      "name": "Malicious Models on Hugging Face",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0032": {
+      "name": "Attempted Evasion of ML Phishing Webpage Detection System",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0033": {
+      "name": "Live Deepfake Image Injection to Evade Mobile KYC Verification",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0034": {
+      "name": "ProKYC: Deepfake Tool for Account Fraud Attacks",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0035": {
+      "name": "Data Exfiltration from Slack AI via Indirect Prompt Injection",
+      "scope": "channel",
+      "note": "Injection via Slack messages; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0036": {
+      "name": "AIKatz: Attacking LLM Desktop Applications",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0037": {
+      "name": "Data Exfiltration via Agent Tools in Copilot Studio",
+      "scope": "channel",
+      "note": "Injection via Copilot Studio inputs; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0038": {
+      "name": "Planting Instructions for Delayed Automatic AI Agent Tool Invocation",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0039": {
+      "name": "Living Off AI: Prompt Injection via Jira Service Management",
+      "scope": "channel",
+      "note": "Injection via Jira tickets; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0040": {
+      "name": "Hacking ChatGPT's Memories with Prompt Injection",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0041": {
+      "name": "Rules File Backdoor: Supply Chain Attack on AI Coding Assistants",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0042": {
+      "name": "SesameOp: Novel backdoor uses OpenAI Assistants API for command and control",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0043": {
+      "name": "Malware Prototype with Embedded Prompt Injection",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0044": {
+      "name": "LAMEHUG: Malware Leveraging Dynamic AI-Generated Commands",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0045": {
+      "name": "Data Exfiltration via an MCP Server used by Cursor",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0046": {
+      "name": "Data Destruction via Indirect Prompt Injection Targeting Claude Computer-Use",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0047": {
+      "name": "Code to Deploy Destructive AI Agent Discovered in Amazon Q VS Code Extension",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0048": {
+      "name": "Exposed ClawdBot Control Interfaces Leads to Credential Access and Execution",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0049": {
+      "name": "Supply Chain Compromise via Poisoned ClawdBot Skill",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0050": {
+      "name": "OpenClaw 1-Click Remote Code Execution",
+      "scope": "channel",
+      "note": "Malicious link to the agent gateway; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0051": {
+      "name": "OpenClaw Command & Control via Prompt Injection",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0052": {
+      "name": "LLMSmith: RCE Vulnerabilities in LLM-Integrated Applications",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0053": {
+      "name": "Poisoned Postmark MCP Server Email Exfiltration",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0054": {
+      "name": "Data Exfiltration via Remote Poisoned MCP Tool",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0055": {
+      "name": "AI ClickFix: Hijacking Computer-Use Agents Using ClickFix",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0056": {
+      "name": "Model Distillation Campaigns Targeting Anthropic Claude",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0057": {
+      "name": "Storm-2139 Azure OpenAI Guardrail Bypass",
+      "scope": "partial",
+      "note": "Stolen Azure OpenAI keys: credential rules flag exposed keys, not the guardrail bypass."
+    },
+    "AML.CS0058": {
+      "name": "Google Photos AI Model Extraction",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0059": {
+      "name": "EchoLeak: Zero-Click Prompt Injection Targeting M365 Copilot for Data Exfiltration",
+      "scope": "channel",
+      "note": "Injection via email (EchoLeak); payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0060": {
+      "name": "Cross-Site Scripting via Prompt Manipulation in Lenovo AI Chatbot",
+      "scope": "channel",
+      "note": "Injection via chatbot input; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0061": {
+      "name": "AI in the Middle: Web-Based AI Services as C2 Relays",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0062": {
+      "name": "RCE Vulnerability in Semantic Kernel Search Plugin",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0063": {
+      "name": "Prompt-Based Attacks Against Gemini via Calendar Invitations",
+      "scope": "channel",
+      "note": "Injection via calendar invitations; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0064": {
+      "name": "Poisoned GGUF Templates: Inference-Time Supply Chain Attack",
+      "scope": "partial",
+      "note": "Poisoned GGUF chat template: model artifact; only URLs inside the template are flagged."
+    },
+    "AML.CS0065": {
+      "name": "Model Namespace Reuse Supply Chain Attack",
+      "scope": "out",
+      "note": "Outside a static instruction-file scanner (model, data, runtime, infrastructure or non-agent malware)."
+    },
+    "AML.CS0066": {
+      "name": "ZombieAgent: Data Exfiltration Attack on ChatGPT",
+      "scope": "channel",
+      "note": "Injection via email/connectors; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0067": {
+      "name": "Claude Code GitHub Action Secret Exposure",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0068": {
+      "name": "Autonomous OpenAI Evaluation Agents Compromise Hugging Face Infrastructure",
+      "scope": "channel",
+      "note": "Agent behaviour during evaluation; payload text is detected only when it is in a scanned file."
+    },
+    "AML.CS0069": {
+      "name": "GTG-1002 Claude Code Espionage Campaign",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0070": {
+      "name": "Threat Actor Uses a DeepSeek-Powered Hermes Agent in Langflow and n8n Exploitation Attempts",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    },
+    "AML.CS0071": {
+      "name": "Multi-Agent Framework Compromises Taiwanese Government Systems",
+      "scope": "partial",
+      "note": "Offensive multi-agent tasking: OFFENSIVE-TASKING catches explicit tasking in agent files only."
+    },
+    "AML.CS0072": {
+      "name": "AI Recommendation Poisoning via Crafted AI Assistant Links",
+      "scope": "file",
+      "note": "Detected; guarded by tests/atlas_cases/cases.json."
+    }
+  }
+}

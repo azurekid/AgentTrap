@@ -1,0 +1,37 @@
+{
+  "id": "DE-006",
+  "title": "Browser-login and crypto-wallet theft",
+  "summary": "Browser-login and crypto-wallet theft",
+  "category": "DE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/DE-006.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "WALLET-BROWSER-THEFT"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0037",
+    "AML.T0113"
+  ],
+  "owasp_asi": [
+    "ASI03"
+  ],
+  "why_it_works": "Named browser-credential and wallet files are classic infostealer targets.",
+  "mitigations": [
+    "Deny agent access to browser profiles and wallet files.",
+    "Alert on reads of known credential stores."
+  ],
+  "references": [],
+  "tags": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "PA-004",
+  "title": "VS Code task auto-runs a script on folder open",
+  "summary": "VS Code task auto-runs a script on folder open",
+  "category": "PA",
+  "platforms": [
+    "vscode"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/PA-004.inert",
+      "scan_as": ".vscode/tasks.json"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "VSCODE-TASK-AUTORUN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0011",
+    "AML.T0081"
+  ],
+  "owasp_asi": [
+    "ASI05"
+  ],
+  "why_it_works": "A task with runOn=folderOpen executes a workspace script the moment the folder is opened.",
+  "mitigations": [
+    "Disable automatic task execution.",
+    "Review tasks.json runOptions."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/PA-004.inert",
+    "scan_as": ".vscode/tasks.json"
+  }
+}

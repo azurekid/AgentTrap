@@ -1,0 +1,41 @@
+{
+  "id": "PI-003",
+  "title": "Jailbreak persona (DAN / unrestricted mode)",
+  "summary": "Jailbreak persona (DAN / unrestricted mode)",
+  "category": "PI",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "agentnode skills-security-audit",
+  "artifacts": [
+    {
+      "path": "payload/PI-003.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "JAILBREAK-PERSONA"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0051.001",
+    "AML.T0054"
+  ],
+  "owasp_asi": [
+    "ASI01"
+  ],
+  "why_it_works": "Persona jailbreaks tell the model it is a new, unrestricted character to shed its safety alignment before issuing harmful requests.",
+  "mitigations": [
+    "Reject persona-switch instructions from untrusted files.",
+    "Keep safety policies independent of conversation role-play."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/PI-003.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

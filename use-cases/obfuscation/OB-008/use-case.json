@@ -1,0 +1,36 @@
+{
+  "id": "OB-008",
+  "title": "Large base64 blob conceals bundled data",
+  "summary": "Large base64 blob conceals bundled data",
+  "category": "OB",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "LOW",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/OB-008.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "BASE64-BLOB"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0123"
+  ],
+  "owasp_asi": [
+    "ASI01"
+  ],
+  "why_it_works": "A long base64 blob can smuggle bundled code or data past a reviewer who skims the file.",
+  "mitigations": [
+    "Decode and inspect long base64 blobs.",
+    "Flag unexplained encoded data in instructions."
+  ],
+  "references": [],
+  "tags": []
+}

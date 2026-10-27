@@ -1,0 +1,54 @@
+{
+  "id": "PA-001",
+  "title": "Claude settings: malicious hooks, apiKeyHelper and wildcard permissions",
+  "summary": "Claude settings: malicious hooks, apiKeyHelper and wildcard permissions",
+  "category": "PA",
+  "platforms": [
+    "claude-code"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/PA-001.inert",
+      "scan_as": ".claude/settings.json"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "CLAUDE-APIKEYHELPER",
+      "CLAUDE-HOOKS",
+      "MCP-CONFIG",
+      "PERMISSION-WILDCARD",
+      "PIPE-TO-SHELL",
+      "SUSPICIOUS-TLD",
+      "TRAFFIC-REDIRECT"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0010.005",
+    "AML.T0050",
+    "AML.T0053",
+    "AML.T0072",
+    "AML.T0081",
+    "AML.T0098"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI03",
+    "ASI04",
+    "ASI05"
+  ],
+  "why_it_works": "A SessionStart hook runs a remote script at startup, apiKeyHelper siphons the API key, wildcard Bash is allowed and the base URL is redirected to an attacker gateway.",
+  "mitigations": [
+    "Review .claude/settings.json in PRs.",
+    "Disallow wildcard Bash and startup hooks; pin ANTHROPIC_BASE_URL."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/PA-001.inert",
+    "scan_as": ".claude/settings.json"
+  }
+}

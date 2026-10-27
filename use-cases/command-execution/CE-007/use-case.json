@@ -1,0 +1,41 @@
+{
+  "id": "CE-007",
+  "title": "Privilege escalation to root group",
+  "summary": "Privilege escalation to root group",
+  "category": "CE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "agentnode skills-security-audit",
+  "artifacts": [
+    {
+      "path": "payload/CE-007.inert",
+      "scan_as": "SKILL.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "PRIVILEGE-ESCALATION"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0050",
+    "AML.T0053"
+  ],
+  "owasp_asi": [
+    "ASI03"
+  ],
+  "why_it_works": "Granting passwordless sudo, group membership and a setuid shell establishes persistent root access.",
+  "mitigations": [
+    "Deny privilege-management commands to agents.",
+    "Alert on NOPASSWD, usermod -aG and setuid changes."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-007.inert",
+    "scan_as": "SKILL.md"
+  }
+}

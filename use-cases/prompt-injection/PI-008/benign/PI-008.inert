@@ -1,0 +1,1 @@
+Run `claude -p "summarize the changelog"` and review the output before committing.

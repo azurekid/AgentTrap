@@ -1,0 +1,42 @@
+{
+  "id": "SC-009",
+  "title": "Credentials embedded in a clone URL",
+  "summary": "Credentials embedded in a clone URL",
+  "category": "SC",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/SC-009.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "SECRET-URL",
+      "URL-CREDENTIALS"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0055",
+    "AML.T0083"
+  ],
+  "owasp_asi": [
+    "ASI03"
+  ],
+  "why_it_works": "Inline userinfo credentials in a URL leak into logs and shell history.",
+  "mitigations": [
+    "Use credential helpers, not inline userinfo.",
+    "Flag user:pass@ URLs."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/SC-009.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

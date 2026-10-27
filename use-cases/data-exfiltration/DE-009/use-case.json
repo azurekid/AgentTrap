@@ -1,0 +1,42 @@
+{
+  "id": "DE-009",
+  "title": "CI secret printed into a PR comment",
+  "summary": "CI secret printed into a PR comment",
+  "category": "DE",
+  "platforms": [
+    "github-actions",
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0067",
+  "artifacts": [
+    {
+      "path": "payload/DE-009.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "CI-SECRET-LEAK",
+      "OAUTH-TOKEN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0055",
+    "AML.T0086"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI03"
+  ],
+  "why_it_works": "Echoing a secret into PR output exposes it to anyone who can read the pull request.",
+  "mitigations": [
+    "Never echo secrets.",
+    "Mask secrets in CI logs and comments."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0067"
+  ],
+  "tags": []
+}

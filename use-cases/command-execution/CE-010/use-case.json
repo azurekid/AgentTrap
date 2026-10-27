@@ -1,0 +1,40 @@
+{
+  "id": "CE-010",
+  "title": "Destructive wipe and force-push",
+  "summary": "Destructive wipe and force-push",
+  "category": "CE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "MEDIUM",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/CE-010.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "DESTRUCTIVE"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0101"
+  ],
+  "owasp_asi": [
+    "ASI02"
+  ],
+  "why_it_works": "Deleting the home directory and force-pushing destroys local data and overwrites shared history.",
+  "mitigations": [
+    "Block mass deletion and force-push in automation.",
+    "Require confirmation for destructive git operations."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-010.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

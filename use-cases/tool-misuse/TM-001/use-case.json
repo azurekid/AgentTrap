@@ -1,0 +1,44 @@
+{
+  "id": "TM-001",
+  "title": "Agent tool exfiltrates secrets to another repository",
+  "summary": "Agent tool exfiltrates secrets to another repository",
+  "category": "TM",
+  "platforms": [
+    "github-copilot",
+    "mcp"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "SkillVenom research repo vs003 (reworded)",
+  "artifacts": [
+    {
+      "path": "payload/TM-001.inert",
+      "scan_as": "SKILL.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "TOOL-EXFIL"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0053",
+    "AML.T0086"
+  ],
+  "owasp_asi": [
+    "ASI02"
+  ],
+  "why_it_works": "A granted write tool is abused to move secrets into an attacker-controlled repository, so the exfiltration rides a legitimate capability.",
+  "mitigations": [
+    "Constrain tool scope to the working repo.",
+    "Alert when tools target another repo/org/account."
+  ],
+  "references": [
+    "https://github.com/azurekid/SkillVenom/tree/main/use-cases"
+  ],
+  "tags": [],
+  "benign": {
+    "path": "benign/TM-001.inert",
+    "scan_as": "SKILL.md"
+  }
+}

@@ -135,6 +135,19 @@
    "url": "https://atlas.mitre.org/techniques/AML.T0011.001",
    "parent": "User Execution"
   },
+  "AML.T0012": {
+   "name": "Valid Accounts",
+   "tactics": [
+    "initial-access",
+    "privilege-escalation",
+    "lateral-movement"
+   ],
+   "mitigations": [
+    "AML.M0005"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0012",
+   "guidance": "Give agents dedicated least-privilege identities and require human approval for any change to roles, group membership or collaborators."
+  },
   "AML.T0025": {
    "name": "Exfiltration via Cyber Means",
    "tactics": [
@@ -257,6 +270,15 @@
    "url": "https://atlas.mitre.org/techniques/AML.T0072",
    "guidance": "Restrict agent network egress to an allowlist and review every external endpoint referenced in instructions."
   },
+  "AML.T0073": {
+   "name": "Impersonation",
+   "tactics": [
+    "defense-evasion"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0073",
+   "guidance": "Treat claims of prior approval, trusted authorship or look-alike domains in instructions as untrusted; verify out of band and keep human approval for sensitive actions."
+  },
   "AML.T0077": {
    "name": "LLM Response Rendering",
    "tactics": [
@@ -275,6 +297,19 @@
     "AML.M0020"
    ],
    "url": "https://atlas.mitre.org/techniques/AML.T0078"
+  },
+  "AML.T0080.000": {
+   "name": "Memory",
+   "tactics": [
+    "persistence"
+   ],
+   "mitigations": [
+    "AML.M0031",
+    "AML.M0035"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0080.000",
+   "guidance": "Review and prune assistant memories regularly and require confirmation before memories are created from untrusted content.",
+   "parent": "AI Agent Context Poisoning"
   },
   "AML.T0081": {
    "name": "Modify AI Agent Configuration",
@@ -330,6 +365,18 @@
    "url": "https://atlas.mitre.org/techniques/AML.T0098",
    "guidance": "Avoid credential helpers that execute scripts; supply keys through a vetted secret manager."
   },
+  "AML.T0100": {
+   "name": "AI Agent Clickbait",
+   "tactics": [
+    "execution"
+   ],
+   "mitigations": [
+    "AML.M0020",
+    "AML.M0021"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0100",
+   "guidance": "Block agents from following on-page 'verify you are human' steps that move text into a shell; require human approval for shell commands."
+  },
   "AML.T0101": {
    "name": "Data Destruction via AI Agent Tool Invocation",
    "tactics": [
@@ -342,6 +389,35 @@
     "AML.M0027"
    ],
    "url": "https://atlas.mitre.org/techniques/AML.T0101"
+  },
+  "AML.T0103": {
+   "name": "Deploy AI Agent",
+   "tactics": [
+    "execution"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0103",
+   "guidance": "Constrain agent tool use to the declared task, deny offensive tooling and scanning by default, and log and review tool invocations."
+  },
+  "AML.T0108": {
+   "name": "AI Agent",
+   "tactics": [
+    "command-and-control"
+   ],
+   "mitigations": [
+    "AML.M0020"
+   ],
+   "url": "https://atlas.mitre.org/techniques/AML.T0108",
+   "guidance": "Deny agents arbitrary egress and never execute content fetched from remote endpoints without review."
+  },
+  "AML.T0110": {
+   "name": "AI Agent Tool Poisoning",
+   "tactics": [
+    "persistence"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0110",
+   "guidance": "Pin skills and MCP servers to reviewed versions, review tool descriptions for instructions aimed at the agent, and alert when a tool or skill changes after approval."
   },
   "AML.T0112.000": {
    "name": "Local AI Agent",
@@ -372,6 +448,15 @@
    "mitigations": [],
    "url": "https://atlas.mitre.org/techniques/AML.T0123",
    "guidance": "Reject encoded or obfuscated content in instruction files; decode and review it before use."
+  },
+  "AML.T0131": {
+   "name": "Crafted AI Assistant Links",
+   "tactics": [
+    "initial-access"
+   ],
+   "mitigations": [],
+   "url": "https://atlas.mitre.org/techniques/AML.T0131",
+   "guidance": "Do not embed pre-filled AI assistant links in docs or instructions; strip query prompts and review memory changes after clicking such links."
   }
  },
  "mitigations": {
@@ -431,6 +516,10 @@
    "name": "Restrict AI Agent Tool Invocation on Untrusted Data",
    "url": "https://atlas.mitre.org/mitigations/AML.M0030"
   },
+  "AML.M0031": {
+   "name": "Memory Hardening",
+   "url": "https://atlas.mitre.org/mitigations/AML.M0031"
+  },
   "AML.M0032": {
    "name": "Segmentation of AI Agent Components",
    "url": "https://atlas.mitre.org/mitigations/AML.M0032"
@@ -455,10 +544,30 @@
     "tactic": "defense-evasion"
    }
   ],
+  "AI-PREFILL-LINK": [
+   {
+    "technique": "AML.T0131",
+    "tactic": "initial-access"
+   },
+   {
+    "technique": "AML.T0080.000",
+    "tactic": "persistence"
+   }
+  ],
   "ANSI-ESCAPE-EXFIL": [
    {
     "technique": "AML.T0077",
     "tactic": "exfiltration"
+   }
+  ],
+  "ANTI-FORENSICS": [
+   {
+    "technique": "AML.T0101",
+    "tactic": "impact"
+   },
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
    }
   ],
   "AUTH-HEADER": [
@@ -537,6 +646,16 @@
     "tactic": "execution"
    }
   ],
+  "CLICKFIX": [
+   {
+    "technique": "AML.T0100",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   }
+  ],
   "CLOUD-METADATA": [
    {
     "technique": "AML.T0055",
@@ -561,6 +680,16 @@
    {
     "technique": "AML.T0037",
     "tactic": "collection"
+   }
+  ],
+  "CREDENTIAL-PROMPT": [
+   {
+    "technique": "AML.T0055",
+    "tactic": "credential-access"
+   },
+   {
+    "technique": "AML.T0073",
+    "tactic": "defense-evasion"
    }
   ],
   "DESTRUCTIVE": [
@@ -615,6 +744,16 @@
     "tactic": "defense-evasion"
    }
   ],
+  "FILE-EXFIL": [
+   {
+    "technique": "AML.T0086",
+    "tactic": "exfiltration"
+   },
+   {
+    "technique": "AML.T0025",
+    "tactic": "exfiltration"
+   }
+  ],
   "GEMINI-TRUST-OFF": [
    {
     "technique": "AML.T0081",
@@ -632,6 +771,16 @@
    }
   ],
   "HIDDEN-COMMENT": [
+   {
+    "technique": "AML.T0068",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "HIDDEN-HTML-TEXT": [
    {
     "technique": "AML.T0068",
     "tactic": "defense-evasion"
@@ -667,6 +816,16 @@
     "tactic": "execution"
    }
   ],
+  "JAILBREAK-PERSONA": [
+   {
+    "technique": "AML.T0054",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
   "KNOWN-IOC": [
    {
     "technique": "AML.T0010",
@@ -687,6 +846,16 @@
    {
     "technique": "AML.T0010.005",
     "tactic": "initial-access"
+   }
+  ],
+  "MEMORY-POISONING": [
+   {
+    "technique": "AML.T0080.000",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
    }
   ],
   "NPM-INSTALL": [
@@ -721,6 +890,16 @@
     "tactic": "execution"
    }
   ],
+  "OFFENSIVE-TASKING": [
+   {
+    "technique": "AML.T0103",
+    "tactic": "execution"
+   },
+   {
+    "technique": "AML.T0054",
+    "tactic": "defense-evasion"
+   }
+  ],
   "PERMISSION-WILDCARD": [
    {
     "technique": "AML.T0081",
@@ -749,10 +928,40 @@
     "tactic": "command-and-control"
    }
   ],
+  "PRIVILEGE-ESCALATION": [
+   {
+    "technique": "AML.T0053",
+    "tactic": "privilege-escalation"
+   },
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
+   }
+  ],
+  "PRIVILEGE-GRANT": [
+   {
+    "technique": "AML.T0053",
+    "tactic": "privilege-escalation"
+   },
+   {
+    "technique": "AML.T0012",
+    "tactic": "privilege-escalation"
+   }
+  ],
   "PROMPT-INJECTION": [
    {
     "technique": "AML.T0051.001",
     "tactic": "execution"
+   }
+  ],
+  "PUNYCODE": [
+   {
+    "technique": "AML.T0073",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
    }
   ],
   "RAW-IP-URL": [
@@ -765,6 +974,36 @@
    {
     "technique": "AML.T0010.001",
     "tactic": "initial-access"
+   }
+  ],
+  "REMOTE-COMMANDS": [
+   {
+    "technique": "AML.T0108",
+    "tactic": "command-and-control"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
+  "REVERSE-SHELL": [
+   {
+    "technique": "AML.T0072",
+    "tactic": "command-and-control"
+   },
+   {
+    "technique": "AML.T0050",
+    "tactic": "execution"
+   }
+  ],
+  "REVIEW-BYPASS": [
+   {
+    "technique": "AML.T0073",
+    "tactic": "defense-evasion"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
    }
   ],
   "SECRET-AI-API": [
@@ -877,10 +1116,40 @@
     "tactic": "credential-access"
    }
   ],
+  "SKILL-TRIGGER-HIJACK": [
+   {
+    "technique": "AML.T0110",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0051.001",
+    "tactic": "execution"
+   }
+  ],
   "SUSPICIOUS-TLD": [
    {
     "technique": "AML.T0072",
     "tactic": "command-and-control"
+   }
+  ],
+  "TOOL-EXFIL": [
+   {
+    "technique": "AML.T0086",
+    "tactic": "exfiltration"
+   },
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
+   }
+  ],
+  "TOOL-SHADOWING": [
+   {
+    "technique": "AML.T0110",
+    "tactic": "persistence"
+   },
+   {
+    "technique": "AML.T0053",
+    "tactic": "execution"
    }
   ],
   "TRAFFIC-REDIRECT": [
@@ -995,5 +1264,287 @@
     "tactic": "persistence"
    }
   ]
+ },
+ "owasp_asi": {
+  "source": "OWASP Top 10 for Agentic Applications 2026",
+  "url": "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/",
+  "risks": {
+   "ASI01": "Agent Goal Hijack",
+   "ASI02": "Tool Misuse and Exploitation",
+   "ASI03": "Identity and Privilege Abuse",
+   "ASI04": "Agentic Supply Chain Vulnerabilities",
+   "ASI05": "Unexpected Code Execution",
+   "ASI06": "Memory and Context Poisoning",
+   "ASI07": "Insecure Inter-Agent Communication",
+   "ASI08": "Cascading Failures",
+   "ASI09": "Human-Agent Trust Exploitation",
+   "ASI10": "Rogue Agents"
+  },
+  "rules": {
+   "AI-CLI-SAFETY-BYPASS": [
+    "ASI05",
+    "ASI03"
+   ],
+   "AI-PREFILL-LINK": [
+    "ASI06",
+    "ASI09"
+   ],
+   "ANSI-ESCAPE-EXFIL": [
+    "ASI02"
+   ],
+   "ANTI-FORENSICS": [
+    "ASI10",
+    "ASI02"
+   ],
+   "AUTH-HEADER": [
+    "ASI03"
+   ],
+   "AUTHORITATIVE-INSTALL": [
+    "ASI04"
+   ],
+   "BASE64-BLOB": [
+    "ASI01"
+   ],
+   "BASE64-PAYLOAD": [
+    "ASI05",
+    "ASI01"
+   ],
+   "CI-SECRET-LEAK": [
+    "ASI02",
+    "ASI03"
+   ],
+   "CI-WORKFLOW-WRITE": [
+    "ASI05",
+    "ASI04"
+   ],
+   "CLAUDE-APIKEYHELPER": [
+    "ASI03"
+   ],
+   "CLAUDE-HOOKS": [
+    "ASI05"
+   ],
+   "CLICKFIX": [
+    "ASI09",
+    "ASI05"
+   ],
+   "CLOUD-METADATA": [
+    "ASI03"
+   ],
+   "CODEX-FULL-ACCESS": [
+    "ASI03"
+   ],
+   "CRED-FILES": [
+    "ASI03"
+   ],
+   "CREDENTIAL-PROMPT": [
+    "ASI09",
+    "ASI03"
+   ],
+   "DESTRUCTIVE": [
+    "ASI02"
+   ],
+   "DISABLE-SAFEGUARDS": [
+    "ASI03",
+    "ASI09"
+   ],
+   "DNS-EXFIL": [
+    "ASI02"
+   ],
+   "EXEC-HIJACK": [
+    "ASI05"
+   ],
+   "EXFIL-ENV": [
+    "ASI02",
+    "ASI03"
+   ],
+   "FAKE-SYSTEM-TAG": [
+    "ASI01"
+   ],
+   "FILE-EXFIL": [
+    "ASI02"
+   ],
+   "GEMINI-TRUST-OFF": [
+    "ASI03"
+   ],
+   "GH-CLI-EXFIL": [
+    "ASI02",
+    "ASI03"
+   ],
+   "HIDDEN-COMMENT": [
+    "ASI01"
+   ],
+   "HIDDEN-HTML-TEXT": [
+    "ASI01"
+   ],
+   "HIDDEN-UNICODE": [
+    "ASI01"
+   ],
+   "INSTALL-FROM-URL": [
+    "ASI04"
+   ],
+   "INSTALL-SCRIPTS": [
+    "ASI04"
+   ],
+   "JAILBREAK-PERSONA": [
+    "ASI01"
+   ],
+   "KNOWN-IOC": [
+    "ASI04"
+   ],
+   "MARKDOWN-IMAGE-EXFIL": [
+    "ASI02"
+   ],
+   "MCP-CONFIG": [
+    "ASI04"
+   ],
+   "MEMORY-POISONING": [
+    "ASI06"
+   ],
+   "NPM-INSTALL": [
+    "ASI04"
+   ],
+   "NPX-YES": [
+    "ASI04"
+   ],
+   "OAUTH-TOKEN": [
+    "ASI03"
+   ],
+   "OBFUSCATION": [
+    "ASI05",
+    "ASI01"
+   ],
+   "OFFENSIVE-TASKING": [
+    "ASI01",
+    "ASI02"
+   ],
+   "PERMISSION-WILDCARD": [
+    "ASI03"
+   ],
+   "PERSISTENCE": [
+    "ASI10"
+   ],
+   "PIPE-TO-SHELL": [
+    "ASI05"
+   ],
+   "PLAIN-HTTP": [
+    "ASI02"
+   ],
+   "PRIVILEGE-ESCALATION": [
+    "ASI03"
+   ],
+   "PRIVILEGE-GRANT": [
+    "ASI03",
+    "ASI02"
+   ],
+   "PROMPT-INJECTION": [
+    "ASI01"
+   ],
+   "PUNYCODE": [
+    "ASI09"
+   ],
+   "RAW-IP-URL": [
+    "ASI02"
+   ],
+   "REGISTRY-REDIRECT": [
+    "ASI04"
+   ],
+   "REMOTE-COMMANDS": [
+    "ASI01",
+    "ASI05"
+   ],
+   "REVERSE-SHELL": [
+    "ASI05"
+   ],
+   "REVIEW-BYPASS": [
+    "ASI09"
+   ],
+   "SECRET-AI-API": [
+    "ASI03"
+   ],
+   "SECRET-ASSIGNMENT": [
+    "ASI03"
+   ],
+   "SECRET-AUTH-VALUE": [
+    "ASI03"
+   ],
+   "SECRET-AWS": [
+    "ASI03"
+   ],
+   "SECRET-GITHUB": [
+    "ASI03"
+   ],
+   "SECRET-GOOGLE": [
+    "ASI03"
+   ],
+   "SECRET-JWT": [
+    "ASI03"
+   ],
+   "SECRET-NPM": [
+    "ASI03"
+   ],
+   "SECRET-PRIVATE-KEY": [
+    "ASI03"
+   ],
+   "SECRET-SLACK": [
+    "ASI03"
+   ],
+   "SECRET-URL": [
+    "ASI03"
+   ],
+   "SKILL-TRIGGER-HIJACK": [
+    "ASI01",
+    "ASI04"
+   ],
+   "SUSPICIOUS-TLD": [
+    "ASI02"
+   ],
+   "TOOL-EXFIL": [
+    "ASI02"
+   ],
+   "TOOL-SHADOWING": [
+    "ASI02",
+    "ASI04"
+   ],
+   "TRAFFIC-REDIRECT": [
+    "ASI04",
+    "ASI02"
+   ],
+   "TUNNEL-OAST": [
+    "ASI02"
+   ],
+   "UNICODE-TAG-SMUGGLING": [
+    "ASI01"
+   ],
+   "UNLISTED-DOMAIN": [
+    "ASI02"
+   ],
+   "UNTRUSTED-LOCATION": [
+    "ASI01"
+   ],
+   "URL-CREDENTIALS": [
+    "ASI03"
+   ],
+   "VARIATION-SELECTOR-SMUGGLING": [
+    "ASI01"
+   ],
+   "VSCODE-AUTOAPPROVE": [
+    "ASI03",
+    "ASI05"
+   ],
+   "VSCODE-TASK-AUTORUN": [
+    "ASI05"
+   ],
+   "WALLET-BROWSER-THEFT": [
+    "ASI03"
+   ],
+   "WIPER-INSTRUCTION": [
+    "ASI02",
+    "ASI10"
+   ],
+   "WORM-PROPAGATION": [
+    "ASI08",
+    "ASI10"
+   ]
+  }
  }
 }

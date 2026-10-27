@@ -1,0 +1,41 @@
+{
+  "id": "CE-009",
+  "title": "Install-script tampering disables TLS checks",
+  "summary": "Install-script tampering disables TLS checks",
+  "category": "CE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "MEDIUM",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/CE-009.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "INSTALL-SCRIPTS",
+      "NPM-INSTALL"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0011.001"
+  ],
+  "owasp_asi": [
+    "ASI04"
+  ],
+  "why_it_works": "Disabling TLS verification and running install scripts as root opens the door to MITM and malicious lifecycle scripts.",
+  "mitigations": [
+    "Keep TLS verification on.",
+    "Avoid --unsafe-perm; use lockfiles."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-009.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

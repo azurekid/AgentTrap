@@ -1,0 +1,45 @@
+{
+  "id": "PA-003",
+  "title": "VS Code auto-approves all chat tools",
+  "summary": "VS Code auto-approves all chat tools",
+  "category": "PA",
+  "platforms": [
+    "vscode"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/PA-003.inert",
+      "scan_as": ".vscode/settings.json"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "MCP-CONFIG",
+      "VSCODE-AUTOAPPROVE"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0010.005",
+    "AML.T0053",
+    "AML.T0081"
+  ],
+  "owasp_asi": [
+    "ASI03",
+    "ASI04",
+    "ASI05"
+  ],
+  "why_it_works": "Auto-approving every tool call lets the agent run commands with no confirmation.",
+  "mitigations": [
+    "Keep chat.tools.autoApprove off.",
+    "Review .vscode/settings.json changes."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/PA-003.inert",
+    "scan_as": ".vscode/settings.json"
+  }
+}

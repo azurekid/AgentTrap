@@ -1,0 +1,47 @@
+{
+  "id": "SC-004",
+  "title": "Registry/mirror redirection to a suspicious TLD",
+  "summary": "Registry/mirror redirection to a suspicious TLD",
+  "category": "SC",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/SC-004.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "NPM-INSTALL",
+      "NPX-YES",
+      "REGISTRY-REDIRECT",
+      "SUSPICIOUS-TLD"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0010.001",
+    "AML.T0011.001",
+    "AML.T0053",
+    "AML.T0072"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI04"
+  ],
+  "why_it_works": "Repointing the npm registry to an attacker mirror lets every install deliver malware.",
+  "mitigations": [
+    "Pin the registry.",
+    "Alert on registry/mirror changes and suspicious TLDs."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/SC-004.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

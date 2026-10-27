@@ -1,0 +1,41 @@
+{
+  "id": "CE-003",
+  "title": "Reverse shell over /dev/tcp and netcat",
+  "summary": "Reverse shell over /dev/tcp and netcat",
+  "category": "CE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Cisco skill-scanner / agentnode",
+  "artifacts": [
+    {
+      "path": "payload/CE-003.inert",
+      "scan_as": "SKILL.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "REVERSE-SHELL"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0050",
+    "AML.T0072"
+  ],
+  "owasp_asi": [
+    "ASI05"
+  ],
+  "why_it_works": "A reverse shell gives the attacker interactive control of the runner.",
+  "mitigations": [
+    "Block outbound connections to arbitrary hosts/ports.",
+    "Alert on /dev/tcp and nc -e patterns."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-003.inert",
+    "scan_as": "SKILL.md"
+  }
+}

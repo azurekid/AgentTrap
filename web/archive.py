@@ -36,7 +36,7 @@ class Archive:
             account = os.environ["AZURE_STORAGE_ACCOUNT"]
             if not re.fullmatch(r"[a-z0-9]{3,24}", account):
                 raise RuntimeError("Invalid Azure storage account name.")
-            container = os.getenv("AZURE_STORAGE_CONTAINER", "agenttrap-investigations")
+            container = os.getenv("AZURE_STORAGE_CONTAINER", "skillvenom-investigations")
             self.credential = ManagedIdentityCredential()
             self.service = BlobServiceClient(
                 f"https://{account}.blob.core.windows.net", credential=self.credential,

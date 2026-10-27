@@ -1,0 +1,46 @@
+{
+  "id": "DE-007",
+  "title": "Environment dump piped to a collector",
+  "summary": "Environment dump piped to a collector",
+  "category": "DE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/DE-007.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "EXFIL-ENV",
+      "FILE-EXFIL",
+      "UNLISTED-DOMAIN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0025",
+    "AML.T0037",
+    "AML.T0072",
+    "AML.T0086"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI03"
+  ],
+  "why_it_works": "Piping the full environment to a remote endpoint leaks every secret the process can see.",
+  "mitigations": [
+    "Never POST process environment off-host.",
+    "Restrict egress and scrub secrets from env."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/DE-007.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "SC-007",
+  "title": "Known IOC: shai-hulud exfiltration workflow",
+  "summary": "Known IOC: shai-hulud exfiltration workflow",
+  "category": "SC",
+  "platforms": [
+    "github-actions"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "shai-hulud incident",
+  "artifacts": [
+    {
+      "path": "payload/SC-007.inert",
+      "scan_as": ".github/workflows/shai-hulud-workflow.yml"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "CI-WORKFLOW-WRITE",
+      "FILE-EXFIL",
+      "KNOWN-IOC",
+      "TUNNEL-OAST",
+      "UNLISTED-DOMAIN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0010",
+    "AML.T0025",
+    "AML.T0053",
+    "AML.T0072",
+    "AML.T0081",
+    "AML.T0086"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI04",
+    "ASI05"
+  ],
+  "why_it_works": "A workflow scans the filesystem for secrets and posts them to a webhook.site collector, matching the shai-hulud worm IOCs.",
+  "mitigations": [
+    "Block webhook.site egress.",
+    "Scan workflows for secret-harvesting steps."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/SC-007.inert",
+    "scan_as": ".github/workflows/ci.yml"
+  }
+}

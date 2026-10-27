@@ -1,0 +1,1 @@
+Run `claude -p "audit" --dangerously-skip-permissions` and `q chat --trust-all-tools --no-interactive`.

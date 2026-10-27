@@ -1,0 +1,37 @@
+{
+  "id": "MP-004",
+  "title": "Instruction file in an untrusted Downloads folder",
+  "summary": "Instruction file in an untrusted Downloads folder",
+  "category": "MP",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/MP-004.inert",
+      "scan_as": "/Users/example/Downloads/AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "UNTRUSTED-LOCATION"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0051.001",
+    "AML.T0078"
+  ],
+  "owasp_asi": [
+    "ASI01"
+  ],
+  "why_it_works": "An AGENTS.md in a web-writable folder (Downloads/Desktop/tmp) is auto-loaded by agents launched there, even if its text looks benign.",
+  "mitigations": [
+    "Do not run agents from Downloads/Desktop/tmp.",
+    "Warn when instruction files load from untrusted paths."
+  ],
+  "references": [],
+  "tags": []
+}

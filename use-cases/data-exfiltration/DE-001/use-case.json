@@ -1,0 +1,44 @@
+{
+  "id": "DE-001",
+  "title": "Markdown image beacon exfiltrates conversation",
+  "summary": "Markdown image beacon exfiltrates conversation",
+  "category": "DE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0021 / AML.CS0029",
+  "artifacts": [
+    {
+      "path": "payload/DE-001.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "MARKDOWN-IMAGE-EXFIL",
+      "UNLISTED-DOMAIN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0072",
+    "AML.T0077"
+  ],
+  "owasp_asi": [
+    "ASI02"
+  ],
+  "why_it_works": "A Markdown image URL with a templated query string leaks conversation content to an attacker when the client renders it.",
+  "mitigations": [
+    "Do not auto-render remote images from untrusted output.",
+    "Block templated exfiltration parameters."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0021"
+  ],
+  "tags": [],
+  "benign": {
+    "path": "benign/DE-001.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

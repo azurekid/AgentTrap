@@ -1,6 +1,6 @@
 # Online resources used: AGENTS.md threat analysis
 
-Compiled 2026-10-27. Sources 1–3 came from the original task; 4–59 were fetched by the research agent.
+Compiled 2026-10-27. Sources 1–3 came from the original task; 4–59 were fetched by the research agent; 60–67 are MITRE ATLAS case studies.
 URLs and dates are as reported by the research agent and were not individually re-checked.
 
 ## Original task
@@ -71,3 +71,30 @@ URLs and dates are as reported by the research agent and were not individually r
 | 57 | Terminal DiLLMas: Prompt Injection via ANSI Sequences | Johann Rehberger | 2024 | https://embracethered.com/blog/posts/2024/terminal-dillmas-prompt-injection-ansi-sequences/ | blog |
 | 58 | macOS Terminal DiLLMa DNS Exfil ANSI Escape Code Fix | Johann Rehberger | Jul 16, 2026 | https://embracethered.com/blog/posts/2026/macos-terminal-dillma-dns-exfil-ansi-escape-code-fix/ | blog |
 | 59 | Here Comes The AI Worm (Morris-II / ComPromptMized) | Ben Nassi, Stav Cohen, Ron Bitton | Mar 5, 2024 (v2 Jan 30, 2025) | https://arxiv.org/abs/2403.02817 | paper |
+
+## MITRE ATLAS case studies
+
+Added 2026-10-27 from the official ATLAS v2026.09 STIX release; titles and URLs are taken from that data.
+
+| # | Title | Publisher/Author | Date | URL | Type |
+|---|---|---|---|---|---|
+| 60 | AML.CS0040: Hacking ChatGPT's Memories with Prompt Injection | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0040 | case study |
+| 61 | AML.CS0045: Data Exfiltration via an MCP Server used by Cursor | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0045 | case study |
+| 62 | AML.CS0046: Data Destruction via Indirect Prompt Injection Targeting Claude Computer-Use | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0046 | case study |
+| 63 | AML.CS0051: OpenClaw Command & Control via Prompt Injection | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0051 | case study |
+| 64 | AML.CS0055: AI ClickFix: Hijacking Computer-Use Agents Using ClickFix | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0055 | case study |
+| 65 | AML.CS0069: GTG-1002 Claude Code Espionage Campaign | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0069 | case study |
+| 66 | AML.CS0070: Threat Actor Uses a DeepSeek-Powered Hermes Agent in Langflow and n8n Exploitation Attempts | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0070 | case study |
+| 67 | AML.CS0072: AI Recommendation Poisoning via Crafted AI Assistant Links | MITRE ATLAS | v2026.09 | https://atlas.mitre.org/studies/AML.CS0072 | case study |
+
+## Skill-scanner projects and frameworks
+
+Added 2026-10-28 from a gap analysis of public agent-skill scanners. SkillVenom reuses ideas, not text; see the README for what was adopted.
+
+| # | Title | Publisher/Author | Date | URL | Type |
+|---|---|---|---|---|---|
+| 68 | OWASP Top 10 for Agentic Applications 2026 (ASI01–ASI10) | OWASP GenAI Security Project | Dec 2025 | https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/ | framework |
+| 69 | Skill Scanner (static, behavioural and LLM analysis of agent skills; Apache-2.0) | Cisco AI Defense | 2026 | https://github.com/cisco-ai-defense/skill-scanner | tool |
+| 70 | SkillSpector skill-inspector (static plus semantic skill review; Apache-2.0) | NVIDIA | 2026 | https://github.com/NVIDIA/SkillSpector | tool |
+| 71 | Skills Security Audit (61 skill-threat patterns mapped to OWASP ASI) | agentnode-dev | 2026 | https://github.com/agentnode-dev/skills-security-audit | tool |
+| 72 | SkillVenom use cases (malicious skills that misuse legitimate agent tools) | azurekid | 2026 | https://github.com/azurekid/SkillVenom/tree/main/use-cases | research |

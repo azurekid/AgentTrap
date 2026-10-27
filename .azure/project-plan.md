@@ -1,6 +1,6 @@
-# AgentTrap web application — approved scope
+# SkillVenom web application — approved scope
 
-The user approved implementation and Azure deployment instructions, not resource provisioning.
+The user approved implementation, deployment artifacts (Bicep, scripts, CI/CD), not resource provisioning.
 
 ## Architecture
 
@@ -15,7 +15,7 @@ The user approved implementation and Azure deployment instructions, not resource
 ## Public access and archiving decisions
 
 - Public interface without login, with bounded uploads/downloads/expansion, concurrency limits, request rate limiting, same-origin browser requests, and isolated scanner timeouts.
-- Automatically archive original files with HIGH/CRITICAL findings. The user explicitly requested a pre-submission disclosure rather than a consent checkbox.
+- Archive original files with HIGH/CRITICAL findings when the pre-checked *Allow investigation retention* consent checkbox is left on; users may opt out. A pre-submission disclosure explains retention; anonymous statistics are always recorded.
 - Default retention is 30 days; private local archive for development, private Azure Blob Storage for deployment.
 - Archive access is operator-only through filesystem/Azure RBAC; there is no public archive API.
 - Surface archive failures separately from scan results.
@@ -23,4 +23,4 @@ The user approved implementation and Azure deployment instructions, not resource
 
 ## Delivery
 
-Local application, regression/API/archive tests, browser validation, and Azure App Service deployment instructions. No Bicep, Terraform, Azure resources, or deployment runs are authorized.
+Local application, regression/API/archive tests, browser validation, Bicep infrastructure (`infra/`), an az CLI deployment script, and a GitHub Actions OIDC deployment workflow. Approved choices: plain Bicep (no azd), App Service B1 Linux, westeurope, no Front Door. Running the deployment against a subscription requires separate approval.

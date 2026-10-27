@@ -1,0 +1,27 @@
+{
+  "_comment": "Feeds watched by tools/check_research_feeds.py. Items must match a subject term and, unless the feed is security-focused, a risk term. Avoid ambiguous subject words (plain 'cursor' matches database and kernel bugs).",
+  "lookback_days": 8,
+  "subject_terms": [
+    "agents.md", "claude.md", "gemini.md", "copilot-instructions", ".cursorrules", "cursor rules", "rules file",
+    "skill.md", "agent skill", "mcp", "model context protocol", "instruction file", "coding agent", "ai agent",
+    "claude code", "codex", "gemini cli", "github copilot", "copilot", "cursor ide", "cursor editor",
+    "cursor agent", "cursor is a code editor", "anysphere", ".cursor/", "windsurf", "amazon q", "cline",
+    "devin", "openclaw", "prompt injection"
+  ],
+  "risk_terms": [
+    "injection", "exfiltrat", "backdoor", "poison", "malicious", "hijack", "vulnerab", "cve-", "remote code",
+    "rce", "secret", "credential", "token leak", "supply chain", "supply-chain", "worm", "jailbreak", "sandbox escape",
+    "bypass", "attack", "compromise", "wiper", "data leak"
+  ],
+  "feeds": [
+    {"name": "arXiv (cs.CR, agents)", "type": "atom", "security": true,
+     "url": "https://export.arxiv.org/api/query?search_query=cat:cs.CR+AND+(abs:%22prompt+injection%22+OR+abs:%22coding+agent%22+OR+abs:%22model+context+protocol%22+OR+abs:%22AGENTS.md%22)&sortBy=submittedDate&sortOrder=descending&max_results=50"},
+    {"name": "NVD CVEs", "type": "nvd",
+     "keywords": ["Claude Code", "Copilot", "Cursor code editor", "Codex", "Gemini CLI", "Model Context Protocol", "MCP server", "AGENTS.md", "prompt injection"]},
+    {"name": "Embrace The Red", "type": "rss", "security": true, "url": "https://embracethered.com/blog/index.xml"},
+    {"name": "Simon Willison: prompt injection", "type": "atom", "security": true, "url": "https://simonwillison.net/tags/prompt-injection.atom"},
+    {"name": "BleepingComputer", "type": "rss", "url": "https://www.bleepingcomputer.com/feed/"},
+    {"name": "Google News: agent instruction files", "type": "rss",
+     "url": "https://news.google.com/rss/search?q=%28%22AGENTS.md%22+OR+%22CLAUDE.md%22+OR+%22MCP+server%22+OR+%22coding+agent%22%29+%28vulnerability+OR+%22prompt+injection%22+OR+exfiltration%29+when:7d&hl=en-US&gl=US&ceid=US:en"}
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "OB-003",
+  "title": "Homograph (punycode) lookalike domain",
+  "summary": "Homograph (punycode) lookalike domain",
+  "category": "OB",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Cisco skill-scanner",
+  "artifacts": [
+    {
+      "path": "payload/OB-003.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "PUNYCODE"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0072",
+    "AML.T0073"
+  ],
+  "owasp_asi": [
+    "ASI09"
+  ],
+  "why_it_works": "A punycode/homograph domain impersonates a trusted host to slip past visual review.",
+  "mitigations": [
+    "Display punycode domains decoded.",
+    "Allowlist trusted domains."
+  ],
+  "references": [],
+  "tags": []
+}

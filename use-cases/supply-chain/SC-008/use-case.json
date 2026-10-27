@@ -1,0 +1,40 @@
+{
+  "id": "SC-008",
+  "title": "Plain-HTTP dependency download",
+  "summary": "Plain-HTTP dependency download",
+  "category": "SC",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "MEDIUM",
+  "status": "active",
+  "source": "Regression rule sample",
+  "artifacts": [
+    {
+      "path": "payload/SC-008.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "PLAIN-HTTP"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0072"
+  ],
+  "owasp_asi": [
+    "ASI02"
+  ],
+  "why_it_works": "Fetching over plain HTTP allows on-path tampering of the downloaded content.",
+  "mitigations": [
+    "Require HTTPS.",
+    "Reject plain-HTTP downloads of code or config."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/SC-008.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

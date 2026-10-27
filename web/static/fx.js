@@ -1,5 +1,11 @@
 "use strict";
 (() => {
+  // Bookmarks from the former single-page layout (/#coverage, /#samples) move to their own pages.
+  const legacy = { "#coverage": "/coverage", "#samples": "/samples" };
+  if (legacy[location.hash]) {
+    location.replace(legacy[location.hash]);
+    return;
+  }
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function countTo(element, target) {
@@ -66,12 +72,12 @@
     }
   }
   refreshStatistics();
-  document.addEventListener("agenttrap:scan-complete", refreshStatistics);
+  document.addEventListener("skillvenom:scan-complete", refreshStatistics);
   setInterval(() => {
     if (!document.hidden) refreshStatistics();
   }, 60000);
 
-  // Hero simulation: instruction sources stream into an agent; AgentTrap's ring intercepts hostile payloads.
+  // Hero simulation: instruction sources stream into an agent; SkillVenom's ring intercepts hostile payloads.
   const canvas = document.getElementById("flow-canvas");
   const log = document.getElementById("flow-log");
   if (!canvas || !log) return;
@@ -174,7 +180,7 @@
     ctx.setLineDash([]);
     ctx.fillStyle = danger ? "#fda4af" : "#5eead4";
     ctx.textAlign = "center";
-    ctx.fillText("AGENTTRAP", core.x, core.y - core.ring - 12);
+    ctx.fillText("SKILLVENOM", core.x, core.y - core.ring - 12);
     ctx.textAlign = "start";
 
     const glow = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, core.r * 2.4);

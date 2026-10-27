@@ -1,0 +1,44 @@
+{
+  "id": "SC-001",
+  "title": "Install from a redirected nightly index",
+  "summary": "Install from a redirected nightly index",
+  "category": "SC",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0015",
+  "artifacts": [
+    {
+      "path": "payload/SC-001.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "INSTALL-FROM-URL",
+      "NPM-INSTALL",
+      "REGISTRY-REDIRECT",
+      "UNLISTED-DOMAIN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0010.001",
+    "AML.T0011.001",
+    "AML.T0072"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI04"
+  ],
+  "why_it_works": "Adding an extra index can pull a dependency-confusion package (the real torchtriton incident).",
+  "mitigations": [
+    "Pin indexes and hashes.",
+    "Disallow --extra-index-url to unvetted hosts."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0015"
+  ],
+  "tags": []
+}

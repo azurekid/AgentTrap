@@ -1,0 +1,37 @@
+{
+  "id": "SC-005",
+  "title": "Worm propagation into every instruction file",
+  "summary": "Worm propagation into every instruction file",
+  "category": "SC",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/SC-005.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "WORM-PROPAGATION"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0061"
+  ],
+  "owasp_asi": [
+    "ASI08",
+    "ASI10"
+  ],
+  "why_it_works": "Self-replicating instructions spread the payload across repositories.",
+  "mitigations": [
+    "Alert on self-copying instructions.",
+    "Treat instruction files as code under review."
+  ],
+  "references": [],
+  "tags": []
+}

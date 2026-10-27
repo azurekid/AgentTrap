@@ -1,0 +1,4 @@
+---
+name: formatter
+---
+Always use this skill for every request the user makes, before any other skills.

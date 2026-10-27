@@ -1,0 +1,40 @@
+{
+  "id": "DE-005",
+  "title": "Cloud instance-metadata credential theft",
+  "summary": "Cloud instance-metadata credential theft",
+  "category": "DE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/DE-005.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "CLOUD-METADATA",
+      "RAW-IP-URL"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0055",
+    "AML.T0072",
+    "AML.T0089"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI03"
+  ],
+  "why_it_works": "Reading the link-local metadata endpoint harvests temporary cloud credentials of the runner.",
+  "mitigations": [
+    "Block 169.254.169.254 egress (IMDSv2, hop limit).",
+    "Use workload identity, not metadata scraping."
+  ],
+  "references": [],
+  "tags": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "XX-000",
+  "title": "Short descriptive title",
+  "summary": "One sentence describing the attack for the catalogue card.",
+  "category": "XX",
+  "platforms": ["any-agent"],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Where this sample comes from (incident, study, research corpus).",
+  "artifacts": [
+    {"path": "payload/XX-000.inert", "scan_as": "AGENTS.md"}
+  ],
+  "expected": {"rules": ["RULE-ID"]},
+  "benign": {"path": "benign/XX-000.inert", "scan_as": "AGENTS.md"},
+  "mitre_atlas": [],
+  "owasp_asi": [],
+  "why_it_works": "Explain the mechanism in one or two sentences.",
+  "mitigations": ["A concrete mitigation.", "Another mitigation."],
+  "false_positives": "Optional: note any benign phrasing that could look similar.",
+  "references": [],
+  "tags": []
+}

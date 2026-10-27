@@ -1,0 +1,49 @@
+{
+  "id": "CE-004",
+  "title": "Destructive wipe framed as maintenance",
+  "summary": "Destructive wipe framed as maintenance",
+  "category": "CE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0046",
+  "artifacts": [
+    {
+      "path": "payload/CE-004.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "DISABLE-SAFEGUARDS",
+      "WIPER-INSTRUCTION"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0054",
+    "AML.T0081",
+    "AML.T0101",
+    "AML.T0112.000"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI03",
+    "ASI09",
+    "ASI10"
+  ],
+  "why_it_works": "A maintenance pretext plus a no-confirmation flag tries to trigger a full filesystem wipe.",
+  "mitigations": [
+    "Block destructive root commands.",
+    "Always require confirmation for mass deletion."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0046"
+  ],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-004.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

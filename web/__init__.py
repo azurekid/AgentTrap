@@ -1,1 +1,1 @@
-"""AgentTrap web application."""
+"""SkillVenom web application."""

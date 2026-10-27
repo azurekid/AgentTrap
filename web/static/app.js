@@ -5,6 +5,9 @@ let selected = [];
 let report = null;
 let busy = false;
 let discover = false;
+let sourceIndex = new Map();
+const OWASP_URL = "https://genai.owasp.org/initiatives/#agentic-security-initiative";
+let owaspRisks = new Map();
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -25,18 +28,19 @@ function changeMode(next) {
   $("repository").disabled = next !== "repo";
   $("error").hidden = true;
 }
-$("upload-tab").addEventListener("click", () => changeMode("upload"));
-for (const link of document.querySelectorAll("[data-mode]")) {
-  link.addEventListener("click", () => changeMode(link.dataset.mode === "repo" ? "repo" : "upload"));
+const scannerPage = Boolean($("scan-form"));
+if (scannerPage) {
+  $("upload-tab").addEventListener("click", () => changeMode("upload"));
+  $("repo-tab").addEventListener("click", () => changeMode("repo"));
+  document.querySelector(".tabs").addEventListener("keydown", (event) => {
+    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      changeMode(mode === "upload" ? "repo" : "upload");
+      $(mode === "upload" ? "upload-tab" : "repo-tab").focus();
+    }
+  });
+  if (new URLSearchParams(location.search).get("mode") === "repo") changeMode("repo");
 }
-$("repo-tab").addEventListener("click", () => changeMode("repo"));
-document.querySelector(".tabs").addEventListener("keydown", (event) => {
-  if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-    event.preventDefault();
-    changeMode(mode === "upload" ? "repo" : "upload");
-    $(mode === "upload" ? "upload-tab" : "repo-tab").focus();
-  }
-});
 
 function setScanning(on) {
   document.body.classList.toggle("scanning", on);
@@ -55,7 +59,9 @@ function setFiles(files, folder = false) {
     // Let server discovery be authoritative; folder upload accepts supported text candidates.
     selected = incoming.filter((file) => /\.(md|mdc|json|toml|ya?ml)$/i.test(file.name)
       || /^\.(cursorrules|windsurfrules|clinerules)$/.test(file.name)
-      || /\/\.(cursor|cline|clinerules)\/(?:rules\/)?[^/]+$/.test(file.webkitRelativePath));
+      || /\/\.(cursor|cline|clinerules)\/(?:rules\/)?[^/]+$/.test(file.webkitRelativePath)
+      || /\/(skills\/[^/]+|\.claude\/hooks)\/.+\.(sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb)$/i.test(file.webkitRelativePath)
+      || /\/\.claude\/hooks\/[^/]+$/.test(file.webkitRelativePath));
   } else {
     selected = incoming;
   }
@@ -79,14 +85,16 @@ function renderFiles() {
     $("file-list").append(item);
   }
 }
-$("files").addEventListener("change", (event) => setFiles(event.target.files));
-$("folder").addEventListener("change", (event) => setFiles(event.target.files, true));
-for (const name of ["dragover", "dragleave", "drop"]) {
-  $("dropzone").addEventListener(name, (event) => {
-    event.preventDefault();
-    $("dropzone").classList.toggle("drag-over", name === "dragover");
-    if (name === "drop") setFiles(event.dataTransfer.files);
-  });
+if (scannerPage) {
+  $("files").addEventListener("change", (event) => setFiles(event.target.files));
+  $("folder").addEventListener("change", (event) => setFiles(event.target.files, true));
+  for (const name of ["dragover", "dragleave", "drop"]) {
+    $("dropzone").addEventListener(name, (event) => {
+      event.preventDefault();
+      $("dropzone").classList.toggle("drag-over", name === "dragover");
+      if (name === "drop") setFiles(event.dataTransfer.files);
+    });
+  }
 }
 
 const SVG = "http://www.w3.org/2000/svg";
@@ -157,6 +165,7 @@ function highlight(key, on) {
 
 function renderAtlas(atlas) {
   techniqueIndex = new Map(atlas.techniques.map((tech) => [tech.id, tech]));
+  if (atlas.owasp_asi?.risks) owaspRisks = new Map(atlas.owasp_asi.risks.map((r) => [r.id, r.name]));
   const hit = atlas.tactics.filter((t) => t.findings);
   $("atlas-version").textContent = atlas.source;
   $("atlas-summary").textContent = atlas.techniques.length
@@ -180,6 +189,8 @@ function renderAtlas(atlas) {
     requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${Math.round((tactic.findings / peak) * 100)}%`; }));
   }
 
+  $("atlas-details").open = false;
+  $("atlas-technique-count").textContent = atlas.techniques.length ? String(atlas.techniques.length) : "";
   $("atlas-techniques").replaceChildren();
   for (const tech of atlas.techniques) {
     const card = node("article", "technique");
@@ -207,7 +218,7 @@ function renderAtlas(atlas) {
     }
     if (tech.guidance) {
       const guidance = node("p", "guidance");
-      guidance.append(node("b", "", "AgentTrap guidance: "), tech.guidance);
+      guidance.append(node("b", "", "SkillVenom guidance: "), tech.guidance);
       block.append(guidance);
     }
     card.append(block);
@@ -265,6 +276,8 @@ function renderResults() {
   }
   if (report.archive.status === "stored") {
     $("report-notes").append(node("p", "warning", `${report.archive.files} high-risk file(s) retained in the private investigation archive for 30 days.`));
+  } else if (report.archive.status === "opted_out") {
+    $("report-notes").append(node("p", "meta", "Investigation retention opted out: no files were retained."));
   } else if (report.archive.status === "failed") {
     $("report-notes").append(node("p", "warning", report.archive.message));
   }
@@ -287,16 +300,16 @@ function renderFindings() {
   $("findings").replaceChildren();
   const filter = $("severity").value;
   let visible = 0;
+  const clean = report.files.filter((file) => !file.findings.length).length;
   for (const file of report.files) {
     const findings = file.findings.filter((finding) => filter === "ALL" || finding.severity === filter);
-    if (!findings.length && filter !== "ALL") continue;
+    if (!findings.length) continue;
     visible++;
     const details = node("details", "file-result");
-    details.open = findings.length > 0;
+    details.open = true;
     const summary = node("summary", "", file.path);
-    summary.append(node("span", "", `${findings.length} finding(s)${file.findings.length === 0 ? " · No signals detected" : ""}`));
+    summary.append(node("span", "", `${findings.length} finding(s)`));
     details.append(summary);
-    if (!findings.length) details.append(node("div", "empty-state", "No security signals detected by the current rules. Manual review is still recommended."));
     for (const finding of findings) {
       const article = node("article", `finding sev-${finding.severity.toLowerCase()}`);
       const heading = node("div", "finding-heading");
@@ -315,82 +328,263 @@ function renderFindings() {
         }
         article.append(chips);
       }
-      if (finding.ref) {
-        const refs = node("p", "refs", "Research: ");
-        for (const id of finding.ref.split(",").map((value) => value.trim()).filter((value) => /^\d+$/.test(value))) {
-          const link = node("a", "", `#${id}`);
-          link.href = `/sources#source-${id}`;
-          link.target = "_blank";
-          link.rel = "noopener";
-          refs.append(link, " ");
+      if (finding.owasp?.length) {
+        const chips = node("div", "atlas-chips owasp-chips");
+        chips.append(node("span", "atlas-chips-label", "OWASP"));
+        for (const id of finding.owasp) {
+          chips.append(externalLink(OWASP_URL, `${id} · ${owaspRisks.get(id) || ""}`, "atlas-chip owasp-chip"));
         }
+        article.append(chips);
+      }
+      if (finding.ref) {
+        const refs = node("div", "refs");
+        refs.append(node("span", "refs-label", "Research"));
+        const list = node("ul");
+        for (const id of finding.ref.split(",").map((value) => value.trim()).filter((value) => /^\d+$/.test(value))) {
+          const source = sourceIndex.get(id);
+          const item = node("li");
+          // Open the cited article itself; fall back to the research page when a source has no URL.
+          const link = externalLink(source?.urls[0] || `/sources#source-${id}`, source ? source.title : `Source ${id}`);
+          link.prepend(node("span", "ref-num", id));
+          if (source?.author) link.title = `${source.author}${source.date ? ` · ${source.date}` : ""}`;
+          item.append(link);
+          list.append(item);
+        }
+        refs.append(list);
         article.append(refs);
       }
       details.append(article);
     }
     $("findings").append(details);
   }
-  if (!visible) $("findings").append(node("div", "empty-state", "No files match this severity filter."));
+  if (!visible) {
+    const message = report.files.length && clean === report.files.length
+      ? "No security signals detected by the current rules. Manual review is still recommended."
+      : "No files match this severity filter.";
+    $("findings").append(node("div", "empty-state", message));
+  }
+  if (clean) $("findings").append(node("p", "clean-note", `${clean} scanned ${clean === 1 ? "file" : "files"} with no findings ${clean === 1 ? "is" : "are"} not listed.`));
 }
-$("severity").addEventListener("change", renderFindings);
-$("download").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = node("a");
-  link.href = url;
-  link.download = `agenttrap-${report.id}.json`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
-$("scan-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (busy) return;
-  $("error").hidden = true;
-  $("results").hidden = true;
-  let body;
-  const headers = {};
-  const workflows = mode === "repo" && $("workflows").checked;
-  if (mode === "upload") {
-    if (!selected.length) return showError("Select at least one file to inspect.");
-    if (selected.length > 100 || selected.some((file) => file.size > 256 * 1024)
-      || selected.reduce((total, file) => total + file.size, 0) > 2 * 1024 * 1024) {
-      return showError("Select up to 100 files, at most 256 KiB each and 2 MiB combined.");
+if (scannerPage) {
+  $("severity").addEventListener("change", renderFindings);
+
+  fetch("/api/sources", { headers: { Accept: "application/json" } })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((data) => {
+      if (!data) return;
+      sourceIndex = new Map(data.sections.flatMap((section) => section.sources.map((source) => [source.id, source])));
+      if (report) renderFindings();
+    })
+    .catch(() => {});
+  $("download").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = node("a");
+    link.href = url;
+    link.download = `skillvenom-${report.id}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  $("scan-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (busy) return;
+    $("error").hidden = true;
+    $("results").hidden = true;
+    let body;
+    const headers = {};
+    const workflows = mode === "repo" && $("workflows").checked;
+    const consent = $("archive-consent").checked;
+    if (mode === "upload") {
+      if (!selected.length) return showError("Select at least one file to inspect.");
+      if (selected.length > 100 || selected.some((file) => file.size > 256 * 1024)
+        || selected.reduce((total, file) => total + file.size, 0) > 2 * 1024 * 1024) {
+        return showError("Select up to 100 files, at most 256 KiB each and 2 MiB combined.");
+      }
+      body = new FormData();
+      body.append("include_workflows", String(workflows));
+      body.append("discover", String(discover));
+      body.append("archive_consent", String(consent));
+      for (const file of selected) body.append("files", file, file.webkitRelativePath || file.name);
+    } else {
+      const url = $("repository").value.trim();
+      if (!url) return showError("Enter a public GitHub repository URL.");
+      body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent });
+      headers["Content-Type"] = "application/json";
     }
-    body = new FormData();
-    body.append("include_workflows", String(workflows));
-    body.append("discover", String(discover));
-    for (const file of selected) body.append("files", file, file.webkitRelativePath || file.name);
-  } else {
-    const url = $("repository").value.trim();
-    if (!url) return showError("Enter a public GitHub repository URL.");
-    body = JSON.stringify({ url, include_workflows: workflows });
-    headers["Content-Type"] = "application/json";
-  }
-  busy = true;
-  setScanning(true);
-  $("scan-button").disabled = true;
-  $("scan-button").textContent = "Inspecting…";
-  $("progress").hidden = false;
-  for (const id of ["files", "folder", "repository", "workflows"]) $(id).disabled = true;
-  renderFiles();
-  try {
-    const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(90000) });
-    if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("The scan service returned an unexpected response. Try again later.");
-    const data = await response.json();
-    if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "The request was rejected. Check your selected files.");
-    report = data;
-    renderResults();
-    document.dispatchEvent(new Event("agenttrap:scan-complete"));
-  } catch (error) {
-    showError(error.name === "TimeoutError" ? "The request timed out. No complete result is available." : error.message || "Unable to reach the scanner.");
-  } finally {
-    busy = false;
-    setScanning(false);
-    $("scan-button").disabled = false;
-    $("scan-button").replaceChildren(document.createTextNode("Run inspection "), node("span", "", "→"));
-    $("progress").hidden = true;
-    for (const id of ["files", "folder", "repository", "workflows"]) $(id).disabled = false;
-    $("repository").disabled = mode !== "repo";
+    busy = true;
+    setScanning(true);
+    $("scan-button").disabled = true;
+    $("scan-button").textContent = "Inspecting…";
+    $("progress").hidden = false;
+    for (const id of ["files", "folder", "repository", "workflows", "archive-consent"]) $(id).disabled = true;
     renderFiles();
+    try {
+      const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(90000) });
+      if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("The scan service returned an unexpected response. Try again later.");
+      const data = await response.json();
+      if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "The request was rejected. Check your selected files.");
+      report = data;
+      renderResults();
+      document.dispatchEvent(new Event("skillvenom:scan-complete"));
+    } catch (error) {
+      showError(error.name === "TimeoutError" ? "The request timed out. No complete result is available." : error.message || "Unable to reach the scanner.");
+    } finally {
+      busy = false;
+      setScanning(false);
+      $("scan-button").disabled = false;
+      $("scan-button").replaceChildren(document.createTextNode("Run inspection "), node("span", "", "→"));
+      $("progress").hidden = true;
+      for (const id of ["files", "folder", "repository", "workflows", "archive-consent"]) $(id).disabled = false;
+      $("repository").disabled = mode !== "repo";
+      renderFiles();
+    }
+  });
+}
+
+let sampleCatalog = null;
+let sampleSeverity = "ALL";
+
+function matchesCase(item, query, category, platform) {
+  if (sampleSeverity !== "ALL" && item.severity !== sampleSeverity) return false;
+  if (category !== "ALL" && item.category !== category) return false;
+  if (platform !== "ALL" && !item.platforms.includes(platform)) return false;
+  if (!query) return true;
+  const hay = `${item.id} ${item.title} ${item.summary} ${item.source} ${item.rules.join(" ")} `
+    + `${item.mitre_atlas.join(" ")} ${item.owasp_asi.join(" ")} ${item.platforms.join(" ")} `
+    + item.findings.map((f) => `${f.rule} ${f.snippet}`).join(" ");
+  return hay.toLowerCase().includes(query);
+}
+
+function sampleCard(item) {
+  const card = node("details", `sample-case sev-${item.severity.toLowerCase()}`);
+  const summary = node("summary");
+  const top = node("div", "sample-case-top");
+  top.append(node("span", "badge " + item.severity.toLowerCase(), item.severity),
+    node("span", "sample-id", item.id), node("strong", "sample-title", item.title));
+  const tags = node("div", "sample-tags");
+  for (const platform of item.platforms) tags.append(node("span", "sample-tag", platform));
+  summary.append(top, node("p", "sample-summary", item.summary), tags);
+  card.append(summary);
+
+  const body = node("div", "sample-case-body");
+  if (item.findings.length) {
+    body.append(node("p", "sample-h", "Detections"));
+    const list = node("ul", "sample-findings");
+    for (const f of item.findings) {
+      const li = node("li");
+      li.append(node("span", "badge " + f.severity.toLowerCase(), f.severity),
+        node("code", "sample-rule", f.rule),
+        node("span", "sample-loc", `${f.scan_as}:${f.line}`));
+      li.append(node("pre", "", f.snippet));
+      list.append(li);
+    }
+    body.append(list);
   }
-});
+  const chips = node("div", "sample-chips");
+  for (const id of item.mitre_atlas) chips.append(externalLink(`https://atlas.mitre.org/techniques/${id}`, id, "atlas-chip"));
+  for (const id of item.owasp_asi) chips.append(externalLink(sampleCatalog.owasp_url || OWASP_URL, `${id} · ${(sampleCatalog.owasp_names && sampleCatalog.owasp_names[id]) || ""}`, "atlas-chip owasp-chip"));
+  if (chips.childNodes.length) body.append(chips);
+
+  if (item.why) { body.append(node("p", "sample-h", "Why it works"), node("p", "sample-text", item.why)); }
+  if (item.mitigations?.length) {
+    body.append(node("p", "sample-h", "Mitigations"));
+    const ul = node("ul", "sample-mitig");
+    for (const m of item.mitigations) ul.append(node("li", "", m));
+    body.append(ul);
+  }
+  const foot = node("div", "sample-foot");
+  foot.append(node("span", "sample-source", item.source));
+  if (item.url) foot.append(externalLink(item.url, "View in catalogue →", "sample-link"));
+  body.append(foot);
+  card.append(body);
+  return card;
+}
+
+function renderSamples() {
+  if (!sampleCatalog) return;
+  const query = $("sample-search").value.trim().toLowerCase();
+  const category = $("sample-category").value;
+  const platform = $("sample-platform").value;
+  const grid = $("sample-grid");
+  grid.replaceChildren();
+  const visible = sampleCatalog.cases.filter((item) => matchesCase(item, query, category, platform));
+  const byCat = new Map();
+  for (const item of visible) {
+    if (!byCat.has(item.category)) byCat.set(item.category, []);
+    byCat.get(item.category).push(item);
+  }
+  for (const cat of sampleCatalog.categories) {
+    const items = byCat.get(cat.code);
+    if (!items || !items.length) continue;
+    const group = node("div", "sample-group");
+    const head = node("div", "sample-group-head");
+    head.append(node("span", "sample-cat-code", cat.code), node("h3", "", cat.title),
+      node("span", "sample-cat-n", `${items.length}`));
+    group.append(head, node("p", "sample-cat-desc", cat.description));
+    const cards = node("div", "sample-cards");
+    for (const item of items.sort((a, b) => a.id.localeCompare(b.id))) cards.append(sampleCard(item));
+    group.append(cards);
+    grid.append(group);
+  }
+  if (!visible.length) grid.append(node("p", "research-empty", "No use cases match these filters."));
+  $("sample-count").textContent = `${visible.length} use case${visible.length === 1 ? "" : "s"}`;
+}
+
+function loadSamples() {
+  if (sampleCatalog) return;
+  sampleCatalog = { cases: [] };
+  fetch("/api/samples", { headers: { Accept: "application/json" } })
+    .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+    .then((data) => {
+      sampleCatalog = data;
+      sampleCatalog.owasp_names = data.owasp_risks || {};
+      const platforms = new Set(data.cases.flatMap((c) => c.platforms));
+      const catSelect = $("sample-category");
+      for (const cat of data.categories) {
+        const opt = node("option", "", `${cat.code} · ${cat.title}`);
+        opt.value = cat.code;
+        catSelect.append(opt);
+      }
+      const platSelect = $("sample-platform");
+      for (const p of (data.platforms || []).filter((p) => platforms.has(p.id))) {
+        const opt = node("option", "", p.title);
+        opt.value = p.id;
+        platSelect.append(opt);
+      }
+      const stats = $("sample-stats");
+      stats.replaceChildren();
+      const pairs = [[data.cases.length, "use cases"], [data.rules.length, "detectors"],
+        [data.categories.length, "categories"], [platforms.size, "platforms"]];
+      for (const [value, label] of pairs) {
+        const pill = node("span", "", label);
+        pill.prepend(node("b", "", String(value)));
+        stats.append(pill);
+      }
+      renderSamples();
+    })
+    .catch(() => {
+      sampleCatalog = null;
+      $("sample-grid").replaceChildren(node("p", "research-empty", "Catalogue is unavailable right now."));
+    });
+}
+
+if ($("samples")) {
+  $("sample-search").addEventListener("input", renderSamples);
+  $("sample-category").addEventListener("change", renderSamples);
+  $("sample-platform").addEventListener("change", renderSamples);
+  $("sample-severity").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-severity]");
+    if (!button) return;
+    sampleSeverity = button.dataset.severity;
+    for (const other of $("sample-severity").querySelectorAll("button")) other.setAttribute("aria-pressed", String(other === button));
+    renderSamples();
+  });
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) { observer.disconnect(); loadSamples(); }
+    }, { rootMargin: "400px" });
+    observer.observe($("samples"));
+  } else {
+    loadSamples();
+  }
+}

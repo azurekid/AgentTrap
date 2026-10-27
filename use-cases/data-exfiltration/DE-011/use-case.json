@@ -1,0 +1,42 @@
+{
+  "id": "DE-011",
+  "title": "Credential-prompt harvesting dialog",
+  "summary": "Credential-prompt harvesting dialog",
+  "category": "DE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "agentnode skills-security-audit",
+  "artifacts": [
+    {
+      "path": "payload/DE-011.inert",
+      "scan_as": "SKILL.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "CREDENTIAL-PROMPT"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0055",
+    "AML.T0073"
+  ],
+  "owasp_asi": [
+    "ASI03",
+    "ASI09"
+  ],
+  "why_it_works": "Spawning a native password dialog phishes the user's credentials under the guise of a routine prompt.",
+  "mitigations": [
+    "Never request OS credentials from a skill.",
+    "Flag GUI password-prompt helpers."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/DE-011.inert",
+    "scan_as": "SKILL.md"
+  }
+}

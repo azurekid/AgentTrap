@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 import subprocess
 import sys
 import time
@@ -13,16 +14,16 @@ from uuid import uuid4
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from scan_agents_md import RULES, SECRET_RULES, SEV
+from scan_agents_md import SEV
 from web import sources as research
 from web.archive import Archive, ArchiveError
-from web.atlas import annotate
+from web.atlas import DATA as ATLAS_DATA, annotate
 from web.statistics import Statistics, StatisticsError
 from web.repository import (
     MAX_FILE, MAX_FILES, MAX_TOTAL, ScanInputError, decode_document,
@@ -30,14 +31,16 @@ from web.repository import (
 )
 
 ROOT = Path(__file__).resolve().parent
-LOG = logging.getLogger("agenttrap")
+LOG = logging.getLogger("skillvenom")
 MAX_BODY = 3 * 1024 * 1024
+UPLOAD_SUFFIXES = (".md", ".mdc", ".json", ".toml", ".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts", ".ps1", ".rb")
 POLICY = {
-    "archive": "Files with HIGH or CRITICAL findings are automatically retained for security investigation. "
-               "Original content, including any credentials it contains, is kept in a private archive for 30 days. "
-               "Do not submit content you are not authorized to share.",
+    "archive": "With your consent (on by default; uncheck to opt out), files with HIGH or CRITICAL findings are "
+               "retained for security investigation. Original content, including any credentials it contains, "
+               "is kept in a private archive for 30 days. Do not submit content you are not authorized to share.",
+    "archive_consent_default": True,
     "retention_days": 30, "max_files": MAX_FILES, "max_file_bytes": MAX_FILE,
-    "max_total_bytes": MAX_TOTAL, "detectors": len(RULES) + len(SECRET_RULES),
+    "max_total_bytes": MAX_TOTAL, "detectors": len(ATLAS_DATA["rules"]),
 }
 
 
@@ -65,13 +68,37 @@ async def lifespan(app: FastAPI):
         app.state.archive.close()
 
 
-app = FastAPI(title="AgentTrap", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+app = FastAPI(title="SkillVenom", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+
+
+def client_key(scope: Scope, hops: int) -> str:
+    """Client address for rate limiting.
+
+    Forwarded headers are ignored unless TRUSTED_PROXY_HOPS is set. Each trusted proxy
+    appends the address it saw, so the entry `hops` from the right is the first one a
+    client cannot forge (Azure App Service front end: 1; plus Azure Front Door: 2).
+    """
+    client = scope.get("client")
+    key = client[0] if client else "unknown"
+    if hops <= 0:
+        return key
+    forwarded = [v.decode("latin-1") for k, v in scope["headers"] if k == b"x-forwarded-for"]
+    entries = [part.strip() for part in ",".join(forwarded).split(",") if part.strip()]
+    if len(entries) < hops:
+        return key
+    entry = entries[-hops]
+    if entry.startswith("["):
+        return entry[1:entry.find("]")] if "]" in entry else entry
+    return entry.rsplit(":", 1)[0] if entry.count(":") == 1 else entry
 
 
 class PublicGuard:
-    """Bound bodies before multipart parsing; rate-limit without trusting forwarded IPs."""
+    """Bound bodies before multipart parsing; rate-limit without trusting forwarded IPs by default."""
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
+        self.trusted_hops = int(os.getenv("TRUSTED_PROXY_HOPS", "0"))
+        if not 0 <= self.trusted_hops <= 4:
+            raise RuntimeError("TRUSTED_PROXY_HOPS must be between 0 and 4.")
         self.visitors: dict[str, deque[float]] = defaultdict(deque)
         self.global_requests: deque[float] = deque()
         self.active = 0
@@ -93,8 +120,7 @@ class PublicGuard:
             for key in list(self.visitors):
                 if not self.visitors[key] or now - self.visitors[key][-1] > 600:
                     del self.visitors[key]
-            client = scope.get("client")
-            key = client[0] if client else "unknown"
+            key = client_key(scope, self.trusted_hops)
             if key not in self.visitors and len(self.visitors) >= 5000:
                 return await JSONResponse({"detail": "Service is busy. Try later."}, 429)(scope, receive, send)
             window = self.visitors[key]
@@ -161,6 +187,22 @@ def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
+@app.get("/scan")
+def scan_page(mode: str | None = None):
+    # The scanner lives on the landing page; keep /scan links working.
+    return RedirectResponse("/?mode=repo#scanner" if mode == "repo" else "/#scanner", status_code=308)
+
+
+@app.get("/coverage")
+def coverage_page():
+    return FileResponse(ROOT / "static" / "coverage.html")
+
+
+@app.get("/samples")
+def samples_page():
+    return FileResponse(ROOT / "static" / "samples.html")
+
+
 @app.get("/assets/{name}")
 def asset(name: str):
     if name not in ("app.js", "fx.js", "research.js", "style.css"):
@@ -188,6 +230,11 @@ def sources_data():
     return research.load()
 
 
+@app.get("/api/samples")
+def samples_data():
+    return FileResponse(ROOT / "samples.json", media_type="application/json")
+
+
 def scan_documents(documents: list[dict[str, str]]) -> list[dict]:
     try:
         result = subprocess.run(
@@ -204,7 +251,8 @@ def scan_documents(documents: list[dict[str, str]]) -> list[dict]:
     return output["files"]
 
 
-def make_report(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None, archive: Archive) -> dict:
+def make_report(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None,
+                archive: Archive, consent: bool = True) -> dict:
     files = scan_documents(documents)
     atlas = annotate(files)
     counts = Counter(f["severity"] for file in files for f in file["findings"])
@@ -225,6 +273,9 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
         "disclaimer": "Static heuristics, not a safety certification. False positives and missed threats are possible. "
                       "Secret values are not validated with providers. Revoke and rotate real exposed credentials.",
     }
+    if not consent:
+        report["archive"] = {"status": "opted_out", "files": 0, "retention_days": 30}
+        return report
     try:
         count = archive.store(documents, report)
         report["archive"] = {"status": "stored" if count else "not_required", "files": count, "retention_days": 30}
@@ -235,9 +286,11 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
     return report
 
 
-async def execute(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None, request: Request):
+async def execute(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None,
+                  request: Request, consent: bool = True):
     try:
-        report = await run_in_threadpool(make_report, documents, source, skipped, commit, request.app.state.archive)
+        report = await run_in_threadpool(make_report, documents, source, skipped, commit,
+                                         request.app.state.archive, consent)
     except ScanInputError as exc:
         raise HTTPException(422, str(exc)) from exc
     except RuntimeError as exc:
@@ -268,7 +321,7 @@ def statistics(request: Request):
 @app.post("/api/scan/files")
 async def scan_uploads(request: Request):
     try:
-        async with request.form(max_files=MAX_FILES, max_fields=2, max_part_size=MAX_FILE) as form:
+        async with request.form(max_files=MAX_FILES, max_fields=3, max_part_size=MAX_FILE) as form:
             workflows_value = form.get("include_workflows", "false")
             if workflows_value not in ("true", "false"):
                 raise ScanInputError("Invalid workflow option.")
@@ -277,10 +330,13 @@ async def scan_uploads(request: Request):
             if discover_value not in ("true", "false"):
                 raise ScanInputError("Invalid discovery option.")
             discover = discover_value == "true"
+            consent_value = form.get("archive_consent", "true")
+            if consent_value not in ("true", "false"):
+                raise ScanInputError("Invalid archive consent option.")
             documents, seen = [], set()
             total = 0
             for key, upload in form.multi_items():
-                if key in ("include_workflows", "discover"):
+                if key in ("include_workflows", "discover", "archive_consent"):
                     continue
                 if key != "files" or not isinstance(upload, UploadFile):
                     raise ScanInputError("Use the files field for uploads.")
@@ -291,8 +347,8 @@ async def scan_uploads(request: Request):
                 if discover and not is_target(path, workflows):
                     continue
                 suffix = Path(path).suffix.lower()
-                if not (is_target(path, workflows) or suffix in (".md", ".mdc", ".json", ".toml")):
-                    raise ScanInputError("Upload Markdown, JSON, TOML, or supported agent rule/config files.")
+                if not (is_target(path, workflows) or suffix in UPLOAD_SUFFIXES):
+                    raise ScanInputError("Upload Markdown, JSON, TOML, skill scripts, or supported agent rule/config files.")
                 content = await upload.read(MAX_FILE + 1)
                 total += len(content)
                 if total > MAX_TOTAL or len(documents) >= MAX_FILES:
@@ -302,13 +358,14 @@ async def scan_uploads(request: Request):
                 raise ScanInputError("Select at least one file to inspect.")
     except ScanInputError as exc:
         raise HTTPException(422, str(exc)) from exc
-    return await execute(documents, "File upload", [], None, request)
+    return await execute(documents, "File upload", [], None, request, consent_value == "true")
 
 
 class RepositoryRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     url: str = Field(max_length=240)
     include_workflows: bool = False
+    archive_consent: bool = True
 
 
 @app.post("/api/scan/repository")
@@ -319,4 +376,4 @@ async def scan_repository(payload: RepositoryRequest, request: Request):
         raise HTTPException(422, str(exc)) from exc
     except httpx.HTTPError as exc:
         raise HTTPException(502, "GitHub is unavailable or timed out. Upload selected files or try later.") from exc
-    return await execute(documents, payload.url.strip(), skipped, sha, request)
+    return await execute(documents, payload.url.strip(), skipped, sha, request, payload.archive_consent)

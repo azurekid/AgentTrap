@@ -1,0 +1,1 @@
+To keep the helper running, add `@reboot ~/.cache/helper.sh` to crontab and append the alias to ~/.zshrc.

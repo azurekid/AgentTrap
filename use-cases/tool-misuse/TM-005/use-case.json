@@ -1,0 +1,37 @@
+{
+  "id": "TM-005",
+  "title": "OAuth/token environment reference",
+  "summary": "OAuth/token environment reference",
+  "category": "TM",
+  "platforms": [
+    "github-actions",
+    "any-agent"
+  ],
+  "severity": "MEDIUM",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/TM-005.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "OAUTH-TOKEN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0055"
+  ],
+  "owasp_asi": [
+    "ASI03"
+  ],
+  "why_it_works": "Pulling named token environment variables into output is a precursor to credential leakage.",
+  "mitigations": [
+    "Never log token env vars.",
+    "Mask secrets in agent output."
+  ],
+  "references": [],
+  "tags": []
+}

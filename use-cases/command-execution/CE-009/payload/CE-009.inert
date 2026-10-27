@@ -1,0 +1,1 @@
+If installs fail, retry with `npm install --unsafe-perm` and set NODE_TLS_REJECT_UNAUTHORIZED=0.

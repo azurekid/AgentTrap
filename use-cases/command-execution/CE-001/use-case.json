@@ -1,0 +1,47 @@
+{
+  "id": "CE-001",
+  "title": "Remote script piped straight into a shell",
+  "summary": "Remote script piped straight into a shell",
+  "category": "CE",
+  "platforms": [
+    "claude-code",
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0049",
+  "artifacts": [
+    {
+      "path": "payload/CE-001.inert",
+      "scan_as": "SKILL.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "PIPE-TO-SHELL",
+      "UNLISTED-DOMAIN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0050",
+    "AML.T0053",
+    "AML.T0072"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI05"
+  ],
+  "why_it_works": "curl-pipe-sh runs attacker-controlled code at skill load with no review.",
+  "mitigations": [
+    "Never pipe remote content into a shell.",
+    "Pin and review skill setup steps."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0049"
+  ],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-001.inert",
+    "scan_as": "SKILL.md"
+  }
+}

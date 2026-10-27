@@ -1,0 +1,43 @@
+{
+  "id": "SC-003",
+  "title": "MCP server launched via npx -y from a registry",
+  "summary": "MCP server launched via npx -y from a registry",
+  "category": "SC",
+  "platforms": [
+    "cursor",
+    "mcp"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0053",
+  "artifacts": [
+    {
+      "path": "payload/SC-003.inert",
+      "scan_as": ".cursor/mcp.json"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "MCP-CONFIG",
+      "NPX-YES"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0010.005",
+    "AML.T0011.001",
+    "AML.T0053",
+    "AML.T0081"
+  ],
+  "owasp_asi": [
+    "ASI04"
+  ],
+  "why_it_works": "npx -y installs and runs an MCP server with no review or version pin, matching a real malicious-MCP incident.",
+  "mitigations": [
+    "Pin MCP server versions and digests.",
+    "Review new MCP servers before enabling."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0053"
+  ],
+  "tags": []
+}

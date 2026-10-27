@@ -1,144 +1,112 @@
-# Azure deployment guide
+# Azure deployment
 
-This is a manual deployment guide, not an executed deployment. Review resource
-names, region, pricing, RBAC, and privacy obligations before provisioning.
+SkillVenom runs on Azure App Service (Linux, Python 3.14, one Uvicorn worker). The
+same application serves the site and the API. Investigation records and the
+`statistics/totals.json` counter live in a private Blob container that the app reaches
+with its system-assigned managed identity. There are no connection strings, storage keys,
+publishing passwords, GitHub tokens, databases or language-model services.
 
-## Architecture
+## What gets deployed
 
-Use Linux Azure App Service with a supported Python 3.11+ runtime and one Uvicorn
-worker. The same application serves the dashboard and API. Store investigation
-records in a private Azure Blob container; authenticate using the App Service's
-system-assigned managed identity. No connection string, storage key, GitHub token,
-database, or language-model service is needed.
-Site-wide activity counters use a separate `statistics/totals.json` blob in the
-same private container. Conditional ETag writes prevent concurrent lost updates.
-This blob contains only aggregate file and finding counts, not scan content or
-identifiers. Keep it outside the 30-day `investigations/` lifecycle rule: activity
-totals are retained indefinitely. Totals start at feature enablement, count repeat
-inspections again, and do not backfill existing investigations. Failed counter
-writes are reported explicitly; they do not discard the inspection report.
+[infra/main.bicep](../infra/main.bicep) (resource-group scope), parameters in
+[infra/main.parameters.json](../infra/main.parameters.json):
 
-For a public service, front App Service with Azure Front Door/WAF. Restrict App
-Service ingress to your gateway, enforce HTTPS, configure a request size limit,
-rate limits, bot controls and alerts, and disable caching for scan APIs.
-Do not trust arbitrary forwarded client IP headers. The application's own limits
-are single-process safety controls, not a distributed abuse-prevention service.
+| Resource | Configuration |
+| --- | --- |
+| App Service plan | Linux, `B1` (Always On) |
+| Web app | `PYTHON|3.14`, HTTPS only, TLS 1.2, FTP off, FTP/SCM basic auth off, HTTP/2, health check `/healthz`, system-assigned identity, startup `uvicorn --workers 1 --no-proxy-headers` |
+| Storage account | StorageV2 LRS, shared-key access **disabled**, anonymous blob access disabled, TLS 1.2, HTTPS only, OAuth by default |
+| Blob container | `skillvenom-investigations`, private |
+| Lifecycle rule | Deletes `investigations/` blobs 30 days after last modification; `statistics/` is kept |
+| Blob service | Soft delete, container soft delete, versioning and change feed **off** so copies cannot outlive retention |
+| Role assignment | *Storage Blob Data Contributor* for the web app identity, scoped to the container only |
+| Log Analytics | 30-day retention; web app logs + metrics and blob read/write/delete audit logs |
 
-## 1. Prepare resources
-
-In your chosen subscription/resource group, provision:
-
-1. A Linux App Service plan and Python web app. Use a tier supporting your
-   required uptime and gateway restrictions.
-2. A Standard GPv2 Storage account with secure transfer required, TLS 1.2+,
-   anonymous blob access disabled, and shared-key access disabled.
-3. A private container named `agenttrap-investigations`.
-4. A system-assigned managed identity on the web app.
-5. A **Storage Blob Data Contributor** assignment for that identity scoped to
-   this container, not the entire subscription. Investigators should receive
-   only the roles needed for their work.
-
-Use private endpoints/VNet integration if your requirements call for network
-isolation, with DNS configured so App Service can reach Blob Storage.
-Do not expose archive blobs through static website hosting, SAS links, or UI routes.
-
-## 2. Configure mandatory retention
-
-Add a Blob lifecycle management rule on the storage account:
-
-- Enabled, block blobs.
-- Prefix: `agenttrap-investigations/investigations/`.
-- Delete base blobs **30 days after last modification**.
-- Archive records use unique names and are never overwritten.
-
-Review soft delete, snapshots, versioning, replication, backup, and legal-hold
-settings: retained copies may otherwise outlive the stated retention period.
-Lifecycle deletion is asynchronous, not an exact-to-the-second guarantee.
-
-Example policy body for an operator's `az storage account management-policy create`
-invocation (not an automatically applied infrastructure file):
-
-```json
-{
-  "rules": [{
-    "enabled": true,
-    "name": "expire-agenttrap-investigations",
-    "type": "Lifecycle",
-    "definition": {
-      "filters": {
-        "blobTypes": ["blockBlob"],
-        "prefixMatch": ["agenttrap-investigations/investigations/"]
-      },
-      "actions": {
-        "baseBlob": {"delete": {"daysAfterModificationGreaterThan": 30}}
-      }
-    }
-  }]
-}
-```
-
-After confirming the applied policy, set these App Service application settings:
+App settings set by the template:
 
 ```text
 ARCHIVE_BACKEND=azure
-AZURE_STORAGE_ACCOUNT=<your-account-name>
-AZURE_STORAGE_CONTAINER=agenttrap-investigations
-AZURE_ARCHIVE_RETENTION_CONFIRMED=true
-SCM_DO_BUILD_DURING_DEPLOYMENT=true
+AZURE_STORAGE_ACCOUNT=<generated>
+AZURE_STORAGE_CONTAINER=skillvenom-investigations
+AZURE_ARCHIVE_RETENTION_CONFIRMED=true   # the lifecycle rule is part of the same template
+TRUSTED_PROXY_HOPS=1                     # App Service front end appends X-Forwarded-For
+SCM_DO_BUILD_DURING_DEPLOYMENT=true      # remote build installs requirements.txt
+WEBSITES_PORT=8000
 ```
 
-The retention confirmation is an operator attestation, not automatic lifecycle
-verification. Startup rejects Azure mode without it and rejects containers with
-public access. Storage-account-level prevention of anonymous access remains
-an operator responsibility. Do not use the ephemeral App Service filesystem
-for production investigation records.
+Indicative cost (westeurope, pay-as-you-go): App Service B1 is the main cost (roughly
+USD 13/month); Storage, transactions and Log Analytics ingestion are typically a few
+dollars at low traffic. Check the [pricing calculator](https://azure.microsoft.com/pricing/calculator/)
+for your region and currency.
 
-## 3. Deploy application code
+## 1. Provision and deploy (az CLI)
 
-Deploy these application inputs from the repository root using your approved
-App Service source/ZIP deployment pipeline:
-
-```text
-requirements.txt
-scan_agents_md.py
-credential_rules.json
-SOURCES.md
-web/
-```
-
-Do **not** package `.archive/`, `.env`, `.venv/`, local settings, test artifacts,
-or the `poc/` directory. ZIP deployment must put the inputs at the archive root.
-App Service's remote build installs `requirements.txt`.
-
-Set the startup command:
+Prerequisites: Azure CLI 2.60+ (`az bicep` included), `zip`, `curl`, and an account with
+*Contributor* + *User Access Administrator* (or *Owner*) on the target resource group,
+because the template creates a role assignment.
 
 ```bash
-python -m uvicorn web.app:app --host 0.0.0.0 --port 8000 --workers 1 --no-proxy-headers
+az login
+infra/deploy.sh --what-if        # preview (creates the resource group if missing)
+infra/deploy.sh                  # provision + package + deploy + wait for /healthz
+infra/deploy.sh --code-only      # later: redeploy code only
 ```
 
-Configure App Service Health Check to `/healthz`. Azure mode checks container
-reachability and privacy at startup; health checks afterwards indicate application
-liveness, not continuous storage availability. Archive write failures are returned
-explicitly in scan reports and logged by scan ID without uploaded content.
+Override `RESOURCE_GROUP` (default `rg-skillvenom`), `LOCATION` (default `westeurope`)
+or `AZURE_SUBSCRIPTION_ID` as environment variables. The first start may fail until the
+new role assignment propagates (usually a few minutes); App Service restarts the app and
+the script waits up to 10 minutes for `/healthz`.
 
-Direct dependencies are pinned to the locally tested versions. For fully
-reproducible releases, resolve and lock transitive dependencies in your delivery
-pipeline as well.
+[infra/package.sh](../infra/package.sh) builds the ZIP from only the runtime inputs:
+`requirements.txt`, `scan_agents_md.py`, `credential_rules.json`, `SOURCES.md` and
+`web/`. `.archive/`, `.env`, `.venv/`, `poc/`, tests and fixtures are never packaged.
 
-## 4. Verify before opening public access
+## 2. Continuous deployment (GitHub Actions, OIDC)
 
-- `/healthz` returns `{"status":"ok"}` over HTTPS.
-- Dashboard loads; upload `tests/benign/AGENTS.md`: no high-risk findings and no archive record.
-- Upload `tests/repo/.codex/config.toml`: `CODEX-FULL-ACCESS`, private archive record,
-  and visible retention notice. Use synthetic data for credential checks.
-- Scan a small public GitHub repository; report the pinned commit, discovery,
-  and any skipped targets. Empty repositories must report no targets, not certification.
-- Download JSON and confirm credential-shaped values are redacted.
-- Verify anonymous archive access is denied and no storage credentials are in app settings.
-- Verify lifecycle and gateway limits, direct-backend restrictions, alerts and budgets.
+[.github/workflows/deploy-azure.yml](../.github/workflows/deploy-azure.yml) runs the
+Python, PowerShell-parity and JavaScript checks, then deploys on pushes to `main` that
+touch runtime files (or manually). The deploy job is skipped until the repository is
+configured:
+
+```bash
+RESOURCE_GROUP=rg-skillvenom infra/setup-github-oidc.sh azurekid/AgentTrap
+```
+
+This creates a Microsoft Entra application with a **federated credential** for
+`repo:<owner>/<repo>:environment:production` (no client secret), grants it
+*Website Contributor* on the web app only, creates the `production` environment and sets
+the `AZURE_*` repository variables (identifiers, not secrets). Add required reviewers to
+the `production` environment to gate releases. Infrastructure changes stay a manual
+`infra/deploy.sh` step, so CI never holds role-assignment rights.
+
+## 3. Public-service hardening
+
+This deployment exposes App Service directly (HTTPS only). The app enforces body
+limits, per-client and per-instance scan limits, two concurrent scans and isolated
+scanner timeouts; these are single-process safety controls, not DDoS protection.
+For higher exposure, add Azure Front Door Premium with WAF (managed rules, rate limits,
+bot protection), restrict App Service access to the Front Door service tag and
+`X-Azure-FDID`, and set `trustedProxyHops` to `2`. Configure budgets and alerts.
+
+Network isolation (private endpoint for Blob + VNet integration) is not included in
+this template; add it if your policy requires storage to be unreachable from the
+internet. Shared-key access is already disabled, so Entra ID RBAC is the only data path.
+
+## 4. Verify after deployment
+
+- `/healthz` returns `{"status":"ok"}` over HTTPS; `/` shows the scanner.
+- Upload `tests/benign/AGENTS.md`: no high-risk findings and no archive record.
+- Run `python tools/fixtures.py /tmp/skillvenom-fixtures`, upload
+  `/tmp/skillvenom-fixtures/tests/repo/.codex/config.toml`: `CODEX-FULL-ACCESS`, a private
+  archive record under `investigations/`, and the retention notice. Repeat with the
+  consent box unticked: report says *opted out* and no blob is written.
+- Scan a small public GitHub repository; the report shows the pinned commit.
+- Download the JSON report and confirm credential-shaped values are redacted.
+- Anonymous access to the container is denied; no storage keys are in app settings.
+- `az storage account management-policy show` lists the 30-day rule.
 - Keep HTTP/APM body logging disabled. Exported reports and filenames may still be sensitive.
-- Review legal basis, permitted investigation use, deletion workflow, and access audits.
+- Review legal basis, permitted investigation use, the pre-ticked consent default,
+  deletion workflow and access audits (blob audit logs are in Log Analytics).
 
-No Azure deployment, quota validation, pricing estimate, or live Blob integration
-has been performed as part of generating this application. These remain deployment
-operator checks.
+Investigators need their own *Storage Blob Data Reader* assignment on the container;
+there is no public archive API.

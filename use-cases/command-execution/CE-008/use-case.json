@@ -1,0 +1,42 @@
+{
+  "id": "CE-008",
+  "title": "Anti-forensics: clear history and logs",
+  "summary": "Anti-forensics: clear history and logs",
+  "category": "CE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "agentnode skills-security-audit",
+  "artifacts": [
+    {
+      "path": "payload/CE-008.inert",
+      "scan_as": "SKILL.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "ANTI-FORENSICS"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0050",
+    "AML.T0101"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI10"
+  ],
+  "why_it_works": "Clearing shell history and audit logs is indicator removal that hides the attack from responders.",
+  "mitigations": [
+    "Protect audit logs from agent writes.",
+    "Alert on history/log clearing."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/CE-008.inert",
+    "scan_as": "SKILL.md"
+  }
+}

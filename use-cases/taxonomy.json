@@ -1,0 +1,36 @@
+{
+  "_comment": "Categories and platforms for the SkillVenom use-case catalogue. Written in our own words; OWASP ASI and MITRE ATLAS identifiers are cross-references, not quotations.",
+  "categories": [
+    {"code": "PI", "slug": "prompt-injection", "title": "Prompt Injection & Instruction Override",
+     "description": "Text that overrides the agent's instructions, impersonates the system, jailbreaks a persona, or coaxes the model into unsafe tasking."},
+    {"code": "DE", "slug": "data-exfiltration", "title": "Data Exfiltration & Covert Channels",
+     "description": "Instructions that move secrets, environment, conversation or local files to an attacker over DNS, images, ANSI links, cloud metadata or agent tools."},
+    {"code": "CE", "slug": "command-execution", "title": "Command Execution & Remote Payloads",
+     "description": "Instructions that fetch and run remote code, open reverse shells, hijack build/test commands, escalate privileges, or destroy data."},
+    {"code": "OB", "slug": "obfuscation", "title": "Obfuscation & Hidden Content",
+     "description": "Payloads concealed with base64, HTML comments, invisible Unicode, tag/variation-selector smuggling, homographs or anti-forensics."},
+    {"code": "PA", "slug": "autonomy-abuse", "title": "Autonomy & Platform-Config Abuse",
+     "description": "Agent, editor or CLI configuration that disables safeguards, auto-approves tools, grants wildcards or installs malicious hooks."},
+    {"code": "SC", "slug": "supply-chain", "title": "Supply Chain & Dependency Trust",
+     "description": "Unpinned installs, registry/mirror redirection, authoritative-install nudges, CI tampering, worm propagation and untrusted endpoints."},
+    {"code": "MP", "slug": "memory-persistence", "title": "Memory, Persistence & Untrusted Sources",
+     "description": "Long-term memory poisoning, host persistence, and treating untrusted download locations as authoritative."},
+    {"code": "TM", "slug": "tool-misuse", "title": "Tool Misuse & Privilege Abuse",
+     "description": "Abuse of granted agent tools to exfiltrate to another destination, grant access, hijack skill triggers or shadow other tools."},
+    {"code": "CR", "slug": "credentials", "title": "Hardcoded Credentials & Secrets",
+     "description": "Live-shaped tokens, keys, private keys and connection strings embedded in agent or config files."}
+  ],
+  "platforms": [
+    {"id": "any-agent", "title": "Any coding agent"},
+    {"id": "claude-code", "title": "Claude Code"},
+    {"id": "github-copilot", "title": "GitHub Copilot"},
+    {"id": "cursor", "title": "Cursor"},
+    {"id": "codex", "title": "OpenAI Codex CLI"},
+    {"id": "gemini-cli", "title": "Gemini CLI"},
+    {"id": "vscode", "title": "VS Code"},
+    {"id": "windsurf", "title": "Windsurf"},
+    {"id": "cline", "title": "Cline"},
+    {"id": "github-actions", "title": "GitHub Actions"},
+    {"id": "mcp", "title": "MCP client/server"}
+  ]
+}

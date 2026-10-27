@@ -1,0 +1,41 @@
+{
+  "id": "OB-002",
+  "title": "Variation-selector smuggling",
+  "summary": "Variation-selector smuggling",
+  "category": "OB",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/OB-002.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "VARIATION-SELECTOR-SMUGGLING"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0051.001",
+    "AML.T0068"
+  ],
+  "owasp_asi": [
+    "ASI01"
+  ],
+  "why_it_works": "Runs of variation selectors encode hidden data that survives copy/paste while staying invisible.",
+  "mitigations": [
+    "Normalise and strip stray variation selectors.",
+    "Flag non-emoji selector runs."
+  ],
+  "references": [],
+  "tags": [],
+  "benign": {
+    "path": "benign/OB-002.inert",
+    "scan_as": "AGENTS.md"
+  }
+}

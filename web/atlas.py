@@ -11,11 +11,17 @@ TACTIC_ORDER = ["initial-access", "execution", "persistence", "defense-evasion",
 
 def annotate(files: list[dict]) -> dict:
     """Attach technique IDs to each finding and return the report-level ATLAS summary."""
+    asi_rules = DATA["owasp_asi"]["rules"]
+    asi_names = DATA["owasp_asi"]["risks"]
     tactic_hits = {t: 0 for t in TACTIC_ORDER}
     techniques: dict[str, dict] = {}
+    asi_hits: dict[str, int] = {}
     unmapped = set()
     for file in files:
         for finding in file["findings"]:
+            finding["owasp"] = asi_rules.get(finding["rule"], [])
+            for risk in finding["owasp"]:
+                asi_hits[risk] = asi_hits.get(risk, 0) + 1
             pairs = DATA["rules"].get(finding["rule"])
             if not pairs:
                 unmapped.add(finding["rule"])
@@ -47,5 +53,11 @@ def annotate(files: list[dict]) -> dict:
         "tactics": [{"key": t, "id": DATA["tactics"][t]["id"], "name": DATA["tactics"][t]["name"], "findings": tactic_hits[t]}
                     for t in TACTIC_ORDER],
         "techniques": detail,
+        "owasp_asi": {
+            "source": DATA["owasp_asi"]["source"],
+            "url": DATA["owasp_asi"]["url"],
+            "risks": [{"id": rid, "name": asi_names[rid], "findings": asi_hits[rid]}
+                      for rid in sorted(asi_hits)],
+        },
         "unmapped_rules": sorted(unmapped),
     }

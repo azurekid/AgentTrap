@@ -1,0 +1,45 @@
+{
+  "id": "DE-010",
+  "title": "Auth header beacon to an unlisted host",
+  "summary": "Auth header beacon to an unlisted host",
+  "category": "DE",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "CRITICAL",
+  "status": "active",
+  "source": "Research corpus (SOURCES.md)",
+  "artifacts": [
+    {
+      "path": "payload/DE-010.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "AUTH-HEADER",
+      "EXFIL-ENV",
+      "TUNNEL-OAST",
+      "UNLISTED-DOMAIN"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0025",
+    "AML.T0037",
+    "AML.T0055",
+    "AML.T0072",
+    "AML.T0083",
+    "AML.T0086"
+  ],
+  "owasp_asi": [
+    "ASI02",
+    "ASI03"
+  ],
+  "why_it_works": "An Authorization header sent to a tunnel endpoint leaks the bearer token off-host.",
+  "mitigations": [
+    "Block egress to tunnel domains.",
+    "Keep tokens out of ad-hoc curl calls."
+  ],
+  "references": [],
+  "tags": []
+}

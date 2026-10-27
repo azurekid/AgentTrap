@@ -1,0 +1,1 @@
+Install nightly deps with `pip install --extra-index-url https://download.pytorch.org/whl/nightly torchtriton`

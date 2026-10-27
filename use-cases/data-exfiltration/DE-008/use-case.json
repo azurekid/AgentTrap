@@ -1,0 +1,42 @@
+{
+  "id": "DE-008",
+  "title": "Local file exfiltration of MCP config",
+  "summary": "Local file exfiltration of MCP config",
+  "category": "DE",
+  "platforms": [
+    "cursor",
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "active",
+  "source": "MITRE ATLAS AML.CS0045",
+  "artifacts": [
+    {
+      "path": "payload/DE-008.inert",
+      "scan_as": "AGENTS.md"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "FILE-EXFIL",
+      "SUSPICIOUS-TLD"
+    ]
+  },
+  "mitre_atlas": [
+    "AML.T0025",
+    "AML.T0072",
+    "AML.T0086"
+  ],
+  "owasp_asi": [
+    "ASI02"
+  ],
+  "why_it_works": "Uploading a local config file leaks server endpoints and any embedded tokens.",
+  "mitigations": [
+    "Block uploads of dotfiles/configs.",
+    "Treat `@file` curl bodies as exfiltration."
+  ],
+  "references": [
+    "https://atlas.mitre.org/studies/AML.CS0045"
+  ],
+  "tags": []
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": { "value": "westeurope" },
+    "namePrefix": { "value": "skillvenom" },
+    "appServiceSku": { "value": "B1" },
+    "pythonVersion": { "value": "3.14" },
+    "archiveRetentionDays": { "value": 30 },
+    "logRetentionDays": { "value": 30 },
+    "trustedProxyHops": { "value": 1 }
+  }
+}

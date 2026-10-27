@@ -122,7 +122,7 @@ def fetch_repository(url: str, workflows: bool) -> tuple[list[dict[str, str]], l
     api = f"https://api.github.com/repos/{owner}/{repo}"
     # Environment proxies and redirects are disabled; all outbound hosts are fixed.
     with httpx.Client(timeout=httpx.Timeout(10, connect=5), follow_redirects=False,
-                      trust_env=False, headers={"User-Agent": "AgentTrap/1.0"}) as client:
+                      trust_env=False, headers={"User-Agent": "SkillVenom/1.0"}) as client:
         sha = fetch_bytes(client, f"{api}/commits/HEAD", 128, deadline,
                           headers={"Accept": "application/vnd.github.sha"}).decode("ascii", "replace").strip()
         if not SHA.fullmatch(sha):
