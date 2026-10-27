@@ -7,9 +7,8 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from functools import lru_cache
 from urllib.parse import quote, unquote, urlsplit
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 
 import httpx
 
@@ -73,31 +72,10 @@ class Ref:
     path: tuple[str, ...]  # GitHub/GitLab: namespace + project. Azure DevOps: collection prefix + project + repository.
 
 
-ALLOWLIST_FILE = Path(__file__).with_name("allowlist.json")
-BUILT_IN = {"gitlab": "gitlab.com", "azuredevops": "dev.azure.com"}
-ENV_HOSTS = {"gitlab": "SCM_GITLAB_HOSTS", "azuredevops": "SCM_AZDO_HOSTS"}
-
-
-@lru_cache(maxsize=1)
-def file_hosts() -> dict[str, frozenset[str]]:
-    """Hosts from web/allowlist.json. A broken file fails closed to the built-in cloud hosts."""
-    try:
-        data = json.loads(ALLOWLIST_FILE.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        data = {}
-    result = {}
-    for provider in BUILT_IN:
-        items = data.get(provider, []) if isinstance(data, dict) else []
-        items = items if isinstance(items, list) else []
-        result[provider] = frozenset(item.strip().lower() for item in items
-                                     if isinstance(item, str) and HOST.fullmatch(item.strip().lower()))
-    return result
-
-
-def allowed_hosts(provider: str) -> set[str]:
-    """Self-managed hosts are operator-configured (allowlist.json or an app setting), never user-supplied."""
-    extra = {item.strip().lower() for item in os.environ.get(ENV_HOSTS[provider], "").split(",")}
-    return {BUILT_IN[provider]} | set(file_hosts()[provider]) | {item for item in extra if HOST.fullmatch(item)}
+def configured_hosts(name: str) -> set[str]:
+    """Self-managed hosts are operator-configured, never user-supplied, so users cannot aim the server elsewhere."""
+    values = {item.strip().lower() for item in os.environ.get(name, "").split(",")}
+    return {value for value in values if HOST.fullmatch(value)}
 
 
 def parse_repository(url: str) -> Ref:
@@ -111,7 +89,8 @@ def parse_repository(url: str) -> Ref:
         raise ScanInputError(UNSUPPORTED)
     raw = parsed.path.strip("/").split("/")
     segments = [unquote(item) for item in raw]
-    gitlab, azdo = host in allowed_hosts("gitlab"), host in allowed_hosts("azuredevops")
+    gitlab, azdo = host == "gitlab.com" or host in configured_hosts("SCM_GITLAB_HOSTS"), \
+        host == "dev.azure.com" or host in configured_hosts("SCM_AZDO_HOSTS")
     if host == "github.com":
         match = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9_.-]{1,100})", "/".join(raw))
         if not match:

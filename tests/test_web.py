@@ -988,27 +988,3 @@ def test_token_scan_is_never_archived(client, monkeypatch):
     assert response.status_code == 200 and calls["token"] == "glpat-secret123"
     assert "secret" not in response.text
     assert client.post("/api/scan/repository", json={"url": "https://gitlab.com/g/p", "token": "x" * 300}).status_code == 422
-
-
-def test_allowlist_file_hosts(monkeypatch, tmp_path):
-    import web.repository as repository
-    path = tmp_path / "allowlist.json"
-    path.write_text(json.dumps({"gitlab": ["Git.Corp.Example", "bad host", 5], "azuredevops": ["tfs.corp.example"]}))
-    monkeypatch.setattr(repository, "ALLOWLIST_FILE", path)
-    repository.file_hosts.cache_clear()
-    try:
-        assert parse_repository("https://git.corp.example/g/p").provider == "gitlab"
-        assert parse_repository("https://tfs.corp.example/c/p/_git/r").provider == "azuredevops"
-        assert repository.allowed_hosts("gitlab") == {"gitlab.com", "git.corp.example"}
-        with pytest.raises(ScanInputError):
-            parse_repository("https://other.example/g/p")
-        path.write_text("{not json")
-        repository.file_hosts.cache_clear()
-        assert repository.allowed_hosts("gitlab") == {"gitlab.com"}
-    finally:
-        repository.file_hosts.cache_clear()
-
-
-def test_shipped_allowlist_is_valid():
-    data = json.loads(Path("web/allowlist.json").read_text())
-    assert set(data) == {"gitlab", "azuredevops"} and all(isinstance(v, list) for v in data.values())

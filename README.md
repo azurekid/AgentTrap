@@ -63,11 +63,8 @@ checkbox says. Use short-lived read-only tokens and revoke them afterwards. Ever
 file is verified against the pinned commit's git object hash. Azure DevOps and GitLab
 listings carry no file sizes, so the 100 files / 256 KiB / 2 MiB limits are enforced while reading files.
 
-Self-managed servers are **operator-configured** in [`web/allowlist.json`](web/allowlist.json)
-(`{"gitlab": [...], "azuredevops": [...]}` host names, for example `git.corp.example`; it ships
-in the deployment package, so edit it and redeploy). The `SCM_GITLAB_HOSTS` / `SCM_AZDO_HOSTS`
-app settings (comma-separated) add hosts on top without a code deploy. `gitlab.com`,
-`dev.azure.com` and `github.com` are built in; GitHub is fixed and not configurable. Users cannot
+Self-managed servers are **operator-configured**: set `SCM_GITLAB_HOSTS` and/or
+`SCM_AZDO_HOSTS` to comma-separated host names (for example `git.corp.example`). Users cannot
 add hosts, ports or redirects, so the server cannot be pointed at arbitrary addresses. The
 Azure DevOps Server URL form is `https://host/<collection>/<project>/_git/<repo>`.
 The App Service must be able to reach those hosts (VNet integration for internal servers).
