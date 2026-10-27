@@ -39,7 +39,7 @@
     <section id="results" class="results" aria-labelledby="results-title">
       <header class="results-head">
         <div><p class="label">Inspection report</p><h1 id="results-title">Security findings</h1></div>
-        <button id="download" class="btn btn-ghost btn-small" type="button">Export JSON <span aria-hidden="true">↓</span></button>
+        <div class="results-actions"><button id="fp-open" class="btn btn-ghost btn-small" type="button">Report false positives</button><button id="download" class="btn btn-ghost btn-small" type="button">Export JSON <span aria-hidden="true">↓</span></button></div>
       </header>
       <div id="verdict" class="verdict"></div>
       <div class="report-grid">
@@ -79,6 +79,22 @@
       <p class="disclaimer" id="disclaimer"></p>
     </section>
   </main>
+
+  <dialog id="fp-dialog" class="fp-dialog" aria-labelledby="fp-title">
+    <form id="fp-form" method="dialog">
+      <h2 id="fp-title">Report false positives</h2>
+      <p class="meta">Select the findings that are wrong. Rule, severity, file path and line are sent to the SkillVenom operators and stored privately. Secrets are never included.</p>
+      <ul id="fp-list" class="fp-list"></ul>
+      <label class="fp-check"><input id="fp-snippets" type="checkbox"> Also send the matched line (only if it contains nothing sensitive)</label>
+      <label class="fp-label" for="fp-comment">Why is it a false positive? <span class="meta">(optional, max 1000 characters)</span></label>
+      <textarea id="fp-comment" maxlength="1000" rows="4"></textarea>
+      <p id="fp-status" class="meta" role="status" hidden></p>
+      <div class="fp-actions">
+        <button id="fp-cancel" class="btn btn-ghost btn-small" type="button">Cancel</button>
+        <button id="fp-send" class="btn btn-small" type="submit">Send report</button>
+      </div>
+    </form>
+  </dialog>
 
   <footer class="footer">
     <div class="footer-inner">

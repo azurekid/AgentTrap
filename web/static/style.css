@@ -586,3 +586,15 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .sample-link { font: 12px var(--sans); color: var(--cyan); text-decoration: none; }
 .sample-link:hover { text-decoration: underline; }
 @media (max-width: 900px) { .sample-cards { grid-template-columns: minmax(0, 1fr); } }
+
+.results-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.fp-link { margin-top: .6rem; background: none; border: 0; padding: 0; color: var(--muted, #8aa0b4); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; }
+.fp-link:hover, .fp-link:focus-visible { color: #2dd4bf; }
+.fp-dialog { width: min(640px, 92vw); background: #0a121c; color: inherit; border: 1px solid rgba(45, 212, 191, .35); border-radius: 12px; padding: 1.4rem; }
+.fp-dialog::backdrop { background: rgba(2, 6, 12, .75); }
+.fp-dialog h2 { margin: 0 0 .5rem; }
+.fp-list { list-style: none; margin: .8rem 0; padding: 0; max-height: 40vh; overflow: auto; display: grid; gap: .4rem; }
+.fp-list label, .fp-check { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.fp-label { display: block; margin: .8rem 0 .3rem; }
+.fp-dialog textarea { width: 100%; box-sizing: border-box; background: #05080d; color: inherit; border: 1px solid rgba(255, 255, 255, .15); border-radius: 8px; padding: .6rem; font: inherit; }
+.fp-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }

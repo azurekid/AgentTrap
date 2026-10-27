@@ -114,3 +114,27 @@ class Archive:
                 path.unlink(missing_ok=True)
                 raise
         return len(risky)
+
+    def store_feedback(self, record: dict) -> str:
+        """Persist a false-positive report under feedback/, outside the 30-day investigation lifecycle rule."""
+        record_id = uuid4().hex
+        payload = json.dumps({**record, "id": record_id}, ensure_ascii=True).encode()
+        try:
+            with self.lock:
+                if self.container is not None:
+                    self.container.upload_blob(
+                        name=f"feedback/{record_id}.json", data=payload, overwrite=False,
+                        content_settings=ContentSettings(content_type="application/octet-stream"),
+                        timeout=15,
+                    )
+                else:
+                    folder = self.directory / "feedback"
+                    folder.mkdir(mode=0o700, exist_ok=True)
+                    if sum(1 for _ in folder.glob("*.json")) >= 5000:
+                        raise ArchiveError("Feedback store is full.")
+                    fd = os.open(folder / f"{record_id}.json", os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                    with os.fdopen(fd, "wb") as stream:
+                        stream.write(payload)
+        except (OSError, AzureError) as exc:
+            raise ArchiveError("Feedback write failed.") from exc
+        return record_id

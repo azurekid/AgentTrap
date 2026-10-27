@@ -33,6 +33,7 @@ from web.repository import (
 ROOT = Path(__file__).resolve().parent
 LOG = logging.getLogger("skillvenom")
 MAX_BODY = 3 * 1024 * 1024
+MAX_FEEDBACK_BODY = 64 * 1024
 UPLOAD_SUFFIXES = (".md", ".mdc", ".json", ".toml", ".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts", ".ps1", ".rb")
 POLICY = {
     "archive": "With your consent (on by default; uncheck to opt out), files with HIGH or CRITICAL findings are "
@@ -101,6 +102,7 @@ class PublicGuard:
             raise RuntimeError("TRUSTED_PROXY_HOPS must be between 0 and 4.")
         self.visitors: dict[str, deque[float]] = defaultdict(deque)
         self.global_requests: deque[float] = deque()
+        self.feedback: dict[str, deque[float]] = defaultdict(deque)
         self.active = 0
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -108,7 +110,24 @@ class PublicGuard:
             return await self.app(scope, receive, send)
         path = scope["path"]
         is_scan = path.startswith("/api/scan")
+        is_feedback = path == "/api/feedback"
         headers = dict(scope["headers"])
+        limit = MAX_FEEDBACK_BODY if is_feedback else MAX_BODY
+        if is_feedback:
+            if scope["method"] != "POST":
+                return await JSONResponse({"detail": "POST required."}, 405)(scope, receive, send)
+            host = headers.get(b"host", b"").decode("latin-1")
+            origin = headers.get(b"origin")
+            if origin and origin.decode("latin-1") not in (f"https://{host}", f"http://{host}"):
+                return await JSONResponse({"detail": "Cross-origin requests are not accepted."}, 403)(scope, receive, send)
+            now = time.monotonic()
+            window = self.feedback[client_key(scope, self.trusted_hops)]
+            while window and now - window[0] > 600:
+                window.popleft()
+            if len(window) >= 5 or len(self.feedback) > 5000:
+                return await JSONResponse({"detail": "Feedback limit reached. Try again later."}, 429,
+                                          headers={"Retry-After": "600"})(scope, receive, send)
+            window.append(now)
         if is_scan:
             if scope["method"] != "POST":
                 return await JSONResponse({"detail": "POST required."}, 405)(scope, receive, send)
@@ -143,7 +162,7 @@ class PublicGuard:
                 ]
             await send(message)
         try:
-            if is_scan:
+            if is_scan or is_feedback:
                 body = bytearray()
                 deadline = time.monotonic() + 15
                 while True:
@@ -151,8 +170,8 @@ class PublicGuard:
                     if message["type"] == "http.disconnect":
                         return
                     chunk = message.get("body", b"")
-                    if len(body) + len(chunk) > MAX_BODY:
-                        return await JSONResponse({"detail": "Request exceeds 3 MiB."}, 413)(scope, receive, secured_send)
+                    if len(body) + len(chunk) > limit:
+                        return await JSONResponse({"detail": "Request is too large."}, 413)(scope, receive, secured_send)
                     body.extend(chunk)
                     if not message.get("more_body"):
                         break
@@ -196,6 +215,37 @@ def scan_page(mode: str | None = None):
 @app.get("/coverage")
 def coverage_page():
     return FileResponse(ROOT / "static" / "coverage.html")
+
+
+class FeedbackFinding(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    rule: str = Field(max_length=64, pattern=r"^[A-Z0-9-]+$")
+    severity: str = Field(pattern=r"^(CRITICAL|HIGH|MEDIUM|LOW)$")
+    path: str = Field(max_length=300)
+    line: int = Field(ge=0, le=10_000_000)
+    snippet: str | None = Field(default=None, max_length=300)
+
+
+class FeedbackRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    scan_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+    source: str = Field(default="", max_length=300)
+    commit: str | None = Field(default=None, max_length=64)
+    comment: str = Field(default="", max_length=1000)
+    findings: list[FeedbackFinding] = Field(min_length=1, max_length=50)
+
+
+@app.post("/api/feedback", status_code=201)
+async def submit_feedback(payload: FeedbackRequest, request: Request):
+    record = payload.model_dump()
+    record["created_at"] = datetime.now(timezone.utc).isoformat()
+    record["kind"] = "false_positive"
+    try:
+        await run_in_threadpool(request.app.state.archive.store_feedback, record)
+    except ArchiveError:
+        LOG.error("Feedback write failed; scan_id=%s", payload.scan_id)
+        return JSONResponse({"detail": "Feedback could not be saved. Try again later."}, 503)
+    return {"status": "received"}
 
 
 @app.get("/report")

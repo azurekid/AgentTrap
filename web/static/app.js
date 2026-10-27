@@ -360,6 +360,10 @@ function renderFindings() {
         refs.append(list);
         article.append(refs);
       }
+      const fp = node("button", "fp-link", "Report false positive");
+      fp.type = "button";
+      fp.addEventListener("click", () => { allFindings(); openFalsePositive(findingKeys.get(finding)); });
+      article.append(fp);
       details.append(article);
     }
     $("findings").append(details);
@@ -372,7 +376,68 @@ function renderFindings() {
   }
   if (clean) $("findings").append(node("p", "clean-note", `${clean} scanned ${clean === 1 ? "file" : "files"} with no findings ${clean === 1 ? "is" : "are"} not listed.`));
 }
+const findingKeys = new WeakMap();
+function allFindings() {
+  return report.files.flatMap((file) => file.findings.map((f, i) => {
+    findingKeys.set(f, `${file.path}\u0000${i}`);
+    return { ...f, path: file.path, key: findingKeys.get(f) };
+  }));
+}
+function openFalsePositive(selectedKey) {
+  const list = $("fp-list");
+  list.replaceChildren();
+  for (const f of allFindings()) {
+    const item = node("li");
+    const label = node("label");
+    const box = node("input");
+    box.type = "checkbox";
+    box.value = f.key;
+    box.checked = f.key === selectedKey;
+    label.append(box, node("span", `badge ${f.severity.toLowerCase()}`, f.severity), node("code", "", f.rule), node("span", "meta", `${f.path}:${f.line}`));
+    item.append(label);
+    list.append(item);
+  }
+  $("fp-comment").value = "";
+  $("fp-snippets").checked = false;
+  $("fp-status").hidden = true;
+  $("fp-send").disabled = false;
+  $("fp-dialog").showModal();
+}
 if (reportPage) {
+  $("fp-open").addEventListener("click", () => openFalsePositive());
+  $("fp-cancel").addEventListener("click", () => $("fp-dialog").close());
+  $("fp-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const keys = new Set(Array.from($("fp-list").querySelectorAll("input:checked"), (box) => box.value));
+    const chosen = allFindings().filter((f) => keys.has(f.key)).slice(0, 50);
+    const status = $("fp-status");
+    status.hidden = false;
+    if (!chosen.length) { status.textContent = "Select at least one finding."; return; }
+    const withSnippets = $("fp-snippets").checked;
+    $("fp-send").disabled = true;
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(20000),
+        body: JSON.stringify({
+          scan_id: report.id, source: String(report.source || "").slice(0, 300), commit: report.commit || null,
+          comment: $("fp-comment").value.trim(),
+          findings: chosen.map((f) => ({
+            rule: f.rule, severity: f.severity, path: f.path.slice(0, 300), line: f.line,
+            ...(withSnippets && !f.rule.startsWith("SECRET-") && { snippet: String(f.snippet).slice(0, 300) }),
+          })),
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(response.status === 429 ? "Too many reports. Try again later." : typeof data.detail === "string" && response.status !== 422 ? data.detail : "The report could not be sent.");
+      }
+      status.textContent = "Thank you. Your report was received.";
+      setTimeout(() => $("fp-dialog").close(), 1200);
+    } catch (error) {
+      status.textContent = error.message || "The report could not be sent.";
+      $("fp-send").disabled = false;
+    }
+  });
   $("severity").addEventListener("change", renderFindings);
 
   fetch("/api/sources", { headers: { Accept: "application/json" } })

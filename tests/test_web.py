@@ -1049,3 +1049,36 @@ def test_token_scan_is_never_archived(client, monkeypatch):
     assert response.status_code == 200 and calls["token"] == "glpat-secret123"
     assert "secret" not in response.text
     assert client.post("/api/scan/repository", json={"url": "https://gitlab.com/g/p", "token": "x" * 300}).status_code == 422
+
+
+def feedback_body(**over):
+    body = {"scan_id": "a" * 32, "source": "File upload", "comment": "benign deny list",
+            "findings": [{"rule": "PERMISSION-WILDCARD", "severity": "HIGH", "path": "settings.json", "line": 4}]}
+    return {**body, **over}
+
+
+def test_feedback_is_stored_privately(client):
+    response = client.post("/api/feedback", json=feedback_body())
+    assert response.status_code == 201
+    stored = list((app.state.archive.directory / "feedback").glob("*.json"))
+    assert len(stored) == 1
+    record = json.loads(stored[0].read_text())
+    assert record["findings"][0]["rule"] == "PERMISSION-WILDCARD" and record["kind"] == "false_positive"
+    assert not list(app.state.archive.directory.glob("*.json"))
+    assert client.get("/api/feedback").status_code == 405
+
+
+@pytest.mark.parametrize("body", [
+    feedback_body(scan_id="nope"), feedback_body(findings=[]), feedback_body(comment="x" * 1001),
+    feedback_body(findings=[{"rule": "bad rule", "severity": "HIGH", "path": "a", "line": 1}]),
+    feedback_body(findings=[{"rule": "X", "severity": "HIGH", "path": "a", "line": 1, "extra": 1}]),
+])
+def test_feedback_rejects_invalid_payloads(client, body):
+    assert client.post("/api/feedback", json=body).status_code == 422
+
+
+def test_feedback_limits_size_origin_and_rate(client):
+    assert client.post("/api/feedback", content=b"{" + b" " * 70000 + b"}").status_code == 413
+    assert client.post("/api/feedback", json=feedback_body(), headers={"origin": "https://evil.example"}).status_code == 403
+    codes = [client.post("/api/feedback", json=feedback_body()).status_code for _ in range(7)]
+    assert 429 in codes
