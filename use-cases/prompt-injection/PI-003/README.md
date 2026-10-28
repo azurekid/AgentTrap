@@ -21,10 +21,10 @@ Persona jailbreaks tell the model it is a new, unrestricted character to shed it
 
 ## Artifacts
 
-- `payload/PI-003.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-003.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

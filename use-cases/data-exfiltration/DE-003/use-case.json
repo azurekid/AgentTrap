@@ -11,7 +11,7 @@
   "source": "Research corpus (SOURCES.md)",
   "artifacts": [
     {
-      "path": "payload/DE-003.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],
@@ -36,7 +36,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/DE-003.inert",
+    "path": "benign/AGENTS.md",
     "scan_as": "AGENTS.md"
   }
 }

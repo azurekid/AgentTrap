@@ -21,11 +21,11 @@ A prompt-injection string tries to replace the agent's standing instructions wit
 
 ## Artifacts
 
-- `payload/PI-001.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-001.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

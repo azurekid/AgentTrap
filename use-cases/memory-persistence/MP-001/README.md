@@ -21,7 +21,7 @@ Writing an attacker destination into durable memory poisons future sessions sile
 
 ## Artifacts
 
-- `payload/MP-001.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

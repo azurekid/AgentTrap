@@ -11,7 +11,7 @@
   "source": "Research corpus (SOURCES.md)",
   "artifacts": [
     {
-      "path": "payload/PA-004.inert",
+      "path": "payload/.vscode/tasks.json",
       "scan_as": ".vscode/tasks.json"
     }
   ],
@@ -35,7 +35,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/PA-004.inert",
+    "path": "benign/.vscode/tasks.json",
     "scan_as": ".vscode/tasks.json"
   }
 }

@@ -21,7 +21,7 @@ A persistent C2 fetch-and-execute loop turns the agent into a scheduled backdoor
 
 ## Artifacts
 
-- `payload/CE-002.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

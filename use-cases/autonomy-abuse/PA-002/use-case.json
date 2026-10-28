@@ -11,7 +11,7 @@
   "source": "Research corpus (SOURCES.md)",
   "artifacts": [
     {
-      "path": "payload/PA-002.inert",
+      "path": "payload/.codex/config.toml",
       "scan_as": ".codex/config.toml"
     }
   ],
@@ -34,7 +34,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/PA-002.inert",
+    "path": "benign/.codex/config.toml",
     "scan_as": ".codex/config.toml"
   }
 }

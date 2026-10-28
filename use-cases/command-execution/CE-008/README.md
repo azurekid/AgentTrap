@@ -21,10 +21,10 @@ Clearing shell history and audit logs is indicator removal that hides the attack
 
 ## Artifacts
 
-- `payload/CE-008.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/CE-008.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

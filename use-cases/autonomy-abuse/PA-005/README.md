@@ -21,10 +21,10 @@ Disabling folder trust and enabling autoAccept removes Gemini CLI's execution sa
 
 ## Artifacts
 
-- `payload/PA-005.inert` → scanned as `.gemini/settings.json`
+- `payload/.gemini/settings.json` → scanned as `.gemini/settings.json`
 
 ## Benign look-alike
 
-- `benign/PA-005.inert` → scanned as `.gemini/settings.json`
+- `benign/.gemini/settings.json` → scanned as `.gemini/settings.json`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

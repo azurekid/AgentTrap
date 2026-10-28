@@ -12,7 +12,7 @@
   "source": "Research corpus (SOURCES.md)",
   "artifacts": [
     {
-      "path": "payload/TM-005.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],

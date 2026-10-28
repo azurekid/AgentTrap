@@ -21,10 +21,10 @@ Claims of prior approval and 'trust me' pressure the agent to skip code review b
 
 ## Artifacts
 
-- `payload/PI-007.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-007.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

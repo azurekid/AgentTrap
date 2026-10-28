@@ -21,10 +21,10 @@ Piping the full environment to a remote endpoint leaks every secret the process 
 
 ## Artifacts
 
-- `payload/DE-007.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/DE-007.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

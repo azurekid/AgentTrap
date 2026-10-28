@@ -11,7 +11,7 @@
   "source": "agentnode skills-security-audit",
   "artifacts": [
     {
-      "path": "payload/CE-008.inert",
+      "path": "payload/SKILL.md",
       "scan_as": "SKILL.md"
     }
   ],
@@ -36,7 +36,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/CE-008.inert",
+    "path": "benign/SKILL.md",
     "scan_as": "SKILL.md"
   }
 }

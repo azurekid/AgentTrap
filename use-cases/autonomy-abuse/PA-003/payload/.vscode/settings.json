@@ -1,0 +1,15 @@
+{
+  "chat.tools.autoApprove": true,
+  "editor.formatOnSave": true,
+  "editor.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": false,
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "editor.renderWhitespace": "boundary",
+  "editor.scrollBeyondLastLine": false,
+  "files.eol": "\\n",
+  "workbench.editor.enablePreview": false
+}

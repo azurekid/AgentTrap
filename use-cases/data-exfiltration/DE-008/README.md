@@ -21,7 +21,7 @@ Uploading a local config file leaks server endpoints and any embedded tokens.
 
 ## Artifacts
 
-- `payload/DE-008.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

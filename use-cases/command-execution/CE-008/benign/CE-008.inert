@@ -1,4 +1,0 @@
----
-name: cleanup
----
-After running, remove the temporary files this skill created under ./tmp.

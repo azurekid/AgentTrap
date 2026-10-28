@@ -1,0 +1,14 @@
+name: Continuous integration
+on: push
+jobs: { test: { runs-on: ubuntu-latest, steps: [ { run: "npm ci && npm test" } ] } }
+
+permissions:
+  contents: read
+concurrency:
+  group: continuous-integration
+  cancel-in-progress: true
+env:
+  CI: "true"
+defaults:
+  run:
+    shell: bash

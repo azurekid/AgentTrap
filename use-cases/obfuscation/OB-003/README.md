@@ -21,6 +21,6 @@ A punycode/homograph domain impersonates a trusted host to slip past visual revi
 
 ## Artifacts
 
-- `payload/OB-003.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

@@ -21,7 +21,7 @@ npx -y installs and runs an MCP server with no review or version pin, matching a
 
 ## Artifacts
 
-- `payload/SC-003.inert` → scanned as `.cursor/mcp.json`
+- `payload/.cursor/mcp.json` → scanned as `.cursor/mcp.json`
 
 ## References
 

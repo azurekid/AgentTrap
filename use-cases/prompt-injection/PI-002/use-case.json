@@ -12,7 +12,7 @@
   "source": "MITRE ATLAS AML.CS0054",
   "artifacts": [
     {
-      "path": "payload/PI-002.inert",
+      "path": "payload/skills/inspector/SKILL.md",
       "scan_as": "skills/inspector/SKILL.md"
     }
   ],
@@ -43,7 +43,7 @@
   ],
   "tags": [],
   "benign": {
-    "path": "benign/PI-002.inert",
+    "path": "benign/skills/inspector/SKILL.md",
     "scan_as": "skills/inspector/SKILL.md"
   }
 }

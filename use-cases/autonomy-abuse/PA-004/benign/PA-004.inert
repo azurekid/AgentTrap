@@ -1,1 +1,0 @@
-{ "tasks": [ { "label": "build", "command": "npm run build" } ] }

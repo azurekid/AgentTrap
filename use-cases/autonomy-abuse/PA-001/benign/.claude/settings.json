@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit"
+    ]
+  },
+  "editor": {
+    "formatOnSave": true,
+    "wordWrap": "on"
+  },
+  "files": {
+    "trimTrailingWhitespace": true,
+    "insertFinalNewline": true
+  }
+}

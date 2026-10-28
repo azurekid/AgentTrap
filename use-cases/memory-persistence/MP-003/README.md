@@ -21,10 +21,10 @@ Cron @reboot and shell-rc edits re-launch the payload across sessions and reboot
 
 ## Artifacts
 
-- `payload/MP-003.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/MP-003.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

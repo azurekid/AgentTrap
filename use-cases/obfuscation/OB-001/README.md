@@ -21,6 +21,6 @@ Unicode tag characters are invisible to humans but decode to instructions (here 
 
 ## Artifacts
 
-- `payload/OB-001.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

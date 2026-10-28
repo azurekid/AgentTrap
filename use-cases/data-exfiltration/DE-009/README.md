@@ -21,7 +21,7 @@ Echoing a secret into PR output exposes it to anyone who can read the pull reque
 
 ## Artifacts
 
-- `payload/DE-009.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

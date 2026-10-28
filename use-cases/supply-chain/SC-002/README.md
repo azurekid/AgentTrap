@@ -21,11 +21,11 @@ Framing an install as mandatory pressures the agent to add an unvetted (typosqua
 
 ## Artifacts
 
-- `payload/SC-002.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/SC-002.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

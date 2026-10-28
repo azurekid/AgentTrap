@@ -21,10 +21,10 @@ Fetching over plain HTTP allows on-path tampering of the downloaded content.
 
 ## Artifacts
 
-- `payload/SC-008.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/SC-008.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

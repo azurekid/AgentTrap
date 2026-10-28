@@ -11,7 +11,7 @@
   "source": "Regression rule sample",
   "artifacts": [
     {
-      "path": "payload/OB-006.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],

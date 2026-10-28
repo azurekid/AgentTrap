@@ -11,7 +11,7 @@
   "source": "MITRE ATLAS AML.CS0069",
   "artifacts": [
     {
-      "path": "payload/PI-006.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],
@@ -38,7 +38,7 @@
   ],
   "tags": [],
   "benign": {
-    "path": "benign/PI-006.inert",
+    "path": "benign/AGENTS.md",
     "scan_as": "AGENTS.md"
   }
 }

@@ -21,10 +21,10 @@ A workflow scans the filesystem for secrets and posts them to a webhook.site col
 
 ## Artifacts
 
-- `payload/SC-007.inert` → scanned as `.github/workflows/shai-hulud-workflow.yml`
+- `payload/.github/workflows/shai-hulud-workflow.yml` → scanned as `.github/workflows/shai-hulud-workflow.yml`
 
 ## Benign look-alike
 
-- `benign/SC-007.inert` → scanned as `.github/workflows/ci.yml`
+- `benign/.github/workflows/ci.yml` → scanned as `.github/workflows/ci.yml`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

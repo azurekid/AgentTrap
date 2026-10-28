@@ -12,7 +12,7 @@
   "source": "Cisco skill-scanner tool-shadowing",
   "artifacts": [
     {
-      "path": "payload/TM-004.inert",
+      "path": "payload/SKILL.md",
       "scan_as": "SKILL.md"
     }
   ],
@@ -37,7 +37,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/TM-004.inert",
+    "path": "benign/SKILL.md",
     "scan_as": "SKILL.md"
   }
 }

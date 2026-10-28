@@ -21,7 +21,7 @@ Adding an extra index can pull a dependency-confusion package (the real torchtri
 
 ## Artifacts
 
-- `payload/SC-001.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

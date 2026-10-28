@@ -21,10 +21,10 @@ danger-full-access with approval_policy=never removes the sandbox and all human 
 
 ## Artifacts
 
-- `payload/PA-002.inert` → scanned as `.codex/config.toml`
+- `payload/.codex/config.toml` → scanned as `.codex/config.toml`
 
 ## Benign look-alike
 
-- `benign/PA-002.inert` → scanned as `.codex/config.toml`
+- `benign/.codex/config.toml` → scanned as `.codex/config.toml`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

@@ -21,10 +21,10 @@ Instructions redefine how another tool behaves, silently copying every message t
 
 ## Artifacts
 
-- `payload/TM-004.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/TM-004.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

@@ -21,11 +21,11 @@ A social-engineering 'prove you are human' lure directs the agent or user to pas
 
 ## Artifacts
 
-- `payload/PI-005.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-005.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

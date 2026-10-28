@@ -21,10 +21,10 @@ Instructions invoke agent CLIs with flags that disable permission prompts and sa
 
 ## Artifacts
 
-- `payload/PI-008.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-008.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

@@ -21,11 +21,11 @@ A maintenance pretext plus a no-confirmation flag tries to trigger a full filesy
 
 ## Artifacts
 
-- `payload/CE-004.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/CE-004.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

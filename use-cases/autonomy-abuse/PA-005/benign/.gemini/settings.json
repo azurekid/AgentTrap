@@ -1,0 +1,15 @@
+{
+  "security": {
+    "folderTrust": {
+      "enabled": true
+    }
+  },
+  "general": {
+    "previewFeatures": false,
+    "enablePromptCompletion": true
+  },
+  "ui": {
+    "theme": "Default",
+    "showLineNumbers": true
+  }
+}

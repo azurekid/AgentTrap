@@ -21,10 +21,10 @@ CSS that hides text (display:none, font-size:0, opacity:0) conceals injected ins
 
 ## Artifacts
 
-- `payload/OB-005.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/OB-005.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

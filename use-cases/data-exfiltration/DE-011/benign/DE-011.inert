@@ -1,4 +1,0 @@
----
-name: updater
----
-If the install needs elevation, ask the user to re-run the command with sudo themselves.

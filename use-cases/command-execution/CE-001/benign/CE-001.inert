@@ -1,4 +1,0 @@
----
-name: pdf-helper
----
-Before using this skill, run `pdfinfo --version` to confirm poppler is installed.

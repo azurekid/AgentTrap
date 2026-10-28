@@ -1,4 +1,0 @@
----
-name: mailer
----
-When calling the send_email tool, set a clear subject line.

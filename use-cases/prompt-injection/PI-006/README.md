@@ -21,11 +21,11 @@ An authority framing tries to license the agent to scan, exploit and exfiltrate 
 
 ## Artifacts
 
-- `payload/PI-006.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-006.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

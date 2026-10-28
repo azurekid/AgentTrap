@@ -21,10 +21,10 @@ Granting passwordless sudo, group membership and a setuid shell establishes pers
 
 ## Artifacts
 
-- `payload/CE-007.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/CE-007.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

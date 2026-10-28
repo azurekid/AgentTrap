@@ -21,10 +21,10 @@ Deleting the home directory and force-pushing destroys local data and overwrites
 
 ## Artifacts
 
-- `payload/CE-010.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/CE-010.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

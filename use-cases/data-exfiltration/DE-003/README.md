@@ -21,10 +21,10 @@ An OSC-8 ANSI hyperlink renders as harmless text while carrying an exfiltration 
 
 ## Artifacts
 
-- `payload/DE-003.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/DE-003.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

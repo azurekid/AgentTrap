@@ -21,11 +21,11 @@ The agent is told to create a public repo and dump the GitHub token, matching a 
 
 ## Artifacts
 
-- `payload/DE-004.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/DE-004.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

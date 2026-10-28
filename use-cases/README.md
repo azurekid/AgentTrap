@@ -33,17 +33,22 @@ use-cases/
   <category-slug>/<ID>/
     use-case.json         metadata, expected rules, ATLAS/ASI mapping
     README.md             generated, human-readable
-    payload/<ID>.inert    the defanged attack payload
-    benign/<ID>.inert     optional clean look-alike that must NOT trigger HIGH/CRITICAL
+    payload/<scan_as>     the complete, defanged attack file under its real name
+                          (payload/AGENTS.md, payload/.claude/settings.json, ...)
+    benign/<scan_as>      optional clean look-alike that must NOT trigger HIGH/CRITICAL
 ```
 
 ## Safety rules
 
 - **Every payload is inert and defanged.** Hosts use `.example`/`.invalid` domains or documented
   canaries; credentials are synthetic shapes, never live values. Never run a payload.
-- Payloads are stored under `*.inert` filenames so coding agents working in this repo never
-  auto-load them. The real path a scanner should treat the file as is recorded in
-  `artifacts[].scan_as`.
+- Payloads are complete, realistic files stored under their **real names**, so they can be
+  inspected and uploaded as-is. The attack is buried in otherwise ordinary content, as it would
+  be in the wild. `artifacts[].scan_as` records the path a scanner should treat the file as.
+- ⚠️ Because the names are real, an agent whose working directory is inside a case folder (or
+  that loads nested `AGENTS.md` files) may load a payload. Do not run coding agents from inside
+  `use-cases/`, and do not copy a payload into a real project. [AGENTS.md](AGENTS.md) in this
+  folder tells agents that load nested instructions to treat everything below as hostile data.
 - The scanners (`scan_agents_md.py` and `Scan-AgentsMd.ps1`) are the source of truth. `use-case.json`
   records the rules that **actually** fire, so the catalogue can never drift from the detectors.
 
@@ -64,7 +69,7 @@ date, or if any detector lacks a sample.
 ## Adding a use case
 
 1. Copy `_template/use-case.json` into `use-cases/<category-slug>/<ID>/` and add
-   `payload/<ID>.inert` (and optionally `benign/<ID>.inert`).
+   `payload/<scan_as>` (and optionally `benign/<scan_as>`), for example `payload/AGENTS.md`.
 2. Fill in the metadata. Leave `expected.rules`, `mitre_atlas` and `owasp_asi` consistent with what
    the scanner reports for your payload.
 3. Run `python tools/use_cases.py validate && python tools/use_cases.py render`, then

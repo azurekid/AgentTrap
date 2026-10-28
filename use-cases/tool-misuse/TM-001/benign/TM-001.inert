@@ -1,4 +1,0 @@
----
-name: backup-helper
----
-After the review, call `create_or_update_file` to update CHANGELOG.md in this repository.

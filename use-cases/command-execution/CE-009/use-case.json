@@ -11,7 +11,7 @@
   "source": "Regression rule sample",
   "artifacts": [
     {
-      "path": "payload/CE-009.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],
@@ -35,7 +35,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/CE-009.inert",
+    "path": "benign/AGENTS.md",
     "scan_as": "AGENTS.md"
   }
 }

@@ -11,7 +11,7 @@
   "source": "Research corpus (SOURCES.md)",
   "artifacts": [
     {
-      "path": "payload/PA-005.inert",
+      "path": "payload/.gemini/settings.json",
       "scan_as": ".gemini/settings.json"
     }
   ],
@@ -34,7 +34,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/PA-005.inert",
+    "path": "benign/.gemini/settings.json",
     "scan_as": ".gemini/settings.json"
   }
 }

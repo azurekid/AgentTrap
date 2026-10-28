@@ -21,6 +21,6 @@ A base64 blob that decodes to a curl-pipe-sh command hides the payload from casu
 
 ## Artifacts
 
-- `payload/OB-006.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

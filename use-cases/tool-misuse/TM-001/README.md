@@ -21,11 +21,11 @@ A granted write tool is abused to move secrets into an attacker-controlled repos
 
 ## Artifacts
 
-- `payload/TM-001.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/TM-001.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 ## References
 

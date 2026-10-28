@@ -12,7 +12,7 @@
   "source": "MITRE ATLAS AML.CS0045",
   "artifacts": [
     {
-      "path": "payload/DE-008.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],

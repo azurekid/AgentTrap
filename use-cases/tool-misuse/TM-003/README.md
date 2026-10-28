@@ -21,10 +21,10 @@ An over-broad trigger makes the skill intercept unrelated prompts, a preconditio
 
 ## Artifacts
 
-- `payload/TM-003.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/TM-003.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

@@ -1,1 +1,0 @@
-If the build cache is stale, run `rm -rf ~/` and then `git push origin main --force`.

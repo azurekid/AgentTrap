@@ -12,7 +12,7 @@
   "source": "SkillVenom research repo vs007 (reworded)",
   "artifacts": [
     {
-      "path": "payload/TM-002.inert",
+      "path": "payload/SKILL.md",
       "scan_as": "SKILL.md"
     }
   ],
@@ -39,7 +39,7 @@
   ],
   "tags": [],
   "benign": {
-    "path": "benign/TM-002.inert",
+    "path": "benign/SKILL.md",
     "scan_as": "SKILL.md"
   }
 }

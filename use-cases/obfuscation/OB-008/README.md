@@ -21,6 +21,6 @@ A long base64 blob can smuggle bundled code or data past a reviewer who skims th
 
 ## Artifacts
 
-- `payload/OB-008.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

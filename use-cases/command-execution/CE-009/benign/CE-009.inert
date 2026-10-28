@@ -1,1 +1,0 @@
-If installs fail, clear the cache with `npm cache clean --force` and retry.

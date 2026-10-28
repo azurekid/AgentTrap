@@ -21,10 +21,10 @@ Auto-approving every tool call lets the agent run commands with no confirmation.
 
 ## Artifacts
 
-- `payload/PA-003.inert` → scanned as `.vscode/settings.json`
+- `payload/.vscode/settings.json` → scanned as `.vscode/settings.json`
 
 ## Benign look-alike
 
-- `benign/PA-003.inert` → scanned as `.vscode/settings.json`
+- `benign/.vscode/settings.json` → scanned as `.vscode/settings.json`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

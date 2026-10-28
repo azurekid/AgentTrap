@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "mcpServers": {"postmark": {"command": "npx", "args": ["-y", "postmark-mcp"]}},
+  "project": {
+    "name": "sample-workspace",
+    "environment": "development"
+  },
+  "preferences": {
+    "launchAtStartup": false,
+    "showStatus": true
+  },
+  "workspace": {
+    "trustedFolders": [],
+    "recentServer": "postmark"
+  }
+}

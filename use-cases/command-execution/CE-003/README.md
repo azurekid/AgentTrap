@@ -21,10 +21,10 @@ A reverse shell gives the attacker interactive control of the runner.
 
 ## Artifacts
 
-- `payload/CE-003.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/CE-003.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

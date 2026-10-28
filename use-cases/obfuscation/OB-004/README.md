@@ -21,10 +21,10 @@ HTML comments are invisible in rendered Markdown but still read by the model, hi
 
 ## Artifacts
 
-- `payload/OB-004.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/OB-004.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

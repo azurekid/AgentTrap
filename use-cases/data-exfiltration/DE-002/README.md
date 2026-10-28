@@ -21,10 +21,10 @@ Embedding a secret as a DNS subdomain leaks it through resolver logs even when o
 
 ## Artifacts
 
-- `payload/DE-002.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/DE-002.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

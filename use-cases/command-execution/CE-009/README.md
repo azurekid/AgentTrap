@@ -21,10 +21,10 @@ Disabling TLS verification and running install scripts as root opens the door to
 
 ## Artifacts
 
-- `payload/CE-009.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/CE-009.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

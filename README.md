@@ -163,8 +163,9 @@ agent-file attacks, organised into nine categories (prompt injection, data
 exfiltration, command execution, obfuscation, autonomy abuse, supply chain,
 memory/persistence, tool misuse, credentials) and tagged by target platform (Claude
 Code, GitHub Copilot, Cursor, Codex, Gemini CLI, VS Code, Windsurf, Cline, GitHub
-Actions, MCP, any-agent). Each case folder carries a `use-case.json`, an inert
-`payload/<ID>.inert`, an optional benign look-alike, and a generated `README.md`;
+Actions, MCP, any-agent). Each case folder carries a `use-case.json`, a complete
+defanged payload under its real name (`payload/AGENTS.md`, `payload/.claude/settings.json`, ...),
+an optional benign look-alike, and a generated `README.md`;
 [use-cases/CATALOG.md](use-cases/CATALOG.md) is the generated index.
 
 - [use-cases/taxonomy.json](use-cases/taxonomy.json) and

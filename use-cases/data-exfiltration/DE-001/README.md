@@ -21,11 +21,11 @@ A Markdown image URL with a templated query string leaks conversation content to
 
 ## Artifacts
 
-- `payload/DE-001.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/DE-001.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

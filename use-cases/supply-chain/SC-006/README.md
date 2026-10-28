@@ -21,6 +21,6 @@ Having the agent edit CI adds an attacker-controlled step that runs with pipelin
 
 ## Artifacts
 
-- `payload/SC-006.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

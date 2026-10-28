@@ -21,7 +21,7 @@ A delayed, trigger-gated memory write hides the poisoning until a benign user re
 
 ## Artifacts
 
-- `payload/MP-002.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

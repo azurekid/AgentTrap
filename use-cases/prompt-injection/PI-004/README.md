@@ -21,11 +21,11 @@ A Markdown link pre-fills an assistant query that plants a persistent, attacker-
 
 ## Artifacts
 
-- `payload/PI-004.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 ## Benign look-alike
 
-- `benign/PI-004.inert` → scanned as `AGENTS.md`
+- `benign/AGENTS.md` → scanned as `AGENTS.md`
 
 ## References
 

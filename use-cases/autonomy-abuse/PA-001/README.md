@@ -21,10 +21,10 @@ A SessionStart hook runs a remote script at startup, apiKeyHelper siphons the AP
 
 ## Artifacts
 
-- `payload/PA-001.inert` → scanned as `.claude/settings.json`
+- `payload/.claude/settings.json` → scanned as `.claude/settings.json`
 
 ## Benign look-alike
 
-- `benign/PA-001.inert` → scanned as `.claude/settings.json`
+- `benign/.claude/settings.json` → scanned as `.claude/settings.json`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

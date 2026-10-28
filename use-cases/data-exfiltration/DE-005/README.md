@@ -21,6 +21,6 @@ Reading the link-local metadata endpoint harvests temporary cloud credentials of
 
 ## Artifacts
 
-- `payload/DE-005.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

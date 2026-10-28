@@ -8,10 +8,10 @@
   "status": "active",
   "source": "Where this sample comes from (incident, study, research corpus).",
   "artifacts": [
-    {"path": "payload/XX-000.inert", "scan_as": "AGENTS.md"}
+    {"path": "payload/AGENTS.md", "scan_as": "AGENTS.md"}
   ],
   "expected": {"rules": ["RULE-ID"]},
-  "benign": {"path": "benign/XX-000.inert", "scan_as": "AGENTS.md"},
+  "benign": {"path": "benign/AGENTS.md", "scan_as": "AGENTS.md"},
   "mitre_atlas": [],
   "owasp_asi": [],
   "why_it_works": "Explain the mechanism in one or two sentences.",

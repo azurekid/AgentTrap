@@ -21,11 +21,11 @@ curl-pipe-sh runs attacker-controlled code at skill load with no review.
 
 ## Artifacts
 
-- `payload/CE-001.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/CE-001.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 ## References
 

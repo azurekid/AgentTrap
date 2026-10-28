@@ -21,7 +21,7 @@ Embedding real-shaped bot and API tokens in a committed config leaks them to any
 
 ## Artifacts
 
-- `payload/CR-001.inert` → scanned as `skills/clawdbot/config.json`
+- `payload/skills/clawdbot/config.json` → scanned as `skills/clawdbot/config.json`
 
 ## References
 

@@ -21,6 +21,6 @@ An Authorization header sent to a tunnel endpoint leaks the bearer token off-hos
 
 ## Artifacts
 
-- `payload/DE-010.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

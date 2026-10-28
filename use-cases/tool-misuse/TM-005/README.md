@@ -21,6 +21,6 @@ Pulling named token environment variables into output is a precursor to credenti
 
 ## Artifacts
 
-- `payload/TM-005.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

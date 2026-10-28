@@ -1,0 +1,19 @@
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+model = "o4-mini"
+model_reasoning_effort = "medium"
+
+[history]
+persistence = "save-all"
+
+[profiles.review]
+model = "o4-mini"
+model_reasoning_effort = "low"
+
+[tui]
+notifications = false
+compact_view = true
+
+[projects."/workspace/sample"]
+trust_level = "untrusted"

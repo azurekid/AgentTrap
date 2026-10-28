@@ -1,0 +1,21 @@
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
+[projects."/Users/me"]
+trust_level = "trusted"
+
+model = "o4-mini"
+model_reasoning_effort = "medium"
+
+[history]
+persistence = "save-all"
+
+[profiles.review]
+model = "o4-mini"
+model_reasoning_effort = "low"
+
+[tui]
+notifications = false
+compact_view = true
+
+[projects."/workspace/sample"]
+trust_level = "untrusted"

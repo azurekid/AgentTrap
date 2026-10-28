@@ -21,6 +21,6 @@ An AGENTS.md in a web-writable folder (Downloads/Desktop/tmp) is auto-loaded by 
 
 ## Artifacts
 
-- `payload/MP-004.inert` → scanned as `/Users/example/Downloads/AGENTS.md`
+- `payload/Users/example/Downloads/AGENTS.md` → scanned as `/Users/example/Downloads/AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

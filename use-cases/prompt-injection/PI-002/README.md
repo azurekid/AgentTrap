@@ -21,11 +21,11 @@ Fake authority tags such as <IMPORTANT>, <<SYS>> or [INST] make injected text lo
 
 ## Artifacts
 
-- `payload/PI-002.inert` → scanned as `skills/inspector/SKILL.md`
+- `payload/skills/inspector/SKILL.md` → scanned as `skills/inspector/SKILL.md`
 
 ## Benign look-alike
 
-- `benign/PI-002.inert` → scanned as `skills/inspector/SKILL.md`
+- `benign/skills/inspector/SKILL.md` → scanned as `skills/inspector/SKILL.md`
 
 ## References
 

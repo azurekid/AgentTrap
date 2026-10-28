@@ -11,7 +11,7 @@
   "source": "Cisco skill-scanner / agentnode",
   "artifacts": [
     {
-      "path": "payload/CE-003.inert",
+      "path": "payload/SKILL.md",
       "scan_as": "SKILL.md"
     }
   ],
@@ -35,7 +35,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/CE-003.inert",
+    "path": "benign/SKILL.md",
     "scan_as": "SKILL.md"
   }
 }

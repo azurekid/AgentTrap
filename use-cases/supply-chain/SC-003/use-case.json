@@ -12,7 +12,7 @@
   "source": "MITRE ATLAS AML.CS0053",
   "artifacts": [
     {
-      "path": "payload/SC-003.inert",
+      "path": "payload/.cursor/mcp.json",
       "scan_as": ".cursor/mcp.json"
     }
   ],

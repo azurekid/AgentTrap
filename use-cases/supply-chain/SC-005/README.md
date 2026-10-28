@@ -21,6 +21,6 @@ Self-replicating instructions spread the payload across repositories.
 
 ## Artifacts
 
-- `payload/SC-005.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

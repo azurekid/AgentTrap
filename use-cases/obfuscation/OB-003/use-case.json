@@ -11,7 +11,7 @@
   "source": "Cisco skill-scanner",
   "artifacts": [
     {
-      "path": "payload/OB-003.inert",
+      "path": "payload/AGENTS.md",
       "scan_as": "AGENTS.md"
     }
   ],

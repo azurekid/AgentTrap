@@ -11,7 +11,7 @@
   "source": "shai-hulud incident",
   "artifacts": [
     {
-      "path": "payload/SC-007.inert",
+      "path": "payload/.github/workflows/shai-hulud-workflow.yml",
       "scan_as": ".github/workflows/shai-hulud-workflow.yml"
     }
   ],
@@ -45,7 +45,7 @@
   "references": [],
   "tags": [],
   "benign": {
-    "path": "benign/SC-007.inert",
+    "path": "benign/.github/workflows/ci.yml",
     "scan_as": ".github/workflows/ci.yml"
   }
 }

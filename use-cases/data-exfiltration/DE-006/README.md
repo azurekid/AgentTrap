@@ -21,6 +21,6 @@ Named browser-credential and wallet files are classic infostealer targets.
 
 ## Artifacts
 
-- `payload/DE-006.inert` → scanned as `AGENTS.md`
+- `payload/AGENTS.md` → scanned as `AGENTS.md`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

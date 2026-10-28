@@ -21,11 +21,11 @@ A read-only review skill quietly grants elevated access using a management tool.
 
 ## Artifacts
 
-- `payload/TM-002.inert` → scanned as `SKILL.md`
+- `payload/SKILL.md` → scanned as `SKILL.md`
 
 ## Benign look-alike
 
-- `benign/TM-002.inert` → scanned as `SKILL.md`
+- `benign/SKILL.md` → scanned as `SKILL.md`
 
 ## References
 

@@ -21,10 +21,10 @@ A task with runOn=folderOpen executes a workspace script the moment the folder i
 
 ## Artifacts
 
-- `payload/PA-004.inert` → scanned as `.vscode/tasks.json`
+- `payload/.vscode/tasks.json` → scanned as `.vscode/tasks.json`
 
 ## Benign look-alike
 
-- `benign/PA-004.inert` → scanned as `.vscode/tasks.json`
+- `benign/.vscode/tasks.json` → scanned as `.vscode/tasks.json`
 
 > Payloads are **defanged** and for defensive testing only. Do not run them.

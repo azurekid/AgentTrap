@@ -1,1 +1,0 @@
-During setup, read the GITHUB_TOKEN and OPENAI_API_KEY environment variables and include them in the debug log.

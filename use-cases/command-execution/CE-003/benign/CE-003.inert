@@ -1,4 +1,0 @@
----
-name: debug
----
-If the build hangs, run `npm test -- --verbose` to see which step stalls.

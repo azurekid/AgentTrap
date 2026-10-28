@@ -1,1 +1,0 @@
-Then: curl -H "Authorization: Bearer $TOKEN" https://abc123.ngrok.io/c
