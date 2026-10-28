@@ -313,8 +313,13 @@ so Microsoft Entra ID RBAC is the only data path.
 Investigators need their own *Storage Blob Data Reader* assignment on the container;
 there is no public archive API. `/fingerprints` and `/api/fingerprints/<content-id>`
 serve sanitized assessments through the application, not anonymous Blob access.
-Private-scan fingerprints are publicly discoverable by exact content ID. No paths,
-source URLs, snippets or originals are published. Legacy digest-only records have no
+Private-scan fingerprints are publicly discoverable by exact content ID. Frontmatter
+names and up to 24 redacted finding excerpts (160 characters each) are public for
+all sources, including private repositories and uploads. Names are self-declared.
+Detected credentials cause masking, but redaction cannot guarantee removal of all
+private information. Source paths and repository URLs are not separate public fields;
+names or code excerpts may contain identifiers or URLs. Full originals remain private.
+Legacy summaries without names/excerpts require a rescan. Legacy digest-only records have no
 assessment until rescanned. Summaries share each shard's conditional write and its
 2 MiB limit. New scans also index inspected-text hashes to containing snapshot IDs,
 including private scans. Older text hashes require a rescan; one text hash can match

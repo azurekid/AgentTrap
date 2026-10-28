@@ -68,6 +68,25 @@ date, or if any detector lacks a sample.
 
 ## Adding a use case
 
+### Artifact identity validation
+
+The sample library includes four dedicated identity regressions:
+
+| Case | Expected classification | Completeness |
+|------|-------------------------|--------------|
+| [SC-010](supply-chain/SC-010/) | Named skill snapshot | Missing reference prevents a complete claim |
+| [SC-011](supply-chain/SC-011/) | Named two-file skill package | Complete only in the pinned GitHub tree flow |
+| [SC-012](supply-chain/SC-012/) | Saved MCP definition snapshot | Not a skill or running-server evaluation |
+| [SC-013](supply-chain/SC-013/) | Named standalone agent file | Not a skill package |
+
+Tests scan each fixture through both uploads and a mocked pinned GitHub tree, verify
+classification, frontmatter names, completeness, central lookup and unique counters.
+The HTTP references are inert MEDIUM review signals so these fixtures remain visible
+in findings-only reports. Never fetch the endpoints. Uploading the complete-package
+fixture still produces a snapshot, not a proven complete package.
+
+### Adding detection cases
+
 1. Copy `_template/use-case.json` into `use-cases/<category-slug>/<ID>/` and add
    `payload/<scan_as>` (and optionally `benign/<scan_as>`), for example `payload/AGENTS.md`.
 2. Fill in the metadata. Leave `expected.rules`, `mitre_atlas` and `owasp_asi` consistent with what

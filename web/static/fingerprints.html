@@ -8,6 +8,7 @@
   <title>Fingerprint search | AgentLens</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/radar.js" defer></script>
   <script src="/assets/fingerprints.js" defer></script>
 </head>
 <body>
@@ -30,7 +31,7 @@
       <input id="fingerprint-hash" name="hash" type="search" required maxlength="64" minlength="64" pattern="[a-fA-F0-9]{64}" autocomplete="off" spellcheck="false" placeholder="Paste an AgentLens content fingerprint">
       <button class="btn btn-primary" type="submit">Search registry</button>
     </form>
-    <p class="meta">Paste the linked content fingerprint from any report, or an inspected-text SHA256 from a newly indexed scan. A file-text hash can match several containing snapshots; it is not the snapshot identity. Older file-text hashes need a rescan. Raw-download hashes, evaluation IDs and finding IDs are not search keys. Private-scan fingerprints are discoverable too. Reports omit paths, repository URLs, snippets and originals.</p>
+    <p class="meta">Paste a snapshot fingerprint or indexed file-text hash. A text hash may match several snapshots; older scans need a rescan. Raw-download hashes, evaluation IDs and finding IDs are not search keys. All sources, including private scans and uploads, publish self-declared names and redacted finding excerpts. Names are not verified identity. Full originals stay private; excerpts can disclose private information despite detected-secret redaction.</p>
     <p id="lookup-status" role="status" class="meta"></p>
     <section id="lookup-result" class="card fingerprint-report" aria-label="Stored fingerprint report" hidden></section>
   </main>

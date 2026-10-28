@@ -44,6 +44,8 @@ def build():
             "url": f"{GITHUB_TREE}/{slug}/{case['id']}", "rules": case["expected"]["rules"],
             "findings": [],
         }
+        if case["expected"].get("artifact_kind"):
+            card["artifact_validation"] = {key: value for key, value in case["expected"].items() if key != "rules"}
         for artifact in case["artifacts"]:
             text = (directory / artifact["path"]).read_text(encoding="utf-8")
             for finding in scan_file(artifact["scan_as"], text, DEFAULT_ALLOW):

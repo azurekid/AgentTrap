@@ -139,48 +139,8 @@ function externalLink(href, text, className = "") {
 function techniqueName(tech) {
   return tech.parent ? `${tech.parent}: ${tech.name}` : tech.name;
 }
-const SHORT = { "command-and-control": ["Command &", "Control"], "credential-access": ["Credential", "Access"], "defense-evasion": ["Defense", "Evasion"], "initial-access": ["Initial", "Access"] };
-
 function drawRadar(tactics) {
-  const radar = $("atlas-radar");
-  radar.replaceChildren(radar.querySelector("title"));
-  const cx = 230, cy = 210, radius = 140, count = tactics.length;
-  const peak = Math.max(1, ...tactics.map((t) => t.findings));
-  const at = (index, scale) => {
-    const angle = -Math.PI / 2 + (index / count) * Math.PI * 2;
-    return [cx + Math.cos(angle) * radius * scale, cy + Math.sin(angle) * radius * scale];
-  };
-  const web = svg("g", { class: "radar-web" });
-  for (const ring of [0.25, 0.5, 0.75, 1]) {
-    web.append(svg("polygon", { points: tactics.map((_, i) => at(i, ring).join(",")).join(" "), class: ring === 1 ? "ring outer" : "ring" }));
-  }
-  tactics.forEach((tactic, i) => {
-    const [x, y] = at(i, 1);
-    web.append(svg("line", { x1: cx, y1: cy, x2: x, y2: y, class: `spoke${tactic.findings ? " hot" : ""}`, "data-key": tactic.key }));
-  });
-  radar.append(web);
-  // sqrt keeps small counts visible next to one dominant tactic.
-  const values = tactics.map((t) => (t.findings ? 0.14 + 0.86 * Math.sqrt(t.findings / peak) : 0));
-  const shape = svg("g", { class: "radar-shape" });
-  shape.append(svg("polygon", { points: values.map((v, i) => at(i, v).join(",")).join(" "), class: "area" }));
-  tactics.forEach((tactic, i) => {
-    if (!tactic.findings) return;
-    const [x, y] = at(i, values[i]);
-    shape.append(svg("circle", { cx: x, cy: y, r: 9, class: "halo", "data-key": tactic.key }));
-    shape.append(svg("circle", { cx: x, cy: y, r: 4, class: "node", "data-key": tactic.key }));
-  });
-  radar.append(shape);
-  tactics.forEach((tactic, i) => {
-    const [x, y] = at(i, 1.17);
-    const anchor = Math.abs(x - cx) < 12 ? "middle" : x > cx ? "start" : "end";
-    const lines = SHORT[tactic.key] || [tactic.name];
-    const label = svg("text", { x, y: y - (lines.length - 1) * 7, "text-anchor": anchor, class: `axis-label${tactic.findings ? " hot" : ""}`, "data-key": tactic.key });
-    lines.forEach((line, n) => label.append(svg("tspan", { x, dy: n ? 15 : 0 }, line)));
-    label.append(svg("tspan", { x, dy: 15, class: "axis-count" }, tactic.findings ? `${tactic.findings} finding${tactic.findings === 1 ? "" : "s"}` : "-"));
-    radar.append(label);
-  });
-  radar.classList.remove("grow");
-  requestAnimationFrame(() => requestAnimationFrame(() => radar.classList.add("grow")));
+  AgentLensRadar.draw($("atlas-radar"), tactics);
 }
 
 function highlight(key, on) {
@@ -302,7 +262,8 @@ function renderSnapshotReview() {
     const card = node("details", `card snapshot-card${critical || high ? " needs-review" : ""}`);
     const kind = { skill_snapshot: "Skill snapshot", mcp_snapshot: "MCP definition snapshot", agent_file: "Agent file" }[artifact.kind] || "Snapshot";
     const heading = node("summary", "snapshot-row");
-    const name = node("span", "snapshot-name", `${kind}: ${artifact.root}`);
+    const name = node("span", "snapshot-name", `${kind}: ${artifact.name || artifact.root}`);
+    if (artifact.name) name.append(node("span", "meta", ` | ${artifact.root} | self-declared name`));
     heading.append(name, node("span", critical || high ? "warning" : "meta", `${critical} CRITICAL / ${high} HIGH`),
       node("span", "meta", artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
     if (files.length === 1 && !report.view_scope) {
@@ -516,9 +477,7 @@ function renderResults() {
   if (!report.view_scope && !report.skipped.length && report.archive.status !== "stored" && report.archive.status !== "failed") {
     $("report-notes").append(node("p", "", "All discovered files were inspected."));
   }
-  if (report.archive.status === "stored") {
-    $("report-notes").append(node("p", "warning", `${report.archive.files} high-risk file(s) retained in the private investigation archive for 30 days${report.view_scope ? " across the full inspection" : ""}.`));
-  } else if (report.archive.status === "opted_out") {
+  if (report.archive.status === "opted_out") {
     $("report-notes").append(node("p", "meta", "Investigation retention opted out: no files were retained."));
   } else if (report.archive.status === "failed") {
     $("report-notes").append(node("p", "warning", report.archive.message));
@@ -775,7 +734,10 @@ if (reportPage) {
         const context = $("file-context");
         context.hidden = false;
         context.append(node("p", "", path));
-        for (const artifact of report.artifacts || []) context.append(contentFingerprint(artifact));
+        for (const artifact of report.artifacts || []) {
+          if (artifact.name) context.append(node("p", "", `${artifact.name} (self-declared frontmatter name)`));
+          context.append(contentFingerprint(artifact));
+        }
         const fingerprint = stored.provenance?.files.find((item) => item.path === path);
         if (fingerprint) {
           const textHash = node("details", "text-hash-details");
@@ -917,6 +879,12 @@ function sampleCard(item) {
   card.append(summary);
 
   const body = node("div", "sample-case-body");
+  if (item.artifact_validation) {
+    const expected = item.artifact_validation;
+    body.append(node("p", "sample-h", "Identity validation"),
+      node("p", "sample-text", `Expected: ${expected.artifact_kind}. Complete supported package at a pinned repository commit: ${expected.package_complete ? "yes" : "no"}. Uploads remain snapshots.`));
+    if (expected.name) body.append(node("p", "sample-text", `Self-declared frontmatter name: ${expected.name}`));
+  }
   if (item.findings.length) {
     body.append(node("p", "sample-h", "Detections"));
     const list = node("ul", "sample-findings");

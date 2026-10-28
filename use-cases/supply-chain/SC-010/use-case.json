@@ -1,0 +1,15 @@
+{
+  "id": "SC-010",
+  "title": "Named partial skill snapshot",
+  "summary": "Validate named skill grouping without claiming completeness when a referenced file is missing.",
+  "category": "SC",
+  "platforms": ["any-agent"],
+  "severity": "MEDIUM",
+  "status": "regression",
+  "source": "AgentLens artifact identity regression",
+  "artifacts": [{"path": "payload/skills/snapshot-demo/SKILL.md", "scan_as": "skills/snapshot-demo/SKILL.md"}],
+  "expected": {"rules": ["PLAIN-HTTP"], "artifact_kind": "skill_snapshot", "package_complete": false, "name": "Snapshot Notes"},
+  "why_it_works": "The missing local reference prevents a complete-package claim, even when the submitted skill file was fully inspected. The inert HTTP reference keeps the snapshot visible in findings-only report views.",
+  "mitigations": ["Inspect missing references before making a completeness claim.", "Do not interpret a content fingerprint or self-declared name as approval."],
+  "tags": ["artifact-identity", "partial-package", "frontmatter"]
+}

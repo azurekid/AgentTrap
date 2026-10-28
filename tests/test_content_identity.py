@@ -7,7 +7,7 @@ import pytest
 from azure.core import MatchConditions
 from azure.core.exceptions import ResourceModifiedError, ResourceNotFoundError
 
-from web.artifacts import identify
+from web.artifacts import frontmatter_name, identify
 from web.mcp import inspect_mcp
 from web.registry import Registry, RegistryError
 
@@ -152,7 +152,7 @@ def test_registry_persists_exact_unique_counts_and_concurrent_resubmissions(tmp_
     content = report_for()["artifacts"][0]["content_id"]
     assert registry.lookup(content)["report"]["evaluation_id"] == report_for(detector="b" * 64, complete=True)["artifacts"][0]["evaluation_id"]
     payloads = [p.read_text() for p in registry.directory.glob("*.json")]
-    assert all("SKILL.md" not in p and "[REDACTED]" not in p for p in payloads)
+    assert all("SKILL.md" not in p for p in payloads)
     assert any("PROMPT-INJECTION" in p for p in payloads)  # Fixed detector IDs are public assessment metadata.
     assert all(p.stat().st_mode & 0o777 == 0o600 for p in registry.directory.glob("*.json"))
 
@@ -241,7 +241,7 @@ def test_central_lookup_sanitized_report_persists_without_private_input(tmp_path
     report.update(source="https://private.example/repo", created_at="2026-10-28T18:00:00+00:00",
                   status="complete", provenance={"detector_sha256": "a" * 64})
     for file in report["files"]:
-        file["findings"][0]["snippet"] = "PRIVATE SECRET VALUE"
+        file["findings"][0]["snippet"] = "ghp_" + "A" * 36
     content = report["artifacts"][0]["content_id"]
     registry.add(report)
     found = Registry(archive).lookup(content)
@@ -252,7 +252,8 @@ def test_central_lookup_sanitized_report_persists_without_private_input(tmp_path
     assert found["report"]["rules"] == [{"rule": "PROMPT-INJECTION", "severity": "HIGH", "count": 2}]
     assert found["report"]["first_seen"] == "2026-10-28T18:00:00+00:00"
     payload = json.dumps(found)
-    assert all(value not in payload for value in ("private.example", "secret-skill", "PRIVATE SECRET VALUE", "run.py", "SKILL.md"))
+    assert all(value not in payload for value in ("private.example", "secret-skill", "ghp_" + "A" * 36, "run.py", "SKILL.md"))
+    assert all(hit["snippet"].startswith("[REDACTED:") for hit in found["report"]["evidence"]["excerpts"])
     report["created_at"] = "2026-10-28T19:00:00+00:00"
     registry.add(report)
     found = registry.lookup(content)
@@ -329,3 +330,83 @@ def test_text_hash_index_capacity_and_corruption_are_explicit(tmp_path, monkeypa
     (registry.directory / "a.json").write_text(json.dumps(record))
     with pytest.raises(RegistryError, match="hash index"):
         registry.lookup("a" * 64)
+
+
+@pytest.mark.parametrize("header,expected", [
+    ('name: Plain Name', "Plain Name"),
+    ('name: "Quoted: Name"', "Quoted: Name"),
+    ("name: 'Agent''s Notes'", "Agent's Notes"),
+    ("description: Not a name", None),
+    ("name: [not, a, scalar]", None),
+    ("name: 42", None),
+    ("name: ''", None),
+    ('name: "line\\nbreak"', None),
+    ("name: " + "x" * 161, None),
+    ("name: !!python/object/apply:os.system ['echo unsafe']", None),
+    ("name: " + "[" * 40 + "x" + "]" * 40, None),
+    ("other: &other [*other]\nname: Alias", None),
+])
+def test_frontmatter_names_are_bounded_safe_scalars(header, expected):
+    name, warning = frontmatter_name(f"---\n{header}\n---\n# Body\n")
+    assert name == expected
+    if expected is None and header.startswith("name:"):
+        assert warning
+
+
+def test_frontmatter_names_do_not_fall_back_to_headings_or_publish_credentials():
+    assert frontmatter_name("# A heading is not frontmatter\n") == (None, None)
+    assert frontmatter_name("---\nname: Missing closing delimiter")[1]
+    assert frontmatter_name("---\nname: Bearer ghp_" + "A" * 36 + "\n---")[0] is None
+
+
+def test_frontmatter_metadata_does_not_change_fingerprint_algorithm():
+    docs = [{"path": "SKILL.md", "text": "---\nname: Notes\n---\n# Notes\n"}]
+    files = [{"path": "SKILL.md", "findings": []}]
+    artifact = identify(files, docs, "a" * 64, False, {})[0]
+    assert artifact["name"] == "Notes"
+    assert artifact["name_source"] == "frontmatter.name"
+    from web.artifacts import identity, IDENTITY_VERSION
+    assert artifact["content_id"] == identity({
+        "version": IDENTITY_VERSION, "kind": "skill_snapshot", "files": artifact["files"], "hash_scope": "inspected_text",
+    })
+
+
+def test_public_excerpts_are_bounded_and_do_not_reduce_finding_counts(tmp_path):
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    report = report_for()
+    report["artifacts"][0]["name"] = "Self-declared Notes"
+    report["artifacts"][0]["name_source"] = "frontmatter.name"
+    original = report["files"][0]["findings"][0]
+    report["files"][0]["findings"] = [
+        {**original, "id": f"{number:064x}", "line": number + 1, "snippet": "<script>untrusted text</script>"}
+        for number in range(30)
+    ]
+    report["files"][1]["findings"] = []
+    registry.add(report)
+    summary = registry.lookup(report["artifacts"][0]["content_id"])["report"]
+    assert summary["name"] == "Self-declared Notes"
+    assert summary["findings"] == 30
+    assert len(summary["evidence"]["excerpts"]) == 24
+    assert summary["evidence"]["omitted"] == 6
+    assert summary["evidence"]["excerpts"][0]["snippet"] == "<script>untrusted text</script>"
+    assert set(summary["evidence"]["excerpts"][0]) == {"rule", "severity", "snippet", "source", "line"}
+    atlas = summary["atlas"]
+    assert max(tactic["findings"] for tactic in atlas["tactics"]) == 30
+    assert atlas["technique_count"] > 0
+    from web.atlas import annotate
+    assert atlas["tactics"] == annotate(report["files"])["tactics"]
+
+
+def test_old_assessment_records_without_names_or_excerpts_still_load(tmp_path):
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    report = report_for()
+    registry.add(report)
+    content = report["artifacts"][0]["content_id"]
+    path = registry.directory / f"{content[0]}.json"
+    record = json.loads(path.read_text())
+    for key in ("name", "name_source", "evidence", "atlas"):
+        record["reports"][content].pop(key)
+    path.write_text(json.dumps(record))
+    summary = registry.lookup(content)["report"]
+    assert summary["findings"] == 2
+    assert "evidence" not in summary

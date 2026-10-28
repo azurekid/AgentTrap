@@ -13,11 +13,14 @@ from azure.core import MatchConditions
 from azure.core.exceptions import AzureError, ResourceExistsError, ResourceModifiedError, ResourceNotFoundError
 
 from web.evaluation import evaluate
+from web.atlas import TACTIC_ORDER, annotate
+from scan_agents_md import SECRET_RULES
 
 METRICS = ("skill_snapshots", "complete_skill_versions", "mcp_snapshots", "agent_files", "evaluations", "findings")
 SHARDS = "0123456789abcdef"
 MAX_SHARD_BYTES = 2 * 1024 * 1024
 MAX_HASH_MATCHES = 64
+MAX_PUBLIC_EXCERPTS = 24
 DIGEST = re.compile(r"[0-9a-f]{64}")
 
 
@@ -62,7 +65,7 @@ class Registry:
         ):
             raise RegistryError("Invalid stored fingerprint reports.")
         for digest, summary in data.get("reports", {}).items():
-            if (set(summary) != {"content_id", "kind", "evaluation_id", "package_complete", "inspection_status",
+            if (set(summary) - {"name", "name_source", "evidence", "atlas"} != {"content_id", "kind", "evaluation_id", "package_complete", "inspection_status",
                                  "first_seen", "last_seen", "detector_sha256", "file_count", "assessment",
                                  "findings", "severities", "rules"}
                     or summary["content_id"] != digest or summary["kind"] not in ("skill_snapshot", "mcp_snapshot", "agent_file")
@@ -73,6 +76,31 @@ class Registry:
                     or any(type(value) is not int or value < 0 for value in summary["severities"].values())
                     or summary["findings"] != sum(summary["severities"].values())):
                 raise RegistryError("Invalid stored fingerprint assessment.")
+            if summary.get("name") is not None and (not isinstance(summary["name"], str) or len(summary["name"]) > 160):
+                raise RegistryError("Invalid stored frontmatter name.")
+            if "atlas" in summary:
+                atlas = summary["atlas"]
+                if (not isinstance(atlas, dict) or set(atlas) != {"source", "tactics", "technique_count"}
+                        or not isinstance(atlas["source"], str) or type(atlas["technique_count"]) is not int
+                        or atlas["technique_count"] < 0 or not isinstance(atlas["tactics"], list)
+                        or len(atlas["tactics"]) != len(TACTIC_ORDER)):
+                    raise RegistryError("Invalid stored ATLAS summary.")
+                for key, tactic in zip(TACTIC_ORDER, atlas["tactics"]):
+                    if (not isinstance(tactic, dict) or set(tactic) != {"key", "id", "name", "findings"}
+                            or tactic["key"] != key or not isinstance(tactic["id"], str)
+                            or not isinstance(tactic["name"], str) or type(tactic["findings"]) is not int
+                            or not 0 <= tactic["findings"] <= summary["findings"]):
+                        raise RegistryError("Invalid stored ATLAS tactic counts.")
+            if "evidence" in summary:
+                evidence = summary["evidence"]
+                if (not isinstance(evidence, dict) or set(evidence) != {"excerpts", "omitted"}
+                        or not isinstance(evidence["excerpts"], list) or len(evidence["excerpts"]) > MAX_PUBLIC_EXCERPTS
+                        or type(evidence["omitted"]) is not int or evidence["omitted"] < 0):
+                    raise RegistryError("Invalid stored finding excerpts.")
+                for excerpt in evidence["excerpts"]:
+                    if (not isinstance(excerpt, dict) or set(excerpt) != {"rule", "severity", "snippet", "source", "line"}
+                            or not isinstance(excerpt["snippet"], str) or len(excerpt["snippet"]) > 160):
+                        raise RegistryError("Invalid stored finding excerpt.")
             datetime.fromisoformat(summary["first_seen"])
             datetime.fromisoformat(summary["last_seen"])
         aliases = data.get("text_hashes", {})
@@ -178,8 +206,29 @@ class Registry:
             counts = Counter(hit["severity"] for hit in hits)
             rules = Counter((hit["rule"], hit["severity"]) for hit in hits)
             assessment, _ = evaluate(files, [], report.get("status", "unknown"))
-            # Only fixed detector metadata and aggregates are published, never submitter-controlled text.
+            atlas = annotate(files)
+            excerpts = []
+            seen = set()
+            for file in files:
+                credential_file = any(hit["rule"].startswith("SECRET-") for hit in file["findings"])
+                for hit in file["findings"]:
+                    if hit["id"] in seen:
+                        continue
+                    seen.add(hit["id"])
+                    if len(excerpts) >= MAX_PUBLIC_EXCERPTS:
+                        continue
+                    snippet = hit.get("snippet", "")
+                    if credential_file or any(rx.search(snippet) for _, _, _, rx in SECRET_RULES):
+                        snippet = "[REDACTED: file contains potential credential]"
+                    excerpts.append({
+                        "rule": hit["rule"], "severity": hit["severity"], "snippet": snippet[:160],
+                        "source": hit.get("evidence_source", "raw"), "line": hit["line"],
+                    })
             summary = {
+                "atlas": {"source": atlas["source"], "tactics": atlas["tactics"],
+                          "technique_count": len(atlas["techniques"])},
+                "name": artifact.get("name"), "name_source": artifact.get("name_source"),
+                "evidence": {"excerpts": excerpts, "omitted": max(0, len(seen) - len(excerpts))},
                 "content_id": artifact["content_id"], "kind": artifact["kind"],
                 "evaluation_id": artifact["evaluation_id"], "package_complete": artifact["package_complete"],
                 "inspection_status": report.get("status", "unknown"),
@@ -252,7 +301,8 @@ class Registry:
         return {"content_id": digest, "recorded": True, "kind": kind.removesuffix("s"),
                 "report": record.get("reports", {}).get(digest),
                 "disclaimer": "Latest recorded snapshot assessment, not a safety certification or a file-only assessment. "
-                              "Private-scan fingerprints are discoverable. No source paths, URLs or content are published."}
+                              "Private-scan fingerprints, self-declared names and redacted finding excerpts are public. "
+                              "Source paths and repository URLs are omitted. Excerpts may contain submitter-controlled text; never execute them."}
 
     def read(self) -> dict:
         try:

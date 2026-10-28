@@ -289,7 +289,11 @@ including private-token repositories. The UI shows a policy notice, not opt-in
 checkboxes. Legacy boolean `archive_consent` and `uniqueness_consent` request fields
 are accepted for compatibility but no longer disable retention, even when false;
 invalid values remain rejected. The registry retains digests and sanitized assessment
-summaries indefinitely, with no names, URLs, snippets, secret values or originals.
+summaries indefinitely. **Public data includes self-declared frontmatter names and
+redacted finding excerpts from all scans, including uploads and private repositories.**
+Source paths, repository URLs and full originals are not published as separate
+metadata. Excerpts or names can themselves contain private identifiers or URLs.
+Detected secrets are masked, not a guarantee of complete de-identification.
 Hashes can identify known content.
 Do not submit material you cannot share with the operator. Prior opted-out scans
 are not backfilled.
@@ -305,9 +309,30 @@ rescan the source to index its file-text hashes. Raw-download hashes, evaluation
 and finding IDs are not search keys. The shareable page
 works without the original browser tab. It shows artifact type, file count, severity
 and rule counts, per-artifact signal risk, methodology, coverage checks, detector and
-evaluation fingerprints and first/latest stored-assessment times. It excludes paths,
-repository URLs, messages, snippets, originals and credentials. Whoever knows matching
+evaluation fingerprints and first/latest stored-assessment times. Visual score and
+category meters, severity counts and performed/not-checked groups summarize the
+assessment. The public report follows fingerprint, file type/name, signal risk,
+then findings, with the shared MITRE ATLAS spiderweb alongside the evidence.
+Its recorded tactic counts cover all snapshot findings, not just stored excerpts.
+The chart uses relative square-root scaling, not risk probabilities. Older summaries
+without ATLAS metadata require a rescan; current mappings are not retroactively
+applied to old detector results. Scoring is explained in plain language; the internal
+`signal-risk-v1` formula identifier stays in technical details.
+Up to 24 distinct finding excerpts (160 characters each) are stored per
+snapshot; omitted counts are explicit and aggregate signal counts remain complete.
+Excerpts are displayed as escaped text in code blocks, never HTML or executable code.
+Files with detected credentials have all their excerpts masked; potential credentials
+in excerpts are checked again before storage. Names come only from a bounded YAML
+frontmatter `name` scalar in the skill's `SKILL.md` or standalone Markdown agent file.
+They are self-declared, never verified identity. Suspected credential-bearing names
+are withheld, malformed metadata produces a coverage note, and absent names are not
+inferred from paths, headings or MCP tool names. Old summaries without names/excerpts
+remain readable and require a rescan to populate those fields. Whoever knows matching
 content can infer that it was scanned, even if it came from a private repository.
+Publication of private names and excerpts is automatic; only submit material you
+can publish. Removing the report's yellow archive-success notice does not disable
+private 30-day original retention; its submission policy and archive-failure warnings
+remain visible.
 Only the latest recorded assessment is retained per content ID, not an evaluation
 history or a merged verdict across detectors. Its evaluation/detector IDs identify
 the exact assessment; partial originating scans remain unscored. An old digest-only

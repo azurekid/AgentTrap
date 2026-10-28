@@ -2844,6 +2844,166 @@
    ]
   },
   {
+   "id": "SC-010",
+   "title": "Named partial skill snapshot",
+   "summary": "Validate named skill grouping without claiming completeness when a referenced file is missing.",
+   "category": "SC",
+   "category_title": "Supply Chain & Dependency Trust",
+   "platforms": [
+    "any-agent"
+   ],
+   "severity": "MEDIUM",
+   "status": "regression",
+   "source": "AgentLens artifact identity regression",
+   "why": "The missing local reference prevents a complete-package claim, even when the submitted skill file was fully inspected. The inert HTTP reference keeps the snapshot visible in findings-only report views.",
+   "mitigations": [
+    "Inspect missing references before making a completeness claim.",
+    "Do not interpret a content fingerprint or self-declared name as approval."
+   ],
+   "mitre_atlas": [],
+   "owasp_asi": [],
+   "references": [],
+   "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-010",
+   "rules": [
+    "PLAIN-HTTP"
+   ],
+   "findings": [
+    {
+     "rule": "PLAIN-HTTP",
+     "severity": "MEDIUM",
+     "line": 8,
+     "snippet": "http://example.com/snapshot-notes",
+     "scan_as": "skills/snapshot-demo/SKILL.md"
+    }
+   ],
+   "artifact_validation": {
+    "artifact_kind": "skill_snapshot",
+    "package_complete": false,
+    "name": "Snapshot Notes"
+   }
+  },
+  {
+   "id": "SC-011",
+   "title": "Named complete supported skill package",
+   "summary": "Validate a two-file supported package from a pinned GitHub tree while keeping uploads classified as snapshots.",
+   "category": "SC",
+   "category_title": "Supply Chain & Dependency Trust",
+   "platforms": [
+    "any-agent"
+   ],
+   "severity": "MEDIUM",
+   "status": "regression",
+   "source": "AgentLens artifact identity regression",
+   "why": "Both supported files and known file modes are available in the pinned-tree test. The complete flag is expected only for that repository flow, never a folder upload. HTTP references are inert review signals, not proof of maliciousness.",
+   "mitigations": [
+    "Verify all listed package files at a pinned commit.",
+    "Keep unsupported-file and missing-reference completeness checks enabled."
+   ],
+   "mitre_atlas": [],
+   "owasp_asi": [],
+   "references": [],
+   "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-011",
+   "rules": [
+    "PLAIN-HTTP"
+   ],
+   "findings": [
+    {
+     "rule": "PLAIN-HTTP",
+     "severity": "MEDIUM",
+     "line": 4,
+     "snippet": "http://example.com/package-reference",
+     "scan_as": "skills/package-demo/references/notes.md"
+    },
+    {
+     "rule": "PLAIN-HTTP",
+     "severity": "MEDIUM",
+     "line": 8,
+     "snippet": "http://example.com/package-notes",
+     "scan_as": "skills/package-demo/SKILL.md"
+    }
+   ],
+   "artifact_validation": {
+    "artifact_kind": "skill_snapshot",
+    "package_complete": true,
+    "name": "Package Notes"
+   }
+  },
+  {
+   "id": "SC-012",
+   "title": "Standalone saved MCP definition snapshot",
+   "summary": "Validate that saved JSON tool definitions outside a skill count as MCP snapshots, not skill packages.",
+   "category": "SC",
+   "category_title": "Supply Chain & Dependency Trust",
+   "platforms": [
+    "mcp"
+   ],
+   "severity": "MEDIUM",
+   "status": "regression",
+   "source": "AgentLens artifact identity regression",
+   "why": "The supported tools array is inspected as decoded JSON and classified separately from skills. This is a saved definition, not an inspection of a running MCP server. The tool name is not a frontmatter skill or agent name.",
+   "mitigations": [
+    "Keep saved-definition inspection separate from runtime server verification."
+   ],
+   "mitre_atlas": [],
+   "owasp_asi": [],
+   "references": [],
+   "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-012",
+   "rules": [
+    "PLAIN-HTTP"
+   ],
+   "findings": [
+    {
+     "rule": "PLAIN-HTTP",
+     "severity": "MEDIUM",
+     "line": 4,
+     "snippet": "http://example.com/mcp-notes.",
+     "scan_as": ".mcp.json"
+    }
+   ],
+   "artifact_validation": {
+    "artifact_kind": "mcp_snapshot",
+    "package_complete": false
+   }
+  },
+  {
+   "id": "SC-013",
+   "title": "Named standalone agent file",
+   "summary": "Validate that an agent definition with frontmatter has a searchable name but is not counted as a skill.",
+   "category": "SC",
+   "category_title": "Supply Chain & Dependency Trust",
+   "platforms": [
+    "github-copilot"
+   ],
+   "severity": "MEDIUM",
+   "status": "regression",
+   "source": "AgentLens artifact identity regression",
+   "why": "A standalone agent definition remains an agent file. Its frontmatter name is descriptive, self-declared metadata, not a publisher identity or trust claim.",
+   "mitigations": [
+    "Review agent instructions independently of their self-declared display name."
+   ],
+   "mitre_atlas": [],
+   "owasp_asi": [],
+   "references": [],
+   "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-013",
+   "rules": [
+    "PLAIN-HTTP"
+   ],
+   "findings": [
+    {
+     "rule": "PLAIN-HTTP",
+     "severity": "MEDIUM",
+     "line": 7,
+     "snippet": "http://example.com/agent-notes",
+     "scan_as": ".github/agents/notes.agent.md"
+    }
+   ],
+   "artifact_validation": {
+    "artifact_kind": "agent_file",
+    "package_complete": false,
+    "name": "Notes Reviewer"
+   }
+  },
+  {
    "id": "TM-001",
    "title": "Agent tool exfiltrates secrets to another repository",
    "summary": "Agent tool exfiltrates secrets to another repository",
@@ -5119,6 +5279,46 @@
      "file": "AGENTS.md",
      "line": 43,
      "snippet": "http://docs.example.com/style.md"
+    },
+    {
+     "origin": "SC-010",
+     "label": "Named partial skill snapshot",
+     "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-010",
+     "file": "skills/snapshot-demo/SKILL.md",
+     "line": 8,
+     "snippet": "http://example.com/snapshot-notes"
+    },
+    {
+     "origin": "SC-011",
+     "label": "Named complete supported skill package",
+     "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-011",
+     "file": "skills/package-demo/SKILL.md",
+     "line": 8,
+     "snippet": "http://example.com/package-notes"
+    },
+    {
+     "origin": "SC-011",
+     "label": "Named complete supported skill package",
+     "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-011",
+     "file": "skills/package-demo/references/notes.md",
+     "line": 4,
+     "snippet": "http://example.com/package-reference"
+    },
+    {
+     "origin": "SC-012",
+     "label": "Standalone saved MCP definition snapshot",
+     "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-012",
+     "file": ".mcp.json",
+     "line": 4,
+     "snippet": "http://example.com/mcp-notes."
+    },
+    {
+     "origin": "SC-013",
+     "label": "Named standalone agent file",
+     "url": "https://github.com/azurekid/AgentTrap/tree/main/use-cases/supply-chain/SC-013",
+     "file": ".github/agents/notes.agent.md",
+     "line": 7,
+     "snippet": "http://example.com/agent-notes"
     }
    ]
   },

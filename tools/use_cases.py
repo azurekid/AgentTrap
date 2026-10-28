@@ -122,6 +122,13 @@ def render_case_readme(directory, case, tax):
         lines.append(f"- **MITRE ATLAS:** {', '.join(case['mitre_atlas'])}")
     if case.get("owasp_asi"):
         lines.append(f"- **OWASP ASI:** {', '.join(case['owasp_asi'])}")
+    if case["expected"].get("artifact_kind"):
+        expected = case["expected"]
+        lines += [f"- **Expected artifact:** {expected['artifact_kind']}",
+                  f"- **Complete supported package (pinned repository flow):** {expected['package_complete']}",
+                  "- **Uploads:** snapshot only; never proof of package completeness"]
+        if expected.get("name"):
+            lines.append(f"- **Expected self-declared frontmatter name:** {expected['name']}")
     lines += ["", "## Why it works", "", case["why_it_works"], "", "## Mitigations", ""]
     lines += [f"- {m}" for m in case["mitigations"]]
     lines += ["", "## Artifacts", ""]

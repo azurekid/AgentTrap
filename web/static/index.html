@@ -165,7 +165,7 @@
                 </label>
               </div>
 
-              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories, record fingerprints, inspected-text hash associations and sanitized assessment summaries centrally, retained indefinitely and publicly searchable by snapshot or indexed file-text hash. These summaries omit paths, repository URLs, snippets and originals. High-risk original files are retained privately for 30 days. Tokens are never retained. Digests can identify known content; do not submit material you cannot share with the operator.</p>
+              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories and uploads, publish fingerprints, self-declared frontmatter names, redacted finding excerpts and assessment summaries indefinitely. Names and excerpts can disclose private code or identifiers; detected-secret redaction is not a guarantee of confidentiality. Source paths, repository URLs and full originals are not separate public fields. High-risk originals are retained privately for 30 days. Access tokens are never retained. Only submit material you can publish.</p>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
                 <button id="scan-button" class="btn btn-primary btn-scan" type="submit">Run inspection <span aria-hidden="true">→</span></button>

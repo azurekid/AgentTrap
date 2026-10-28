@@ -53,7 +53,9 @@ POLICY = {
     "fingerprints": "Content, evaluation and finding digests and sanitized assessment summaries are recorded centrally indefinitely. "
                     "Content fingerprints and indexed inspected-text hashes from all scans, including private scans, "
                     "are publicly searchable with sanitized snapshot reports. "
-                    "No paths, URLs, snippets, originals or tokens are published. Historical unrecorded scans are not backfilled.",
+                    "Self-declared frontmatter names and up to 24 redacted finding excerpts are published for all scans, including private repositories and uploads. "
+                    "Detected-secret redaction cannot guarantee confidentiality. Full originals and access tokens are not published. "
+                    "Source paths and repository URLs are not separate public fields. Historical unrecorded scans are not backfilled.",
 }
 
 
@@ -322,7 +324,7 @@ def samples_page():
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "fingerprints.js", "style.css"):
+    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "fingerprints.js", "style.css"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 

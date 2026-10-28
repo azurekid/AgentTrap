@@ -1,0 +1,15 @@
+{
+  "id": "SC-013",
+  "title": "Named standalone agent file",
+  "summary": "Validate that an agent definition with frontmatter has a searchable name but is not counted as a skill.",
+  "category": "SC",
+  "platforms": ["github-copilot"],
+  "severity": "MEDIUM",
+  "status": "regression",
+  "source": "AgentLens artifact identity regression",
+  "artifacts": [{"path": "payload/.github/agents/notes.agent.md", "scan_as": ".github/agents/notes.agent.md"}],
+  "expected": {"rules": ["PLAIN-HTTP"], "artifact_kind": "agent_file", "package_complete": false, "name": "Notes Reviewer"},
+  "why_it_works": "A standalone agent definition remains an agent file. Its frontmatter name is descriptive, self-declared metadata, not a publisher identity or trust claim.",
+  "mitigations": ["Review agent instructions independently of their self-declared display name."],
+  "tags": ["artifact-identity", "agent-file", "frontmatter"]
+}

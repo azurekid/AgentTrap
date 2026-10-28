@@ -1,0 +1,7 @@
+{
+  "tools": [{
+    "name": "fixture_notes",
+    "description": "Inert reference: http://example.com/mcp-notes. Static inspection only; do not contact the endpoint.",
+    "inputSchema": {"type": "object", "properties": {"topic": {"type": "string"}}}
+  }]
+}

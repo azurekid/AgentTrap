@@ -4,7 +4,43 @@ import json
 import re
 from pathlib import PurePosixPath
 
+import yaml
+
+from scan_agents_md import DEFAULT_ALLOW, scan_file
+
 IDENTITY_VERSION = "artifact-v1"
+
+
+def frontmatter_name(text: str) -> tuple[str | None, str | None]:
+    lines = text.lstrip("\ufeff").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None, None
+    end = next((index for index, line in enumerate(lines[1:65], 1) if line.strip() in ("---", "...")), None)
+    if end is None or sum(len(line) for line in lines[:end]) > 8192:
+        return None, "Frontmatter name unavailable: header is unclosed or exceeds metadata limits."
+    header = "\n".join(lines[1:end])
+    try:
+        depth = 0
+        for count, event in enumerate(yaml.parse(header), 1):
+            if isinstance(event, (yaml.MappingStartEvent, yaml.SequenceStartEvent)):
+                depth += 1
+            elif isinstance(event, (yaml.MappingEndEvent, yaml.SequenceEndEvent)):
+                depth -= 1
+            if count > 512 or depth > 16 or isinstance(event, yaml.AliasEvent):
+                return None, "Frontmatter name unavailable: metadata complexity exceeds supported limits."
+        metadata = yaml.safe_load(header)
+    except yaml.YAMLError:
+        return None, "Frontmatter name unavailable: invalid YAML metadata."
+    if not isinstance(metadata, dict) or "name" not in metadata:
+        return None, None
+    name = metadata["name"]
+    if (not isinstance(name, str) or not name.strip() or len(name) > 160
+            or any(ord(char) < 32 or ord(char) == 127 for char in name)):
+        return None, "Frontmatter name unavailable: expected a single-line text value of at most 160 characters."
+    if any(hit["rule"].startswith("SECRET-") or hit["rule"] in ("AUTH-HEADER", "OAUTH-TOKEN", "URL-CREDENTIALS")
+           for hit in scan_file("AGENTS.md", name, DEFAULT_ALLOW)):
+        return None, "Frontmatter name withheld: possible embedded credential."
+    return name.strip(), None
 
 
 def identity(value) -> str:
@@ -66,6 +102,12 @@ def identify(files: list[dict], documents: list[dict[str, str]], detector: str, 
             "coverage_notes": sorted(set(coverage_notes)),
             "scope": "complete supported skill package" if complete else "inspected snapshot only; not a complete package claim",
         }
+        name_path = skill_path or (paths[0] if PurePosixPath(paths[0]).suffix.lower() in (".md", ".mdc") else None)
+        name, warning = frontmatter_name(docs[name_path]["text"]) if name_path else (None, None)
+        artifact["name"] = name
+        artifact["name_source"] = "frontmatter.name" if name else None
+        if warning:
+            artifact["coverage_notes"].append(warning)
         artifacts.append(artifact)
         for path in paths:
             file = file_results[path]

@@ -1,0 +1,15 @@
+{
+  "id": "SC-012",
+  "title": "Standalone saved MCP definition snapshot",
+  "summary": "Validate that saved JSON tool definitions outside a skill count as MCP snapshots, not skill packages.",
+  "category": "SC",
+  "platforms": ["mcp"],
+  "severity": "MEDIUM",
+  "status": "regression",
+  "source": "AgentLens artifact identity regression",
+  "artifacts": [{"path": "payload/.mcp.json", "scan_as": ".mcp.json"}],
+  "expected": {"rules": ["PLAIN-HTTP"], "artifact_kind": "mcp_snapshot", "package_complete": false},
+  "why_it_works": "The supported tools array is inspected as decoded JSON and classified separately from skills. This is a saved definition, not an inspection of a running MCP server. The tool name is not a frontmatter skill or agent name.",
+  "mitigations": ["Keep saved-definition inspection separate from runtime server verification."],
+  "tags": ["artifact-identity", "mcp-snapshot"]
+}

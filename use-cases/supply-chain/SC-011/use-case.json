@@ -1,0 +1,18 @@
+{
+  "id": "SC-011",
+  "title": "Named complete supported skill package",
+  "summary": "Validate a two-file supported package from a pinned GitHub tree while keeping uploads classified as snapshots.",
+  "category": "SC",
+  "platforms": ["any-agent"],
+  "severity": "MEDIUM",
+  "status": "regression",
+  "source": "AgentLens artifact identity regression",
+  "artifacts": [
+    {"path": "payload/skills/package-demo/SKILL.md", "scan_as": "skills/package-demo/SKILL.md"},
+    {"path": "payload/skills/package-demo/references/notes.md", "scan_as": "skills/package-demo/references/notes.md"}
+  ],
+  "expected": {"rules": ["PLAIN-HTTP"], "artifact_kind": "skill_snapshot", "package_complete": true, "name": "Package Notes"},
+  "why_it_works": "Both supported files and known file modes are available in the pinned-tree test. The complete flag is expected only for that repository flow, never a folder upload. HTTP references are inert review signals, not proof of maliciousness.",
+  "mitigations": ["Verify all listed package files at a pinned commit.", "Keep unsupported-file and missing-reference completeness checks enabled."],
+  "tags": ["artifact-identity", "complete-package", "frontmatter"]
+}

@@ -28,7 +28,12 @@
     "expected": {
       "type": "object", "additionalProperties": false,
       "required": ["rules"],
-      "properties": {"rules": {"type": "array", "items": {"type": "string"}, "minItems": 1}}
+      "properties": {
+        "rules": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "artifact_kind": {"enum": ["skill_snapshot", "mcp_snapshot", "agent_file"]},
+        "package_complete": {"type": "boolean"},
+        "name": {"type": "string", "maxLength": 160}
+      }
     },
     "benign": {
       "type": "object", "additionalProperties": false,
