@@ -203,12 +203,15 @@ def test_registry_azure_conflicts_are_idempotent():
     blobs = {}
     container = SimpleNamespace(get_blob_client=lambda name: blobs.setdefault(name, Blob()))
     registry = Registry(SimpleNamespace(container=container, directory=Path("/unused")))
-    registry.add(report_for())
-    registry.add(report_for())
+    report = report_for()
+    report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+    registry.add(report)
+    registry.add(report)
     assert registry.read()["counts"]["skill_snapshots"] == 1
     assert registry.read()["counts"]["findings"] == 2
     content = report_for()["artifacts"][0]["content_id"]
     assert Registry(SimpleNamespace(container=container, directory=Path("/unused"))).lookup(content)["report"]["findings"] == 2
+    assert registry.lookup("a" * 64)["matches"][0]["content_id"] == content
 
 
 def test_sightings_are_reported_from_atomic_registration_and_survive_restart(tmp_path):
@@ -278,3 +281,51 @@ def test_clean_fingerprints_are_still_registered_and_partial_assessments_unscore
     assert summary["findings"] == 0
     assert summary["assessment"]["score"] is None
     assert summary["assessment"]["decision"] == "incomplete"
+
+
+def test_inspected_text_hash_resolves_containing_snapshot_without_counting_a_new_skill(tmp_path):
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    report = report_for()
+    text_hash = "9d5d69e8013d5d3201c5573f2fbb5f6e11d37f7ea0c945f3ff8f0ad80f58e113"
+    report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": text_hash}]}
+    registry.add(report)
+    found = registry.lookup(text_hash)
+    assert found["match_type"] == "inspected_text"
+    assert found["matches"][0]["content_id"] == report["artifacts"][0]["content_id"]
+    assert registry.read()["counts"]["skill_snapshots"] == 1
+
+
+def test_text_hash_can_match_multiple_snapshots_and_survives_restart(tmp_path):
+    archive = SimpleNamespace(container=None, directory=tmp_path)
+    registry = Registry(archive)
+    expected = set()
+    for changed in (False, True):
+        report = report_for(changed=changed)
+        report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+        expected.add(report["artifacts"][0]["content_id"])
+        registry.add(report)
+        registry.add(report)
+    result = Registry(archive).lookup("a" * 64)
+    assert {item["content_id"] for item in result["matches"]} == expected
+    assert len(result["matches"]) == 2
+    assert registry.read()["counts"]["skill_snapshots"] == 2
+    assert all(item["report"]["findings"] == 2 for item in result["matches"])
+
+
+def test_text_hash_index_capacity_and_corruption_are_explicit(tmp_path, monkeypatch):
+    import web.registry as module
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    monkeypatch.setattr(module, "MAX_HASH_MATCHES", 1)
+    for changed in (False, True):
+        report = report_for(changed=changed)
+        report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+        if changed:
+            with pytest.raises(RegistryError, match="match capacity"):
+                registry.add(report)
+        else:
+            registry.add(report)
+    record = registry._empty()
+    record["text_hashes"] = {"a" * 64: ["invalid"]}
+    (registry.directory / "a.json").write_text(json.dumps(record))
+    with pytest.raises(RegistryError, match="hash index"):
+        registry.lookup("a" * 64)

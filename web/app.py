@@ -51,7 +51,8 @@ POLICY = {
     "automatic_retention": True,
     "private_scans_retained": True,
     "fingerprints": "Content, evaluation and finding digests and sanitized assessment summaries are recorded centrally indefinitely. "
-                    "Content fingerprints from all scans, including private scans, are publicly searchable with sanitized reports. "
+                    "Content fingerprints and indexed inspected-text hashes from all scans, including private scans, "
+                    "are publicly searchable with sanitized snapshot reports. "
                     "No paths, URLs, snippets, originals or tokens are published. Historical unrecorded scans are not backfilled.",
 }
 
@@ -303,14 +304,14 @@ def fingerprint_page():
 @app.get("/api/fingerprints/{digest}")
 def fingerprint_lookup(digest: str, request: Request):
     if not re.fullmatch(r"[a-fA-F0-9]{64}", digest):
-        raise HTTPException(422, "Enter a full 64-character SHA256 content fingerprint.")
+        raise HTTPException(422, "Enter a full 64-character SHA256 snapshot fingerprint or inspected-text hash.")
     try:
         result = request.app.state.registry.lookup(digest.lower())
     except RegistryError as exc:
         LOG.error("Fingerprint lookup failed")
         raise HTTPException(503, "Fingerprint lookup is temporarily unavailable.") from exc
     if result is None:
-        raise HTTPException(404, "This content fingerprint has not been recorded. This does not mean it is safe.")
+        raise HTTPException(404, "No snapshot or indexed inspected-text hash matches. Older text hashes need a rescan. This does not mean it is safe.")
     return result
 
 

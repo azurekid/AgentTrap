@@ -29,14 +29,30 @@
       const response = await fetch(`/api/fingerprints/${hash}`, { signal: controller.signal, cache: "no-store" });
       if (controller.signal.aborted) return;
       if (response.status === 404) {
-        status.textContent = "Not recorded. No matching content fingerprint was found; this is not evidence that the content is safe.";
+        status.textContent = "No matching snapshot or indexed file-text hash found. Older scans need a rescan to index file-text hashes. This is not evidence that the content is safe.";
         return;
       }
       if (response.status === 429) throw new Error("Fingerprint lookup limit reached. Wait a minute before searching again.");
       if (!response.ok) throw new Error("Central fingerprint lookup is temporarily unavailable. Try again later.");
-      const data = await response.json();
+      let data = await response.json();
       if (controller.signal.aborted) return;
       status.textContent = "Fingerprint found in the central registry.";
+      if (data.match_type === "inspected_text") {
+        status.textContent = `File-text hash found in ${data.matches.length} recorded snapshot(s). Assessments cover the containing snapshots, not this file alone.`;
+        if (data.matches.length > 1) {
+          result.append(element("h2", "Matching snapshots"));
+          for (const match of data.matches) {
+            const link = element("a", match.content_id, "fingerprint-value");
+            link.href = `/fingerprints?hash=${match.content_id}`;
+            const row = element("p", "");
+            row.append(link);
+            result.append(row);
+          }
+          result.hidden = false;
+          return;
+        }
+        data = data.matches[0];
+      }
       result.append(element("h2", "Stored fingerprint report"), element("code", data.content_id),
         element("p", data.disclaimer, "meta"));
       const kinds = { skill_snapshot: "Skill snapshot", mcp_snapshot: "MCP definition snapshot", agent_file: "Agent file" };

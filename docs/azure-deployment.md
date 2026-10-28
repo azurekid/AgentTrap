@@ -316,7 +316,11 @@ serve sanitized assessments through the application, not anonymous Blob access.
 Private-scan fingerprints are publicly discoverable by exact content ID. No paths,
 source URLs, snippets or originals are published. Legacy digest-only records have no
 assessment until rescanned. Summaries share each shard's conditional write and its
-2 MiB limit, outside the 30-day investigation lifecycle. Keep `uniqueness-v1/` out of
+2 MiB limit. New scans also index inspected-text hashes to containing snapshot IDs,
+including private scans. Older text hashes require a rescan; one text hash can match
+multiple snapshots. Associations are bounded to 64 snapshots per hash and disclose
+capacity failures rather than truncate matches. Registry data remains outside the
+30-day investigation lifecycle. Keep `uniqueness-v1/` out of
 archive-deletion rules; it is retained indefinitely. Lookup limits are 60/client/minute
 and 300/instance/minute, single-process controls rather than DDoS protection.
 Review the legal basis for retention and public fingerprint lookup, the

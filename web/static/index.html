@@ -165,7 +165,7 @@
                 </label>
               </div>
 
-              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories, record fingerprints and sanitized assessment summaries centrally, retained indefinitely and publicly searchable by content fingerprint. These summaries omit paths, repository URLs, snippets and originals. High-risk original files are retained privately for 30 days. Tokens are never retained. Digests can identify known content; do not submit material you cannot share with the operator.</p>
+              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories, record fingerprints, inspected-text hash associations and sanitized assessment summaries centrally, retained indefinitely and publicly searchable by snapshot or indexed file-text hash. These summaries omit paths, repository URLs, snippets and originals. High-risk original files are retained privately for 30 days. Tokens are never retained. Digests can identify known content; do not submit material you cannot share with the operator.</p>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
                 <button id="scan-button" class="btn btn-primary btn-scan" type="submit">Run inspection <span aria-hidden="true">→</span></button>
@@ -190,7 +190,7 @@
       <h2 id="fingerprint-search-title">Seen this skill before?</h2>
       <p class="meta">Search the central registry for a content fingerprint and its latest stored assessment, including fingerprints registered by private scans.</p>
       <form class="fingerprint-search" action="/fingerprints" method="get">
-        <label for="central-fingerprint">Content fingerprint (SHA256)</label>
+        <label for="central-fingerprint">Snapshot fingerprint or indexed file-text hash (SHA256)</label>
         <input id="central-fingerprint" type="search" name="hash" required minlength="64" maxlength="64" pattern="[a-fA-F0-9]{64}" placeholder="Paste an AgentLens content fingerprint" autocomplete="off" spellcheck="false">
         <button class="btn btn-primary" type="submit">Search registry</button>
       </form>

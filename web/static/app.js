@@ -255,6 +255,30 @@ function affectedFiles(artifact) {
     ? (artifact.root === "." ? file.path : `${artifact.root}/${file.path}`) : artifact.root));
   return report.files.filter((file) => file.findings.length && paths.has(file.path));
 }
+function contentFingerprint(artifact) {
+  const field = node("span", "content-fingerprint");
+  const link = node("a", "fingerprint-value");
+  link.href = `/fingerprints?hash=${artifact.content_id}`;
+  link.setAttribute("aria-label", `Look up content fingerprint ${artifact.content_id}`);
+  link.append(node("code", "", artifact.content_id));
+  const copy = node("button", "btn btn-ghost btn-small", "Copy");
+  copy.type = "button";
+  copy.setAttribute("aria-label", `Copy content fingerprint for ${artifact.root}`);
+  const status = node("span", "meta fingerprint-copy-status");
+  status.setAttribute("role", "status");
+  copy.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(artifact.content_id);
+      status.textContent = "Copied";
+    } catch {
+      status.textContent = "Clipboard unavailable. Select and copy the linked fingerprint.";
+    }
+  });
+  field.append(node("span", "meta fingerprint-caption", "Content fingerprint"), link, copy, status);
+  return field;
+}
 function renderSnapshotReview() {
   const artifacts = (report.artifacts || []).filter((artifact) => affectedFiles(artifact).length);
   $("snapshot-review").hidden = !artifacts.length;
@@ -286,6 +310,7 @@ function renderSnapshotReview() {
       link.href = `/report?file=${encodeURIComponent(files[0].path)}`;
       heading.append(link);
     }
+    heading.append(contentFingerprint(artifact));
     card.append(heading, node("p", critical || high ? "warning" : "meta", critical || high
         ? `Review required: ${critical} CRITICAL, ${high} HIGH signal(s)`
         : "No HIGH or CRITICAL signals in inspected content. This is not approval."),
@@ -295,8 +320,8 @@ function renderSnapshotReview() {
         : artifact.seen_before === false ? "First recorded: this content fingerprint was new when this scan was registered."
           : "Prior sightings unavailable for this report."));
     const fingerprints = node("details", "snapshot-identities");
-    fingerprints.append(node("summary", "", `SHA256 ${artifact.content_id.slice(0, 16)}... | Fingerprint details`));
-    for (const [label, value] of [["Content fingerprint (SHA256)", artifact.content_id], ["Evaluation fingerprint (SHA256)", artifact.evaluation_id]]) {
+    fingerprints.append(node("summary", "", "Evaluation fingerprint"));
+    for (const [label, value] of [["Evaluation fingerprint (SHA256)", artifact.evaluation_id]]) {
       const field = node("div", "snapshot-fingerprint");
       const input = node("input");
       input.type = "text";
@@ -364,26 +389,54 @@ function renderEvaluation() {
   const status = !complete ? "Incomplete evaluation"
     : evaluation.decision === "review_required" ? "Manual review required" : "No rule signals detected";
   const score = evaluation.score === null ? "Not scored" : `${evaluation.score}/100`;
-  $("evaluation-summary").replaceChildren(
-    node("h3", "", `${status} | ${score}`),
-    node("p", "meta", "Signal risk score: higher means more distinct rule evidence, not a probability of malware. A score of zero is not approval. Duplicate hits of the same rule do not increase the score."),
-    node("p", "meta", `Highest observed severity: ${evaluation.highest_severity || "none"}. Method: ${evaluation.version}.`),
-  );
+  const overview = node("div", "evaluation-overview");
+  const scoreCard = node("div", "evaluation-score");
+  scoreCard.append(node("span", "meta", "Signal risk"), node("strong", "", score));
+  if (evaluation.score !== null) {
+    const meter = node("meter", "evaluation-meter");
+    meter.min = 0;
+    meter.max = 100;
+    meter.value = evaluation.score;
+    meter.setAttribute("aria-label", `Signal risk score: ${evaluation.score} out of 100`);
+    scoreCard.append(meter);
+  }
+  const decision = node("div", "evaluation-decision");
+  decision.append(node("h3", "", status), node("p", "meta",
+    `${complete ? "Selected-file inspection complete" : "Coverage incomplete"} | Highest signal: ${evaluation.highest_severity || "none"}`),
+    node("p", "meta", "More distinct rule evidence = higher score. Not a malware probability or safety approval."));
+  overview.append(scoreCard, decision);
+  $("evaluation-summary").replaceChildren(overview);
   $("evaluation-categories").replaceChildren();
   for (const category of evaluation.categories) {
     const option = node("option", "", category.name);
     option.value = category.id;
     $("finding-category").append(option);
-    const card = node("article", "card evaluation-category");
-    card.append(node("h3", "", category.name));
-    card.append(node("p", category.findings ? "warning" : "meta",
-      category.findings ? `${category.findings} signals | ${category.highest_severity}` : "No signals in inspected files"));
-    card.append(node("p", "meta", category.guidance));
+    const card = node("div", `evaluation-category-row${category.findings ? " has-signals" : ""}`);
+    const title = node("span", "", category.name);
+    const count = node("span", category.findings ? "warning" : "meta", `${category.findings} signals`);
+    const meter = node("meter", "evaluation-meter");
+    meter.min = 0;
+    meter.max = Math.max(1, ...evaluation.categories.map((item) => item.findings));
+    meter.value = category.findings;
+    meter.setAttribute("aria-label", `${category.name}: ${category.findings} signal occurrences`);
+    card.append(title, meter, count);
+    if (category.findings) {
+      const advice = node("details", "category-advice");
+      advice.append(node("summary", "", `${category.highest_severity} | Review guidance`), node("p", "meta", category.guidance));
+      card.append(advice);
+    }
     $("evaluation-categories").append(card);
   }
   $("evaluation-checks").replaceChildren();
-  for (const check of evaluation.checks) {
-    $("evaluation-checks").append(node("p", "meta", `${check.performed ? "Performed" : "Not performed"}: ${check.name}`));
+  for (const [performed, title] of [[true, "Checks performed"], [false, "Not checked"]]) {
+    const group = node("div", "coverage-check-group");
+    group.append(node("h3", "", title));
+    const list = node("ul", "coverage-check-list");
+    for (const check of evaluation.checks.filter((item) => item.performed === performed)) {
+      list.append(node("li", performed ? "check-performed" : "check-not-performed", check.name));
+    }
+    group.append(list);
+    $("evaluation-checks").append(group);
   }
   const provenance = report.provenance;
   $("evaluation-provenance").replaceChildren();
@@ -722,8 +775,15 @@ if (reportPage) {
         const context = $("file-context");
         context.hidden = false;
         context.append(node("p", "", path));
+        for (const artifact of report.artifacts || []) context.append(contentFingerprint(artifact));
         const fingerprint = stored.provenance?.files.find((item) => item.path === path);
-        if (fingerprint) context.append(node("p", "meta", `Inspected-text SHA256: ${fingerprint.sha256}`));
+        if (fingerprint) {
+          const textHash = node("details", "text-hash-details");
+          const link = node("a", "fingerprint-value", fingerprint.sha256);
+          link.href = `/fingerprints?hash=${fingerprint.sha256}`;
+          textHash.append(node("summary", "", "File text hash (different from snapshot identity)"), link);
+          context.append(textHash);
+        }
         context.append(node("p", "meta", "Findings and threat mapping below cover this file only. Snapshot fingerprints and completeness describe its containing package from the full inspection."));
       }
       renderResults();

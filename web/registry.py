@@ -17,6 +17,7 @@ from web.evaluation import evaluate
 METRICS = ("skill_snapshots", "complete_skill_versions", "mcp_snapshots", "agent_files", "evaluations", "findings")
 SHARDS = "0123456789abcdef"
 MAX_SHARD_BYTES = 2 * 1024 * 1024
+MAX_HASH_MATCHES = 64
 DIGEST = re.compile(r"[0-9a-f]{64}")
 
 
@@ -43,7 +44,8 @@ class Registry:
         if len(payload) > MAX_SHARD_BYTES:
             raise RegistryError("Uniqueness storage shard exceeds its supported capacity.")
         data = json.loads(payload)
-        if (not isinstance(data, dict) or set(data) not in ({"since", "sets"}, {"since", "sets", "reports"})
+        if (not isinstance(data, dict) or not {"since", "sets"} <= set(data)
+                or set(data) - {"since", "sets", "reports", "text_hashes"}
                 or not isinstance(data["since"], str) or not isinstance(data["sets"], dict)
                 or set(data["sets"]) != set(METRICS)):
             raise RegistryError("Invalid uniqueness record.")
@@ -73,6 +75,13 @@ class Registry:
                 raise RegistryError("Invalid stored fingerprint assessment.")
             datetime.fromisoformat(summary["first_seen"])
             datetime.fromisoformat(summary["last_seen"])
+        aliases = data.get("text_hashes", {})
+        if (not isinstance(aliases, dict) or any(
+                not DIGEST.fullmatch(key) or not isinstance(values, list)
+                or not 1 <= len(values) <= MAX_HASH_MATCHES
+                or any(not isinstance(value, str) or not DIGEST.fullmatch(value) for value in values)
+                or len(values) != len(set(values)) for key, values in aliases.items())):
+            raise RegistryError("Invalid inspected-text hash index.")
         return data
 
     def _load(self, shard: str) -> tuple[dict, str | None]:
@@ -92,11 +101,19 @@ class Registry:
             return self._empty(), None
 
     def _merge(self, shard: str, additions: dict[str, set[str]],
-               summaries: dict[str, dict] | None = None) -> dict[str, set[str]]:
+               summaries: dict[str, dict] | None = None,
+               text_hashes: dict[str, set[str]] | None = None) -> dict[str, set[str]]:
         for _ in range(8):
             record, etag = self._load(shard)
             existing = {key: set(record["sets"][key]) & values for key, values in additions.items()}
             changed = False
+            for digest, values in (text_hashes or {}).items():
+                aliases = record.setdefault("text_hashes", {})
+                merged = sorted(set(aliases.get(digest, [])) | values)
+                if len(merged) > MAX_HASH_MATCHES:
+                    raise RegistryError("Inspected-text hash match capacity reached. No matches were silently dropped.")
+                changed |= aliases.get(digest) != merged
+                aliases[digest] = merged
             for digest, summary in (summaries or {}).items():
                 reports = record.setdefault("reports", {})
                 previous = reports.get(digest)
@@ -137,6 +154,8 @@ class Registry:
     def add(self, report: dict) -> dict[str, bool]:
         additions: dict[str, dict[str, set[str]]] = {}
         summaries: dict[str, dict[str, dict]] = {}
+        text_hashes: dict[str, dict[str, set[str]]] = {}
+        provenance = {file["path"]: file["sha256"] for file in report.get("provenance", {}).get("files", [])}
 
         def add(key: str, digest: str) -> None:
             if not DIGEST.fullmatch(digest):
@@ -174,6 +193,12 @@ class Registry:
                           for (rule, severity), count in sorted(rules.items())],
             }
             summaries.setdefault(artifact["content_id"][0], {})[artifact["content_id"]] = summary
+            for file in files:
+                digest = provenance.get(file["path"])
+                if digest is not None:
+                    if not DIGEST.fullmatch(digest):
+                        raise RegistryError("Invalid inspected-text hash.")
+                    text_hashes.setdefault(digest[0], {}).setdefault(digest, set()).add(artifact["content_id"])
         for file in report["files"]:
             for finding in file["findings"]:
                 add("findings", finding["id"])
@@ -181,10 +206,14 @@ class Registry:
             with self.lock:
                 self.cached = None
                 if self.container is None:
-                    results = [self._merge(shard, values, summaries.get(shard)) for shard, values in additions.items()]
+                    results = [self._merge(shard, values, summaries.get(shard), text_hashes.get(shard))
+                               for shard, values in additions.items()]
                 else:
                     with ThreadPoolExecutor(max_workers=4) as pool:
-                        results = list(pool.map(lambda item: self._merge(*item, summaries.get(item[0])), additions.items()))
+                        results = list(pool.map(lambda item: self._merge(*item, summaries.get(item[0]),
+                                                                        text_hashes.get(item[0])), additions.items()))
+                for shard in text_hashes.keys() - additions.keys():
+                    self._merge(shard, {}, text_hashes=text_hashes[shard])
                 known = set()
                 for result in results:
                     for metric in ("skill_snapshots", "mcp_snapshots", "agent_files"):
@@ -202,13 +231,28 @@ class Registry:
                 kind = next((metric for metric in ("skill_snapshots", "mcp_snapshots", "agent_files")
                              if digest in record["sets"][metric]), None)
                 if kind is None:
-                    return None
-                return {"content_id": digest, "recorded": True, "kind": kind.removesuffix("s"),
-                        "report": record.get("reports", {}).get(digest),
-                        "disclaimer": "Latest recorded static assessment, not a safety certification. "
-                                      "Private-scan fingerprints are discoverable. No source paths, URLs or content are published."}
+                    content_ids = record.get("text_hashes", {}).get(digest, [])
+                    if not content_ids:
+                        return None
+                    records = {digest[0]: record}
+                    for shard in {content_id[0] for content_id in content_ids} - records.keys():
+                        records[shard], _ = self._load(shard)
+                    matches = [self._content_result(content_id, records[content_id[0]]) for content_id in content_ids]
+                    return {"queried_hash": digest, "match_type": "inspected_text", "matches": matches}
+                return self._content_result(digest, record)
         except (OSError, AzureError, ValueError, TypeError) as exc:
             raise RegistryError("Fingerprint lookup unavailable.") from exc
+
+    @staticmethod
+    def _content_result(digest: str, record: dict) -> dict:
+        kind = next((metric for metric in ("skill_snapshots", "mcp_snapshots", "agent_files")
+                     if digest in record["sets"][metric]), None)
+        if kind is None:
+            raise RegistryError("Inspected-text hash references an unavailable snapshot.")
+        return {"content_id": digest, "recorded": True, "kind": kind.removesuffix("s"),
+                "report": record.get("reports", {}).get(digest),
+                "disclaimer": "Latest recorded snapshot assessment, not a safety certification or a file-only assessment. "
+                              "Private-scan fingerprints are discoverable. No source paths, URLs or content are published."}
 
     def read(self) -> dict:
         try:

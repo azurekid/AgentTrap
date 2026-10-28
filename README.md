@@ -218,7 +218,10 @@ visible. Scanned-file totals, coverage, raw JSON exports and registry identities
 still include all inspected files. Compact expandable snapshot rows put
 CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
 per-snapshot occurrence counts, completeness notes
-and expandable, copyable content/evaluation fingerprints. Central registration returns
+and an always-visible, linked, copyable content fingerprint on each collapsed row.
+The same snapshot fingerprint appears at the top of file reports; the file-text hash
+is secondary and explicitly labelled as a different identity. Evaluation fingerprints
+remain in expandable details. Central registration returns
 `seen_before: true` when the content existed before that shard's successful update,
 `false` on its first registration, and `null` if registry tracking fails. This
 observation is made for the scan, not refreshed when reopening an old report.
@@ -230,6 +233,10 @@ explicitly. File views do not create server-side report storage or a new scan.
 Snapshots without signals still receive fingerprints, not an approval badge.
 Full reports remain in the current browser tab, not a personal dashboard.
 The central registry stores only a sanitized assessment for each content fingerprint.
+The **Inspection summary** uses a signal-risk meter, category occurrence bars and
+performed/not-checked coverage groups. Review guidance is expandable per affected
+category; scoring methodology and technical provenance remain in details. Bars
+compare signal occurrences, not probabilities. Partial scans are not scored.
 
 Every report now includes `artifacts` and an `inventory`. A skill snapshot is the
 inspected files under a folder containing `SKILL.md`, not one skill per uploaded
@@ -290,7 +297,12 @@ are not backfilled.
 **Central search:** `/fingerprints?hash=<content-id>` and
 `GET /api/fingerprints/<content-id>` provide public exact lookup, including fingerprints
 registered by private-token scans. Paste the 64-hex **content fingerprint** from
-Snapshot review, not a raw file hash, evaluation ID or finding ID. The shareable page
+Snapshot review. Newly registered scans also index **inspected-text SHA256** hashes,
+resolving to the containing snapshot assessment(s). This is not a file-only verdict.
+Several snapshots can contain matching file text; search lists them instead of
+silently choosing one. Older records cannot be backfilled from digests alone:
+rescan the source to index its file-text hashes. Raw-download hashes, evaluation IDs
+and finding IDs are not search keys. The shareable page
 works without the original browser tab. It shows artifact type, file count, severity
 and rule counts, per-artifact signal risk, methodology, coverage checks, detector and
 evaluation fingerprints and first/latest stored-assessment times. It excludes paths,
@@ -302,7 +314,11 @@ the exact assessment; partial originating scans remain unscored. An old digest-o
 record returns “assessment unavailable” until rescanned, never an invented clean result.
 Unknown hashes return 404, malformed hashes 422, unavailable storage 503 and lookup
 limits 429 (60 requests/client/minute, 300/instance/minute). No prefix or directory
-enumeration is provided.
+enumeration is provided. File-text hash associations are stored in the same bounded
+shards, with at most 64 distinct snapshots per text hash. Exceeding capacity is an
+explicit tracking failure, never silently truncated results. Associations contain
+only digests, do not change uniqueness counts, and may be partially recorded if a
+multi-shard write fails. A lookup reads each required shard at most once.
 
 Storage uses 16 bounded digest/assessment shards under `uniqueness-v1/`, outside the
 investigation lifecycle prefix. Local storage uses process locking, mode-0600 atomic

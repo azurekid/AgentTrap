@@ -556,6 +556,11 @@ def test_raw_snapshot_ids_distinguish_bom_but_inspected_text_hashes_do_not(clien
     b = upload(client, "\ufeffHello.\n", "SKILL.md", archive_consent="false").json()
     assert a["provenance"]["files"][0]["sha256"] == b["provenance"]["files"][0]["sha256"]
     assert a["artifacts"][0]["content_id"] != b["artifacts"][0]["content_id"]
+    lookup = client.get("/api/fingerprints/" + a["provenance"]["files"][0]["sha256"])
+    assert lookup.status_code == 200
+    assert {match["content_id"] for match in lookup.json()["matches"]} == {
+        a["artifacts"][0]["content_id"], b["artifacts"][0]["content_id"],
+    }
 
 
 @pytest.mark.parametrize("rule,text", synthetic_secrets())
@@ -605,6 +610,13 @@ def test_private_token_scans_automatically_tracked_and_risky_originals_retained(
     assert "token-for-testing" not in lookup.text
     assert "https://github.com/test/repo" not in lookup.text
     assert "SKILL.md" not in lookup.text
+    text_hash = report["provenance"]["files"][0]["sha256"]
+    lookup = client.get(f"/api/fingerprints/{text_hash.upper()}")
+    assert lookup.status_code == 200
+    assert lookup.json()["match_type"] == "inspected_text"
+    assert lookup.json()["matches"][0]["content_id"] == content
+    assert "SKILL.md" not in lookup.text
+    assert "token-for-testing" not in lookup.text
 
 
 def test_central_fingerprint_search_routes_and_explicit_failures(client, monkeypatch):
