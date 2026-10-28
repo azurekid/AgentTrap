@@ -140,7 +140,13 @@
                 <input id="archive-consent" type="checkbox" checked aria-describedby="consent-help">
                 <span class="consent-box" aria-hidden="true"></span>
                 <span><strong>Allow investigation retention</strong>
-                  <small id="consent-help">Keep the original so it can be investigated. Uncheck to opt out (the scan still runs and nothing is retained.)</small></span>
+                  <small id="consent-help">Keep high-risk originals privately for 30 days. Uncheck to opt out of original-file retention; the scan still runs.</small></span>
+              </label>
+              <label class="consent" for="uniqueness-consent">
+                <input id="uniqueness-consent" type="checkbox" aria-describedby="uniqueness-help">
+                <span class="consent-box" aria-hidden="true"></span>
+                <span><strong>Contribute to unique evaluation counts</strong>
+                  <small id="uniqueness-help">Optional, off by default. Keep content/evaluation/finding digest identities indefinitely to deduplicate public aggregate counts. No filenames, URLs, snippets or originals enter this registry, but digests can identify known content. Private-token scans are excluded. This does not publish your report or certify a skill.</small></span>
               </label>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
@@ -171,6 +177,15 @@
         <div class="stat"><dt>Agent ecosystems</dt><dd>9</dd><span>Claude, Codex, Gemini, Copilot &amp; more</span></div>
       </dl>
       <p id="statistics-error" class="statistics-error" role="status" hidden></p>
+      <h3>Unique opted-in content</h3>
+      <dl class="stat-grid" aria-live="polite">
+        <div class="stat"><dt>Skill snapshots</dt><dd id="unique-skills">-</dd><span>Distinct inspected content, including partial packages</span></div>
+        <div class="stat"><dt>Complete supported skill versions</dt><dd id="unique-complete">-</dd><span>All listed package files inspected at a pinned GitHub commit</span></div>
+        <div class="stat"><dt>MCP definition snapshots</dt><dd id="unique-mcp">-</dd><span>Saved tool definitions, not running servers</span></div>
+        <div class="stat"><dt>Distinct findings</dt><dd id="unique-findings">-</dd><span>Per content version, detector and evidence location</span></div>
+      </dl>
+      <p id="uniqueness-status" class="meta" role="status">Loading uniqueness counters...</p>
+      <p class="meta">Activity totals count repeat scans. Unique counts cover opted-in content versions, not unique people, publishers or safe skills. Minor edits create new versions. No historical uniqueness is inferred.</p>
     </section>
 
     <section class="how" id="how" aria-labelledby="how-title">
@@ -192,7 +207,7 @@
         <li>
           <span class="step-num">03</span>
           <h3>Report</h3>
-          <p>Every signal is mapped to a file, line, severity, MITRE ATLAS technique, and research reference. Secrets are redacted before they reach your screen.</p>
+          <p>Every signal is mapped to a file, line or decoded JSON pointer, severity, MITRE ATLAS technique, and research reference. Detected secret values are redacted before they reach your screen.</p>
         </li>
       </ol>
     </section>

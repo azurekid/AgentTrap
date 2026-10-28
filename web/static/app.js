@@ -20,6 +20,8 @@ function syncToken() {
   $("token-field").hidden = !on;
   $("repo-token").disabled = !on;
   if (!on) $("repo-token").value = "";
+  $("uniqueness-consent").disabled = on || busy;
+  if (on) $("uniqueness-consent").checked = false;
 }
 function changeMode(next) {
   if (busy) return;
@@ -39,6 +41,40 @@ function changeMode(next) {
 const scannerPage = Boolean($("scan-form"));
 const reportPage = Boolean($("findings"));
 const REPORT_KEY = "skillvenom:report";
+if ($("uniqueness-status")) {
+  fetch("/api/statistics/unique", { headers: { Accept: "application/json" } })
+    .then((response) => {
+      if (!response.ok) throw new Error("Uniqueness unavailable");
+      return response.json();
+    })
+    .then((data) => {
+      for (const [id, key] of [["unique-skills", "skill_snapshots"], ["unique-complete", "complete_skill_versions"],
+        ["unique-mcp", "mcp_snapshots"], ["unique-findings", "findings"]]) {
+        const value = data.counts[key];
+        if (!Number.isSafeInteger(value) || value < 0) throw new Error("Invalid uniqueness count");
+        $(id).textContent = value.toLocaleString();
+      }
+      $("uniqueness-status").textContent = data.since
+        ? `Opt-in records since ${new Date(data.since).toLocaleDateString()}. Snapshot ${new Date(data.as_of).toLocaleString()}. ${data.consistency}`
+        : "No opted-in content has been recorded yet.";
+    })
+    .catch(() => {
+      $("uniqueness-status").textContent = "Uniqueness counters are unavailable. Scan results are still available.";
+    });
+}
+if ($("methodology-version")) {
+  fetch("/api/methodology", { headers: { Accept: "application/json" } })
+    .then((response) => {
+      if (!response.ok) throw new Error("Methodology unavailable");
+      return response.json();
+    })
+    .then((data) => {
+      $("methodology-version").textContent = `${data.version} | Detector SHA256: ${data.detector_sha256}`;
+    })
+    .catch(() => {
+      $("methodology-version").textContent = "Current detector identity is unavailable. Try again later.";
+    });
+}
 if (scannerPage) $("private-repo").addEventListener("change", syncToken);
 if (scannerPage) {
   $("upload-tab").addEventListener("click", () => changeMode("upload"));
@@ -237,6 +273,63 @@ function renderAtlas(atlas) {
   }
 }
 
+function renderEvaluation() {
+  const evaluation = report.evaluation;
+  $("evaluation").hidden = !evaluation;
+  $("finding-category").replaceChildren(node("option", "", "All categories"));
+  $("finding-category").firstChild.value = "ALL";
+  if (!evaluation) return;
+  const complete = report.status === "complete";
+  const status = !complete ? "Incomplete evaluation"
+    : evaluation.decision === "review_required" ? "Manual review required" : "No rule signals detected";
+  const score = evaluation.score === null ? "Not scored" : `${evaluation.score}/100`;
+  $("evaluation-summary").replaceChildren(
+    node("h3", "", `${status} | ${score}`),
+    node("p", "meta", "Signal risk score: higher means more distinct rule evidence, not a probability of malware. A score of zero is not approval. Duplicate hits of the same rule do not increase the score."),
+    node("p", "meta", `Highest observed severity: ${evaluation.highest_severity || "none"}. Method: ${evaluation.version}.`),
+  );
+  $("evaluation-categories").replaceChildren();
+  for (const category of evaluation.categories) {
+    const option = node("option", "", category.name);
+    option.value = category.id;
+    $("finding-category").append(option);
+    const card = node("article", "card evaluation-category");
+    card.append(node("h3", "", category.name));
+    card.append(node("p", category.findings ? "warning" : "meta",
+      category.findings ? `${category.findings} signals | ${category.highest_severity}` : "No signals in inspected files"));
+    card.append(node("p", "meta", category.guidance));
+    $("evaluation-categories").append(card);
+  }
+  $("evaluation-checks").replaceChildren();
+  for (const check of evaluation.checks) {
+    $("evaluation-checks").append(node("p", "meta", `${check.performed ? "Performed" : "Not performed"}: ${check.name}`));
+  }
+  const provenance = report.provenance;
+  $("evaluation-provenance").replaceChildren();
+  if (provenance) {
+    $("evaluation-provenance").append(
+      node("p", "meta", `Detector SHA256: ${provenance.detector_sha256}`),
+      node("p", "meta", `Manifest SHA256: ${provenance.manifest_sha256}`),
+      node("p", "meta", provenance.hash_scope),
+    );
+    const list = node("ul", "fingerprint-list");
+    for (const file of provenance.files) {
+      const item = node("li");
+      item.append(node("strong", "", file.path), node("code", "", `${file.bytes} bytes | SHA256 ${file.sha256}`));
+      list.append(item);
+    }
+    $("evaluation-provenance").append(list);
+  }
+  for (const artifact of report.artifacts || []) {
+    const item = node("details", "artifact-evidence");
+    item.append(node("summary", "", `${artifact.kind}: ${artifact.root}`),
+      node("p", "meta", artifact.scope),
+      node("p", "meta", `Content ID: ${artifact.content_id}`),
+      node("p", "meta", `Evaluation ID: ${artifact.evaluation_id}`));
+    for (const note of artifact.coverage_notes) item.append(node("p", "warning", note));
+    $("evaluation-provenance").append(item);
+  }
+}
 function renderResults() {
   const summary = report.summary;
   const incomplete = report.status === "partial" || report.status === "no_targets";
@@ -296,9 +389,21 @@ function renderResults() {
   if (report.statistics?.status === "failed") {
     $("report-notes").append(node("p", "warning", report.statistics.message));
   }
+  if (report.uniqueness) {
+    $("report-notes").append(node("p", report.uniqueness.status === "failed" ? "warning" : "meta",
+      report.uniqueness.status === "failed" ? report.uniqueness.message
+        : `Unique-content tracking: ${report.uniqueness.status.replaceAll("_", " ")}.`));
+  }
+  if (report.inventory) {
+    $("report-notes").append(node("p", "meta", `${report.inventory.skill_snapshots} skill snapshots, `
+      + `${report.inventory.complete_skill_packages} complete supported packages, ${report.inventory.mcp_snapshots} MCP snapshots, `
+      + `${report.inventory.agent_files} other agent files. Files are not counted as skills.`));
+  }
   $("disclaimer").textContent = report.disclaimer;
   $("finding-count").textContent = `${summary.findings} signals across ${summary.files} files`;
   $("severity").value = "ALL";
+  $("finding-search").value = "";
+  renderEvaluation();
   renderAtlas(report.atlas);
   renderFindings();
   $("results").hidden = false;
@@ -306,12 +411,19 @@ function renderResults() {
 function renderFindings() {
   $("findings").replaceChildren();
   const filter = $("severity").value;
+  const category = $("finding-category").value;
+  const query = $("finding-search").value.trim().toLowerCase();
   let visible = 0;
+  let visibleFindings = 0;
   const clean = report.files.filter((file) => !file.findings.length).length;
   for (const file of report.files) {
-    const findings = file.findings.filter((finding) => filter === "ALL" || finding.severity === filter);
+    const findings = file.findings.filter((finding) =>
+      (filter === "ALL" || finding.severity === filter)
+      && (category === "ALL" || finding.category === category)
+      && (!query || `${file.path} ${finding.rule} ${finding.message} ${finding.snippet}`.toLowerCase().includes(query)));
     if (!findings.length) continue;
     visible++;
+    visibleFindings += findings.length;
     const details = node("details", "file-result");
     details.open = true;
     const summary = node("summary", "", file.path);
@@ -321,8 +433,12 @@ function renderFindings() {
       const article = node("article", `finding sev-${finding.severity.toLowerCase()}`);
       const heading = node("div", "finding-heading");
       heading.append(node("span", `badge ${finding.severity.toLowerCase()}`, finding.severity),
-        node("strong", "", finding.rule), node("span", "line-number", `LINE ${finding.line}`));
+        node("strong", "", finding.rule), node("span", "line-number",
+          finding.json_pointer ? `JSON ${finding.json_pointer}` : `LINE ${finding.line}`));
       article.append(heading, node("p", "", finding.message), node("pre", "", finding.snippet));
+      if (finding.encoding_chain) {
+        article.append(node("p", "meta", `Decoded evidence: ${finding.encoding_chain.join(" -> ")}; decoded line ${finding.decoded_line}. The location above identifies the containing encoded text, not an invented decoded source line.`));
+      }
       if (finding.rule.startsWith("SECRET-")) {
         article.append(node("p", "", "If real: revoke and rotate this credential, remove it from instructions and history, and review access logs. Detection does not verify whether a credential is active."));
       }
@@ -371,10 +487,28 @@ function renderFindings() {
   if (!visible) {
     const message = report.files.length && clean === report.files.length
       ? "No security signals detected by the current rules. Manual review is still recommended."
-      : "No files match this severity filter.";
+      : "No findings match these filters.";
     $("findings").append(node("div", "empty-state", message));
   }
   if (clean) $("findings").append(node("p", "clean-note", `${clean} scanned ${clean === 1 ? "file" : "files"} with no findings ${clean === 1 ? "is" : "are"} not listed.`));
+  for (const file of report.files) {
+    if (file.decoding) {
+      const info = node("details", "card evaluation-evidence");
+      info.append(node("summary", "", `${file.path}: encoded-text inspection (${file.decoding.status}, ${file.decoding.payloads} payloads)`),
+        node("p", "meta", file.decoding.scope));
+      for (const note of file.decoding.notes) info.append(node("p", "warning", note));
+      $("findings").append(info);
+    }
+    if (!file.mcp || file.mcp.status === "not_applicable") continue;
+    const info = node("details", "card evaluation-evidence");
+    info.append(node("summary", "", `${file.path}: structured MCP inspection (${file.mcp.status}, ${file.mcp.tools} tools)`));
+    for (const observation of file.mcp.observations) {
+      info.append(node("p", "meta", `${observation.pointer || ""} ${observation.message}`));
+    }
+    info.append(node("p", "meta", "Schema and sensitive-input observations are not vulnerability findings and do not increase the signal score."));
+    $("findings").append(info);
+  }
+  $("finding-count").textContent = `${visibleFindings} of ${report.summary.findings} signals shown`;
 }
 const findingKeys = new WeakMap();
 function allFindings() {
@@ -393,7 +527,8 @@ function openFalsePositive(selectedKey) {
     box.type = "checkbox";
     box.value = f.key;
     box.checked = f.key === selectedKey;
-    label.append(box, node("span", `badge ${f.severity.toLowerCase()}`, f.severity), node("code", "", f.rule), node("span", "meta", `${f.path}:${f.line}`));
+    label.append(box, node("span", `badge ${f.severity.toLowerCase()}`, f.severity), node("code", "", f.rule),
+      node("span", "meta", f.json_pointer ? `${f.path} JSON ${f.json_pointer}` : `${f.path}:${f.line}`));
     item.append(label);
     list.append(item);
   }
@@ -423,6 +558,7 @@ if (reportPage) {
           comment: $("fp-comment").value.trim(),
           findings: chosen.map((f) => ({
             rule: f.rule, severity: f.severity, path: f.path.slice(0, 300), line: f.line,
+            ...(f.json_pointer && { json_pointer: f.json_pointer.slice(0, 8192) }),
             ...(withSnippets && !f.rule.startsWith("SECRET-") && { snippet: String(f.snippet).slice(0, 300) }),
           })),
         }),
@@ -439,6 +575,8 @@ if (reportPage) {
     }
   });
   $("severity").addEventListener("change", renderFindings);
+  $("finding-category").addEventListener("change", renderFindings);
+  $("finding-search").addEventListener("input", renderFindings);
 
   fetch("/api/sources", { headers: { Accept: "application/json" } })
     .then((response) => (response.ok ? response.json() : null))
@@ -448,15 +586,24 @@ if (reportPage) {
       if (report) renderFindings();
     })
     .catch(() => {});
-  $("download").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = node("a");
-    link.href = url;
-    link.download = `skillvenom-${report.id}.json`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  });
+  for (const [id, format] of [["download", "json"], ["download-sarif", "sarif"]]) {
+    $(id).addEventListener("click", () => {
+      $("export-status").hidden = true;
+      try {
+        const data = format === "sarif" ? buildSarif(report) : report;
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = node("a");
+        link.href = url;
+        link.download = `skillvenom-${report.id}.${format}`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (error) {
+        $("export-status").textContent = `Export failed: ${error.message || "Invalid report."}`;
+        $("export-status").hidden = false;
+      }
+    });
+  }
   let stored = null;
   try { stored = JSON.parse(sessionStorage.getItem(REPORT_KEY)); } catch { /* ignore */ }
   if (stored?.files && stored?.atlas) {
@@ -476,6 +623,7 @@ if (scannerPage) {
     const headers = {};
     const workflows = mode === "repo" && $("workflows").checked;
     const consent = $("archive-consent").checked;
+    const uniquenessConsent = $("uniqueness-consent").checked;
     if (mode === "upload") {
       if (!selected.length) return showError("Select at least one file to inspect.");
       if (selected.length > 500 || selected.some((file) => file.size > 256 * 1024)
@@ -486,12 +634,14 @@ if (scannerPage) {
       body.append("include_workflows", String(workflows));
       body.append("discover", String(discover));
       body.append("archive_consent", String(consent));
+      body.append("uniqueness_consent", String(uniquenessConsent));
       for (const file of selected) body.append("files", file, file.webkitRelativePath || file.name);
     } else {
       const url = $("repository").value.trim();
       if (!url) return showError("Enter a repository URL.");
       const token = $("private-repo").checked ? $("repo-token").value.trim() : "";
-      body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent, ...(token && { token }) });
+      body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent,
+        uniqueness_consent: uniquenessConsent, ...(token && { token }) });
       headers["Content-Type"] = "application/json";
     }
     busy = true;
@@ -499,7 +649,7 @@ if (scannerPage) {
     $("scan-button").disabled = true;
     $("scan-button").textContent = "Inspecting…";
     $("progress").hidden = false;
-    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent"]) $(id).disabled = true;
+    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent", "uniqueness-consent"]) $(id).disabled = true;
     renderFiles();
     try {
       const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(120000) });
@@ -522,7 +672,7 @@ if (scannerPage) {
       $("scan-button").disabled = false;
       $("scan-button").replaceChildren(document.createTextNode("Run inspection "), node("span", "", "→"));
       $("progress").hidden = true;
-      for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent"]) $(id).disabled = false;
+      for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent", "uniqueness-consent"]) $(id).disabled = false;
       $("repository").disabled = mode !== "repo";
       $("private-repo").disabled = mode !== "repo";
       syncToken();

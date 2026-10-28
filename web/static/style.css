@@ -276,7 +276,7 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .finding.sev-medium { --sev: var(--medium); }
 .finding-heading { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .finding-heading strong { font: 600 13px var(--mono); color: var(--text); }
-.line-number { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
+.line-number { margin-left: auto; min-width: 0; max-width: 100%; overflow-wrap: anywhere; font: 11px var(--mono); color: var(--muted); }
 .badge { padding: 2px 8px; border-radius: 6px; font: 700 10px var(--mono); letter-spacing: .06em; color: var(--sev); background: color-mix(in srgb, var(--sev) 15%, transparent); border: 1px solid color-mix(in srgb, var(--sev) 35%, transparent); }
 .finding p { margin: 8px 0 0; font-size: 14px; color: var(--body); }
 .finding pre { margin: 10px 0 0; padding: 10px 12px; border-radius: 8px; background: #05080d; border: 1px solid var(--line); font: 12.5px/1.55 var(--mono); color: #cbd5e1; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -588,6 +588,15 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 @media (max-width: 900px) { .sample-cards { grid-template-columns: minmax(0, 1fr); } }
 
 .results-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.evaluation { margin-top: 32px; }
+.evaluation-categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; margin: 14px 0; }
+.evaluation-category h3 { font-size: 16px; }
+.evaluation-evidence { margin-top: 14px; overflow-wrap: anywhere; }
+#methodology-version { overflow-wrap: anywhere; }
+.evaluation-evidence summary { cursor: pointer; font-weight: 600; }
+.fingerprint-list { list-style: none; padding: 0; display: grid; gap: 12px; }
+.fingerprint-list code { display: block; font-size: 11px; overflow-wrap: anywhere; }
+.findings-toolbar input { max-width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font: inherit; }
 .fp-link { margin-top: .6rem; background: none; border: 0; padding: 0; color: var(--muted, #8aa0b4); font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; }
 .fp-link:hover, .fp-link:focus-visible { color: #2dd4bf; }
 .fp-dialog { width: min(640px, 92vw); background: #0a121c; color: inherit; border: 1px solid rgba(45, 212, 191, .35); border-radius: 12px; padding: 1.4rem; }
@@ -595,6 +604,8 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .fp-dialog h2 { margin: 0 0 .5rem; }
 .fp-list { list-style: none; margin: .8rem 0; padding: 0; max-height: 40vh; overflow: auto; display: grid; gap: .4rem; }
 .fp-list label, .fp-check { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.fp-list li { min-width: 0; }
+.fp-list .meta { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .fp-label { display: block; margin: .8rem 0 .3rem; }
 .fp-dialog textarea { width: 100%; box-sizing: border-box; background: #05080d; color: inherit; border: 1px solid rgba(255, 255, 255, .15); border-radius: 8px; padding: .6rem; font: inherit; }
 .fp-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }

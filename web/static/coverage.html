@@ -8,6 +8,7 @@
   <title>Detection coverage | SkillVenom</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a121c'/%3E%3Cpath d='M16 5 25 9v8c0 5-9 10-9 10S7 22 7 17V9Z' fill='none' stroke='%232dd4bf' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%232dd4bf'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/app.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#content">Skip to content</a>
@@ -71,6 +72,36 @@
         <ul class="chips"><li>Claude Code</li><li>OpenAI Codex</li><li>Gemini CLI</li><li>GitHub Copilot</li><li>Cursor</li><li>Windsurf</li><li>Cline</li><li>Devin</li><li>JetBrains Junie</li></ul>
         <ul class="chips chips-code"><li>AGENTS.md</li><li>CLAUDE.md</li><li>SKILL.md</li><li>*.instructions.md</li><li>settings.json</li><li>mcp.json</li><li>config.toml</li><li>.cursorrules</li><li>tasks.json</li></ul>
       </div>
+      <section id="methodology" class="evaluation" aria-labelledby="methodology-title">
+        <header class="section-head">
+          <p class="label">Evaluation transparency</p>
+          <h2 id="methodology-title">Evidence before trust</h2>
+          <p>SkillVenom reports static signals, not a malware verdict or safety certification. Submissions are not automatically published in a directory.</p>
+        </header>
+        <div class="card">
+          <h3>What a score means</h3>
+          <p>The signal risk score runs from 0 to 100. Higher means more distinct rule evidence, not a probability of malware. Each rule contributes only its highest observed severity: CRITICAL 40, HIGH 20, MEDIUM 5, LOW 1. The sum is capped at 100. Repeated matches of one rule do not inflate the score.</p>
+          <p>Partial scans and scans with no target files are not scored. A complete scan only covers the selected, supported files, not all behavior of a skill or repository. A zero score means no current rules matched, not that the skill is approved.</p>
+          <p>Compare scores only with the same methodology version, detector fingerprint and scan scope. A changed rule set can change a score without any change to a skill.</p>
+        </div>
+        <div class="evaluation-categories">
+          <article class="card"><h3>Performed</h3><p>Static pattern analysis and embedded-secret pattern detection, plus bounded recursive base64, UTF-16LE base64, hex and percent decoding. Saved JSON MCP tool definitions are inspected as decoded data with JSON-pointer evidence. Schema and sensitive-input observations are review notes, not scored vulnerabilities. No MCP server is contacted.</p></article>
+          <article class="card"><h3>Not performed</h3><p>No sandbox execution, live credential checks, publisher reputation checks, signature verification, remote-content inspection or installed dependency analysis. SkillVenom does not execute submitted files.</p></article>
+          <article class="card"><h3>Content evidence</h3><p>Reports include the repository commit when available, SHA256 hashes of inspected UTF-8 text, an input-manifest hash and a detector fingerprint. An optional UTF-8 BOM is removed before hashing. These are not signed attestations.</p></article>
+        </div>
+        <div class="card">
+          <h3>Decoded evidence and interoperable reports</h3>
+          <p>Encoded-text inspection follows up to three layers with shared per-file limits of 128 candidates, 32 payloads and 64 KiB of decoded text. Reaching a limit makes the scan partial and unscored. Findings identify the containing source line or JSON pointer, transformation chain and decoded line; decoded line numbers are not presented as physical source lines.</p>
+          <p>Export SARIF 2.1.0 from the report for code-scanning tools. The browser builds the export locally, excluding snippets and original content. It retains evidence locations, fingerprints and incomplete-scan status, without inventing CVSS scores. Review paths, pointers and other metadata before publishing.</p>
+        </div>
+        <div class="card">
+          <h3>Counting content, not claiming trust</h3>
+          <p>A skill snapshot groups inspected files under a SKILL.md folder. Its content ID binds package-relative paths, raw-byte hashes and file modes where known. An evaluation ID also binds the detector, options and completeness; finding IDs bind evidence locations within that evaluation. Matching copies with equivalent metadata count once, while content edits create new versions. Unknown file modes are not treated as known modes.</p>
+          <p>Only eligible pinned GitHub packages with every listed file inspected can count as complete supported versions. Uploads and other repository providers remain snapshots. Missing files, unsupported assets, nested skills and partial scans prevent complete-parent claims. This is not exhaustive dependency resolution, signature verification or proof of safe behavior.</p>
+          <p>Uniqueness tracking is a separate, optional consent, off by default. It retains digest identities indefinitely, not originals or reports. Digests can identify known content. Private-token scans are excluded. Public counts are cached shard snapshots, not unique people, publishers or adoption figures. Storage is bounded and errors are disclosed rather than replaced with invented counts.</p>
+        </div>
+        <p><a href="/api/methodology">Read the machine-readable methodology and rule categories</a>. <span id="methodology-version" role="status">Loading detector identity...</span></p>
+      </section>
     </section>
   </main>
 

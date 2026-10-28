@@ -35,6 +35,8 @@ no filenames, repository URLs, credentials, or content. Locally these live in
 `ARCHIVE_DIRECTORY/statistics/totals.json` (atomic replace, single process); Azure uses
 an ETag-guarded JSON blob, `statistics/totals.json`, in
 the private archive container, outside the investigation retention prefix.
+These activity totals are separate from the optional uniqueness registry described
+below; they must not be presented as a count of distinct skills.
 
 ### Supported files
 
@@ -93,6 +95,175 @@ python tools/build_atlas_mapping.py stix-atlas.json
 
 The generator validates every rule's technique/tactic pairing; a test fails if a
 detector has no mapping.
+
+### Evidence-based skill evaluation
+
+Reports include an `evaluation` and a `provenance` object in both API responses and
+downloaded JSON. The report UI groups evidence into seven review categories:
+instruction control, credentials, data egress, execution/persistence, permissions,
+obfuscation, and supply chain/destinations. Each category includes review guidance.
+Search findings by file, rule or text and combine category and severity filters.
+
+The **signal risk score** is not a trust score or probability of malware. Method
+`signal-risk-v1` adds the highest severity weight for each distinct matched rule
+across all inspected files: CRITICAL 40, HIGH 20, MEDIUM 5, LOW 1, capped at 100.
+Repeating a match does not increase its rule's contribution. Any finding needs
+review, including a low score. A complete scan with no findings scores zero, which
+is not approval. Partial scans and scans with no target files have a null score.
+Compare scores only with the same method, detector fingerprint and scan scope.
+Changing detector files requires a process restart, as with the existing scanner.
+
+`GET /api/methodology` publishes the scoring formula, detector SHA256, rule/category
+assignments and performed/not-performed checks. The public
+[`/coverage#methodology`](web/static/coverage.html) section explains the same limits.
+There is **no** sandbox execution, publisher reputation verification, skill-signature
+verification, live credential validation or installed-dependency analysis.
+Static config checks do not evaluate the behavior of a running MCP server.
+
+Each report records a deterministic, path-sorted manifest with file lengths and
+SHA256 hashes of the **inspected text re-encoded as UTF-8 after optional BOM removal**.
+These are not raw-download hashes. The manifest hash identifies that list; the
+detector fingerprint hashes the scanner, credential rules, domain allowlist, ATLAS
+mapping, evaluation, structured MCP inspection, artifact identity, scan-worker and
+repository-selection implementations. These fingerprints are not signed
+attestations, and a report copied or edited outside the service is not independently
+authenticated. Repository reports retain the existing pinned commit identity.
+
+No uploaded report or skill is automatically published in a searchable public
+directory. Existing retention consent, private-token handling and redaction remain
+unchanged. A public directory, reputation service or verified badge requires
+separate publication consent, identity checks, expiry/rescanning and moderation.
+
+### Structured MCP inspection
+
+The web scanner inspects saved JSON tool-definition arrays in `tools` or a JSON-RPC
+`result.tools` response. It parses JSON and applies the existing detectors to decoded
+tool metadata, including schema descriptions and nested strings. Escaped instructions
+are therefore inspected as text, not just as serialized escape sequences. Findings
+carry `evidence_source: decoded_json` and an RFC 6901 `json_pointer`; `line: 0`
+means there is no claimed physical source-line mapping for the decoded value.
+The report displays the pointer instead, including in the false-positive dialog.
+Submitted feedback includes that pointer (bounded to 8,192 characters) as location
+metadata; snippets remain opt-in. This addition is in the isolated web scan
+worker, not the standalone Python/PowerShell scanners.
+
+Schema-shape inconsistencies, duplicate names and sensitive-input names are separate
+`mcp.observations`: they do not increase severity counts or the signal score. A password
+parameter, an ordinary string without a regex, or a tool's legitimate description is
+not automatically a vulnerability. This is not a full JSON Schema validator.
+`format: password` does not enforce redaction or prevent logging.
+
+Inspection is bounded to 500 tool entries, 4,000 traversed nodes and depth 32 per
+document. A continuation cursor or exceeded limit produces an explicit incomplete
+scan with no score. Strict-JSON parse failures disclose `not_parsed`; raw-text rules
+still run. No server is contacted, no tool is invoked, and MCP runtime capabilities
+are not inferred from arbitrary manifest permission fields.
+
+### Encoded-text inspection
+
+The web worker also applies existing rules to printable text decoded from base64
+(including URL-safe base64 and PowerShell-style UTF-16LE), hex, `\xNN` escapes and
+percent-encoded tokens. It follows mixed/nested encodings up to three layers.
+Transformations operate on data only: no shell, JavaScript evaluation, decompression,
+network calls or payload execution. Decoding alone does not add a new finding; the
+existing raw-text blob heuristics remain, while decoded output must match another
+existing rule. Benign encoded text and rejected binary candidates do not receive
+new vulnerability classifications.
+
+Each derived finding includes `encoding_chain`, `decoded_line`, `encoded_offset`
+and `evidence_source: decoded_payload`. Its physical `line` is the containing outer
+encoded token's line, not a fictional line in a decoded source file. Within MCP
+values it uses `line: 0` and the JSON pointer instead; offsets there are relative to
+that decoded JSON string. Finding IDs include this evidence location. The UI shows
+the transformation chain and distinguishes decoded evidence from source text.
+Any detected secret masks all companion snippets in the containing file.
+
+Budgets are shared by raw text and MCP values in each file: 128 candidate attempts,
+32 decoded payloads and 64 KiB of decoded UTF-8 text. Exhausting a budget or finding
+a further valid layer beyond the depth limit marks inspection **partial and unscored**.
+The report's per-file `decoding` object discloses status, counts and limits reached.
+These are supported-format checks, not a claim to decode every obfuscation technique.
+The isolated process timeout and 2,000-finding request limit still apply. The
+standalone Python/PowerShell scanners retain their existing behavior.
+
+### SARIF export
+
+The report's **Export SARIF** button creates SARIF 2.1.0 locally in the browser,
+without resubmitting files or storing an extra server-side report. The output is
+suitable for SARIF-consuming CI/code-scanning tools, subject to their own ingestion
+requirements. It includes rule IDs, severity levels, relative URI-encoded file paths,
+MITRE ATLAS/OWASP mappings, detector identity and stable finding fingerprints.
+It does not invent CVSS scores or silently mark partial/no-target inspections as
+successful clean scans.
+
+Physical lines are emitted only when actually known. Decoded JSON findings use
+logical JSON-pointer locations and no fabricated `startLine: 0` or `startLine: 1`.
+Encoded-text chains remain result metadata. All snippets and original contents are
+excluded from SARIF; file paths, pointers, rule messages and digests can still be
+sensitive, so review an export before publishing it.
+
+### Content identities and honest uniqueness counts
+
+Every report now includes `artifacts` and an `inventory`. A skill snapshot is the
+inspected files under a folder containing `SKILL.md`, not one skill per uploaded
+file. Nested skills are assigned their own files rather than double counted as a
+complete parent package. Other files are classified separately; saved MCP tool
+definitions outside skill packages count as MCP snapshots, not skills.
+
+`artifact-v1` hashes a deterministic manifest of package-relative paths, SHA256
+content hashes, lengths and file modes where known. Repository URLs and outer
+skill-folder names do not participate. Copies of the same snapshot with the same
+available metadata have the same content ID. Actual downloads/uploads also carry
+**raw-byte hashes** for artifact identity, unlike the existing normalized inspected-text
+hashes in `provenance`. BOM and line-ending changes therefore change the raw identity.
+Unknown file modes are explicit; snapshots with unknown versus known executable
+metadata are different identities, not silently equated.
+
+An evaluation ID binds content to the detector fingerprint, scan options and
+completeness. Finding IDs bind that evaluation to relative path, rule, physical line
+or JSON pointer, evidence source and occurrence ordinal. They do not use raw secrets
+or snippets as their identity input. Repeated scans deduplicate; a new detector build
+creates new evaluations/findings but does not inflate distinct content counts.
+Editing a byte creates a new content version: these are **not counts of distinct
+people, publishers, logical skill names or safe skills**, and are not an adoption metric.
+
+Only a pinned GitHub tree with every listed package file supported and inspected,
+known file modes, no truncated listing, no uninspected simple `scripts/`, `references/`
+or `assets/` references, and no partial scan can claim a complete supported package.
+Uploads, GitLab and Azure DevOps packages conservatively remain snapshots because
+this implementation does not prove complete uploaded contents or equivalent mode
+metadata there. Unsupported files, links and submodules inside a skill prevent a
+complete-package claim. Reference accounting is a bounded static check for those
+relative paths, not a general dependency resolver. Nothing here proves that remote
+dependencies, referenced websites or runtime behavior are safe.
+
+`GET /api/statistics/unique` exposes exact deduplicated counts for opted-in
+`skill_snapshots`, `complete_skill_versions`, `mcp_snapshots`, `agent_files`,
+`evaluations` and `findings`, plus `since` and `as_of`. The existing
+`GET /api/statistics` still reports repeat-inclusive activity. Historical uniqueness
+is not inferred; `since` is null until the first registry entry.
+
+The separate **Contribute to unique evaluation counts** checkbox is **off by default**.
+API callers opt in with `uniqueness_consent: true` (repository JSON) or
+`uniqueness_consent=true` (multipart upload). This is independent of 30-day original-file
+retention. Private-token scans are excluded even if consent is requested. The
+uniqueness registry retains digest identities indefinitely, with no names, URLs,
+snippets, secret values or originals. Hashes can still identify known content, so
+do not opt in for confidential or low-entropy material. No reports are auto-published.
+
+Storage uses 16 bounded digest-set shards under `uniqueness-v1/`, outside the
+investigation lifecycle prefix. Local storage uses process locking, mode-0600 atomic
+files and the existing single-process deployment model. Azure uses the existing
+private container/managed identity and conditional ETag writes, with idempotent
+conflict retries. Each shard is capped at 2 MiB (32 MiB total serialized records).
+This is bounded exact tracking, not an unlimited registry; capacity/corruption/storage
+errors are explicit and never silently reset or approximate counts. Migrate to a
+transactional database before larger-scale registry use.
+
+Counts are a cross-shard snapshot, cached up to 60 seconds; concurrent writes are not
+a global transaction. A failed submission may have recorded some digests, disclosed
+in the response, and retries do not duplicate them. Registry failure does not hide
+scan results. Public counters are aggregates only; there is no public digest lookup.
 
 ### MITRE ATLAS case-study coverage
 
@@ -324,18 +495,31 @@ Detectors and catalogue ideas were drawn from public agent-security research and
 attributed in [SOURCES.md](SOURCES.md). Adopted: the category/platform catalogue layout of the
 [SkillVenom research use-cases](https://github.com/azurekid/SkillVenom/tree/main/use-cases) and three missed payloads; Cisco skill-scanner's tool-shadowing idea
 (`TOOL-SHADOWING`); and NVIDIA SkillSpector's broad-trigger idea
-(`SKILL-TRIGGER-HIJACK`). Not adopted (by design or as future work): a numeric risk
-score or verdict, LLM semantic review, and a SARIF/coverage-ledger output. The older
+(`SKILL-TRIGGER-HIJACK`). The web platform now adds the explicitly limited signal
+score and SARIF export documented above. LLM semantic review, malware/trust verdicts
+and a signed coverage ledger are not implemented. The older
 `tests/repo`, `samples/`, `tests/atlas_cases` and `tests/rule_samples.json` fixtures are
 kept as internal regression guards and are not part of the user-facing catalogue.
+
+The [SkillsGuard engine](https://github.com/Teycir/SkillsGuard/tree/7badb5157f8f9e4dd9ee2acb6e0129636e3147e3/src)
+was also reviewed, including scanning, recursive decoding, SARIF, baseline/diff
+handling and PowerShell/container rules. Its package declares MIT licensing.
+Bounded recursive decoding and SARIF interoperability were independently implemented
+here as useful design ideas; its code was not copied and it is not a dependency.
+We did not adopt submitter-controlled suppression comments, blanket comment/test
+skipping, or the assumption that ordinary downloads, credential APIs or container
+root users prove malicious behavior. CLI baselines, git-diff scanning, watch mode,
+hook installation and additional language/container detectors remain separate work,
+not features silently claimed by this addition.
 
 ## Tests
 
 ```bash
 pip install -r requirements-dev.txt
-python -m pytest -q tests/test_web.py
+python -m pytest -q tests/
 pwsh -NoProfile -File tests/Test-Scanner.ps1
-node --check web/static/app.js && node --check web/static/fx.js
+for f in web/static/*.js; do node --check "$f"; done
+node --test tests/test_sarif.cjs
 ```
 
 The parity test in the Python suite requires PowerShell (`pwsh`). Synthetic

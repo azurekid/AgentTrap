@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -24,6 +25,9 @@ from scan_agents_md import SEV
 from web import sources as research
 from web.archive import Archive, ArchiveError
 from web.atlas import DATA as ATLAS_DATA, annotate
+from web.evaluation import evaluate, methodology
+from web.artifacts import identify
+from web.registry import Registry, RegistryError
 from web.statistics import Statistics, StatisticsError
 from web.repository import (
     MAX_FILE, MAX_FILES, MAX_TOTAL, ScanInputError, decode_document,
@@ -42,6 +46,7 @@ POLICY = {
     "archive_consent_default": True,
     "retention_days": 30, "max_files": MAX_FILES, "max_file_bytes": MAX_FILE,
     "max_total_bytes": MAX_TOTAL, "detectors": len(ATLAS_DATA["rules"]),
+    "uniqueness_consent_default": False,
 }
 
 
@@ -50,6 +55,7 @@ async def lifespan(app: FastAPI):
     app.state.archive = await run_in_threadpool(Archive)
     app.state.archive.prune()
     app.state.statistics = await run_in_threadpool(Statistics, app.state.archive)
+    app.state.registry = await run_in_threadpool(Registry, app.state.archive)
     async def cleanup() -> None:
         while True:
             await asyncio.sleep(3600)
@@ -233,6 +239,7 @@ class FeedbackFinding(BaseModel):
     severity: str = Field(pattern=r"^(CRITICAL|HIGH|MEDIUM|LOW)$")
     path: str = Field(max_length=300)
     line: int = Field(ge=0, le=10_000_000)
+    json_pointer: str | None = Field(default=None, max_length=8192, pattern=r"^/")
     snippet: str | None = Field(default=None, max_length=300)
 
 
@@ -270,7 +277,7 @@ def samples_page():
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "fx.js", "research.js", "style.css"):
+    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "style.css"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 
@@ -278,6 +285,11 @@ def asset(name: str):
 @app.get("/api/policy")
 def policy():
     return POLICY
+
+
+@app.get("/api/methodology")
+def evaluation_methodology():
+    return methodology()
 
 
 @app.get("/healthz")
@@ -320,8 +332,16 @@ def scan_documents(documents: list[dict[str, str]]) -> list[dict]:
 
 
 def make_report(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None,
-                archive: Archive, consent: bool = True) -> dict:
+                archive: Archive, consent: bool = True, scan_options: dict | None = None) -> dict:
     files = scan_documents(documents)
+    skipped = [*skipped, *[
+        f"{file['path']} (structured MCP inspection incomplete)"
+        for file in files if file.get("mcp", {}).get("status") == "incomplete"
+    ]]
+    skipped.extend(
+        f"{file['path']} (encoded-text inspection incomplete)"
+        for file in files if file.get("decoding", {}).get("status") == "incomplete"
+    )
     atlas = annotate(files)
     counts = Counter(f["severity"] for file in files for f in file["findings"])
     worst = max((SEV[s] for s in counts), default=0)
@@ -330,10 +350,20 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
         verdict = "INCOMPLETE SCAN - REVIEW REQUIRED"
     elif not files:
         verdict = "NO TARGET FILES"
+    status = "partial" if skipped else ("complete" if files else "no_targets")
+    evaluation, provenance = evaluate(files, documents, status)
+    artifacts = identify(files, documents, provenance["detector_sha256"], bool(skipped), scan_options or {})
     report = {
         "id": uuid4().hex, "created_at": datetime.now(timezone.utc).isoformat(),
         "source": source, "commit": commit, "files": files, "skipped": skipped,
-        "status": "partial" if skipped else ("complete" if files else "no_targets"),
+        "status": status, "evaluation": evaluation, "provenance": provenance,
+        "artifacts": artifacts, "scan_options": scan_options or {},
+        "inventory": {
+            "skill_snapshots": sum(a["kind"] == "skill_snapshot" for a in artifacts),
+            "complete_skill_packages": sum(a["package_complete"] for a in artifacts),
+            "mcp_snapshots": sum(a["kind"] == "mcp_snapshot" for a in artifacts),
+            "agent_files": sum(a["kind"] == "agent_file" for a in artifacts),
+        },
         "summary": {"files": len(files), "findings": sum(counts.values()),
                     "severities": {s: counts[s] for s in reversed(SEV)},
                     "verdict": verdict},
@@ -355,10 +385,11 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
 
 
 async def execute(documents: list[dict[str, str]], source: str, skipped: list[str], commit: str | None,
-                  request: Request, consent: bool = True):
+                  request: Request, consent: bool = True, uniqueness_consent: bool = False,
+                  private: bool = False, scan_options: dict | None = None):
     try:
         report = await run_in_threadpool(make_report, documents, source, skipped, commit,
-                                         request.app.state.archive, consent)
+                                         request.app.state.archive, consent, scan_options)
     except ScanInputError as exc:
         raise HTTPException(422, str(exc)) from exc
     except RuntimeError as exc:
@@ -374,6 +405,17 @@ async def execute(documents: list[dict[str, str]], source: str, skipped: list[st
         report["statistics"] = {
             "status": "failed", "message": "Scan completed, but site-wide activity totals could not be updated.",
         }
+    report["uniqueness"] = {"status": "private_excluded" if private else "opted_out"}
+    if uniqueness_consent and not private:
+        try:
+            await run_in_threadpool(request.app.state.registry.add, report)
+            report["uniqueness"] = {"status": "recorded"}
+        except RegistryError:
+            LOG.error("Uniqueness update failed; scan_id=%s", report["id"])
+            report["uniqueness"] = {
+                "status": "failed",
+                "message": "Scan completed, but uniqueness tracking failed or reached capacity. Some digest records may have been stored; resubmission is safe.",
+            }
     return report
 
 
@@ -386,10 +428,19 @@ def statistics(request: Request):
         raise HTTPException(503, "Activity totals are temporarily unavailable.") from exc
 
 
+@app.get("/api/statistics/unique")
+def unique_statistics(request: Request):
+    try:
+        return request.app.state.registry.read()
+    except RegistryError as exc:
+        LOG.error("Uniqueness counters unavailable")
+        raise HTTPException(503, "Uniqueness counters are temporarily unavailable.") from exc
+
+
 @app.post("/api/scan/files")
 async def scan_uploads(request: Request):
     try:
-        async with request.form(max_files=MAX_FILES, max_fields=3, max_part_size=MAX_FILE) as form:
+        async with request.form(max_files=MAX_FILES, max_fields=4, max_part_size=MAX_FILE) as form:
             workflows_value = form.get("include_workflows", "false")
             if workflows_value not in ("true", "false"):
                 raise ScanInputError("Invalid workflow option.")
@@ -401,10 +452,13 @@ async def scan_uploads(request: Request):
             consent_value = form.get("archive_consent", "true")
             if consent_value not in ("true", "false"):
                 raise ScanInputError("Invalid archive consent option.")
+            unique_value = form.get("uniqueness_consent", "false")
+            if unique_value not in ("true", "false"):
+                raise ScanInputError("Invalid uniqueness consent option.")
             documents, seen = [], set()
             total = 0
             for key, upload in form.multi_items():
-                if key in ("include_workflows", "discover", "archive_consent"):
+                if key in ("include_workflows", "discover", "archive_consent", "uniqueness_consent"):
                     continue
                 if key != "files" or not isinstance(upload, UploadFile):
                     raise ScanInputError("Use the files field for uploads.")
@@ -421,12 +475,15 @@ async def scan_uploads(request: Request):
                 total += len(content)
                 if total > MAX_TOTAL or len(documents) >= MAX_FILES:
                     raise ScanInputError("Upload limit exceeded (500 files, 5 MiB total).")
-                documents.append(decode_document(path, content))
+                document = decode_document(path, content)
+                document.update(raw_sha256=hashlib.sha256(content).hexdigest(), raw_bytes=str(len(content)))
+                documents.append(document)
             if not documents and not discover:
                 raise ScanInputError("Select at least one file to inspect.")
     except ScanInputError as exc:
         raise HTTPException(422, str(exc)) from exc
-    return await execute(documents, "File upload", [], None, request, consent_value == "true")
+    return await execute(documents, "File upload", [], None, request, consent_value == "true",
+                         unique_value == "true", scan_options={"include_workflows": workflows})
 
 
 class RepositoryRequest(BaseModel):
@@ -434,6 +491,7 @@ class RepositoryRequest(BaseModel):
     url: str = Field(max_length=240)
     include_workflows: bool = False
     archive_consent: bool = True
+    uniqueness_consent: bool = False
     token: str | None = Field(default=None, max_length=256, repr=False)
 
 
@@ -449,4 +507,5 @@ async def scan_repository(payload: RepositoryRequest, request: Request):
         raise HTTPException(502, "The repository host is unavailable or timed out. Upload selected files or try later.") from exc
     # Private repositories are never archived, whatever the consent checkbox says.
     return await execute(documents, payload.url.strip(), skipped, sha, request,
-                         payload.archive_consent and token is None)
+                         payload.archive_consent and token is None, payload.uniqueness_consent,
+                         private=token is not None, scan_options={"include_workflows": payload.include_workflows})

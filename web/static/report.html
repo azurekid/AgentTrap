@@ -8,6 +8,7 @@
   <title>Inspection report | SkillVenom</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a121c'/%3E%3Cpath d='M16 5 25 9v8c0 5-9 10-9 10S7 22 7 17V9Z' fill='none' stroke='%232dd4bf' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%232dd4bf'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/sarif.js" defer></script>
   <script src="/assets/app.js" defer></script>
 </head>
 <body>
@@ -39,8 +40,9 @@
     <section id="results" class="results" aria-labelledby="results-title">
       <header class="results-head">
         <div><p class="label">Inspection report</p><h1 id="results-title">Security findings</h1></div>
-        <div class="results-actions"><button id="fp-open" class="btn btn-ghost btn-small" type="button">Report false positives</button><button id="download" class="btn btn-ghost btn-small" type="button">Export JSON <span aria-hidden="true">↓</span></button></div>
+        <div class="results-actions"><button id="fp-open" class="btn btn-ghost btn-small" type="button">Report false positives</button><button id="download" class="btn btn-ghost btn-small" type="button">Export JSON <span aria-hidden="true">↓</span></button><button id="download-sarif" class="btn btn-ghost btn-small" type="button">Export SARIF <span aria-hidden="true">↓</span></button></div>
       </header>
+      <p id="export-status" class="warning" role="alert" hidden></p>
       <div id="verdict" class="verdict"></div>
       <div class="report-grid">
         <div class="card donut-card">
@@ -49,6 +51,20 @@
         <div id="metrics" class="card metrics"></div>
         <div id="report-notes" class="card report-notes"></div>
       </div>
+      <section id="evaluation" class="evaluation" aria-labelledby="evaluation-title" hidden>
+        <header class="atlas-head">
+          <div><p class="label">Evidence, not endorsement</p><h2 id="evaluation-title">Skill evaluation</h2></div>
+          <a class="btn btn-ghost btn-small" href="/coverage#methodology">How evaluation works</a>
+        </header>
+        <div id="evaluation-summary" class="card"></div>
+        <div id="evaluation-categories" class="evaluation-categories"></div>
+        <details class="card evaluation-evidence">
+          <summary>Scope, checks and content fingerprints</summary>
+          <p>These fingerprints identify the inspected text and detector build. They are not signed attestations or proof that a skill is safe.</p>
+          <div id="evaluation-checks"></div>
+          <div id="evaluation-provenance"></div>
+        </details>
+      </section>
       <section class="atlas" aria-labelledby="atlas-title">
         <header class="atlas-head">
           <div>
@@ -73,6 +89,8 @@
 
       <div class="findings-toolbar">
         <h3>File findings <span id="finding-count"></span></h3>
+        <label>Search <input id="finding-search" type="search" maxlength="200" placeholder="File, rule or finding text"></label>
+        <label>Category <select id="finding-category"><option value="ALL">All categories</option></select></label>
         <label>Severity <select id="severity"><option value="ALL">All severities</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label>
       </div>
       <div id="findings"></div>
@@ -83,7 +101,7 @@
   <dialog id="fp-dialog" class="fp-dialog" aria-labelledby="fp-title">
     <form id="fp-form" method="dialog">
       <h2 id="fp-title">Report false positives</h2>
-      <p class="meta">Select the findings that are wrong. Rule, severity, file path and line are sent to the SkillVenom operators and stored privately. Secrets are never included.</p>
+      <p class="meta">Select the findings that are wrong. Rule, severity, file path and line or JSON pointer are sent to the SkillVenom operators and stored privately. Only send location metadata and optional snippets if they contain nothing sensitive. Detected secret snippets are excluded.</p>
       <ul id="fp-list" class="fp-list"></ul>
       <label class="fp-check"><input id="fp-snippets" type="checkbox"> Also send the matched line (only if it contains nothing sensitive)</label>
       <label class="fp-label" for="fp-comment">Why is it a false positive? <span class="meta">(optional, max 1000 characters)</span></label>

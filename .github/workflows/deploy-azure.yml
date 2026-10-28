@@ -42,6 +42,8 @@ jobs:
         run: ./tests/Test-Scanner.ps1
       - name: JavaScript syntax
         run: for f in web/static/*.js; do node --check "$f"; done
+      - name: SARIF export tests
+        run: node --test tests/test_sarif.cjs
 
   deploy:
     needs: test

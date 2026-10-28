@@ -303,13 +303,36 @@ def fetch_repository(url: str, workflows: bool, token: str | None = None) -> tup
         else:
             sha, tree, blob = azure_devops_listing(ref, get, get_page)
         selected, skipped = select_targets(tree, workflows)
+        modes = {entry.get("path"): entry.get("mode") for entry in tree.get("tree", [])}
+        skill_roots = {
+            entry["path"].rsplit("/", 1)[0] if "/" in entry["path"] else ""
+            for entry in selected if PurePosixPath(entry["path"]).name.lower() == "skill.md"
+        }
+        selected_paths = {entry["path"] for entry in selected}
+        incomplete_roots = set()
+        for entry in tree.get("tree", []):
+            path = entry.get("path", "")
+            if entry.get("type") == "tree":
+                continue
+            for root in skill_roots:
+                if (not root or path.startswith(root + "/")) and path not in selected_paths:
+                    incomplete_roots.add(root)
 
         def download(entry: dict) -> dict[str, str]:
             content = blob(entry)
             digest = hashlib.sha1(b"blob %d\0" % len(content) + content).hexdigest()
             if digest != entry["sha"]:
                 raise ScanInputError(f"Content did not match the pinned commit: {entry['path']}")
-            return decode_document(entry["path"], content)
+            document = decode_document(entry["path"], content)
+            document.update(raw_sha256=hashlib.sha256(content).hexdigest(), raw_bytes=str(len(content)))
+            if ref.provider == "github":
+                document["mode"] = modes[entry["path"]]
+            if PurePosixPath(entry["path"]).name.lower() == "skill.md":
+                root = entry["path"].rsplit("/", 1)[0] if "/" in entry["path"] else ""
+                document["package_complete"] = str(
+                    root not in incomplete_roots and not tree.get("truncated") and ref.provider == "github"
+                ).lower()
+            return document
 
         with ThreadPoolExecutor(max_workers=12) as pool:
             documents = list(pool.map(download, selected))
