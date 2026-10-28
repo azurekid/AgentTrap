@@ -23,6 +23,7 @@ def annotate(files: list[dict]) -> dict:
             for risk in finding["owasp"]:
                 asi_hits[risk] = asi_hits.get(risk, 0) + 1
             pairs = DATA["rules"].get(finding["rule"])
+            finding["atlas_mapping"] = pairs or []
             if not pairs:
                 unmapped.add(finding["rule"])
                 finding["atlas"] = []

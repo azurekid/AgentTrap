@@ -121,7 +121,7 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
                     <input id="repo-token" type="password" placeholder="Read-only token (not stored)" autocomplete="off" spellcheck="false" maxlength="256" disabled>
                   </div>
-                  <p class="field-hint">Use a short-lived, read-only token. It is sent once over HTTPS, used in memory, never logged or saved, and nothing from a token scan is archived. Revoke it afterwards.</p>
+                  <p class="field-hint">Use a short-lived, read-only token. The token is used in memory and never logged or saved. Private scan fingerprints and high-risk originals follow the retention policy below. Revoke the token afterwards.</p>
                 </div>
                 <ul class="repo-facts">
                   <li>Default branch, pinned to one exact commit</li>
@@ -136,18 +136,7 @@
                 </label>
               </div>
 
-              <label class="consent" for="archive-consent">
-                <input id="archive-consent" type="checkbox" checked aria-describedby="consent-help">
-                <span class="consent-box" aria-hidden="true"></span>
-                <span><strong>Allow investigation retention</strong>
-                  <small id="consent-help">Keep high-risk originals privately for 30 days. Uncheck to opt out of original-file retention; the scan still runs.</small></span>
-              </label>
-              <label class="consent" for="uniqueness-consent">
-                <input id="uniqueness-consent" type="checkbox" aria-describedby="uniqueness-help">
-                <span class="consent-box" aria-hidden="true"></span>
-                <span><strong>Contribute to unique evaluation counts</strong>
-                  <small id="uniqueness-help">Optional, off by default. Keep content/evaluation/finding digest identities indefinitely to deduplicate public aggregate counts. No filenames, URLs, snippets or originals enter this registry, but digests can identify known content. Private-token scans are excluded. This does not publish your report or certify a skill.</small></span>
-              </label>
+              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories, record digest identities centrally for repeat detection and unique counters, retained indefinitely. High-risk original files are retained privately for 30 days. Tokens are never retained. Digests can identify known content; do not submit material you cannot share with the operator. Reports and originals are not published.</p>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
                 <button id="scan-button" class="btn btn-primary btn-scan" type="submit">Run inspection <span aria-hidden="true">→</span></button>
@@ -172,12 +161,12 @@
       <h2 id="stats-title" class="visually-hidden">Inspection activity</h2>
       <dl class="stat-grid" aria-live="polite">
         <div class="stat"><dt>Files scanned</dt><dd id="total-files">-</dd><span>All-time, site-wide</span></div>
-        <div class="stat stat-alert"><dt>Security findings</dt><dd id="total-findings">-</dd><span>Potential risks, not confirmed vulnerabilities</span></div>
+        <div class="stat stat-alert"><dt>Unique security findings</dt><dd id="total-findings">-</dd><span>Distinct finding fingerprints, not repeat scan hits</span></div>
         <div class="stat"><dt>Detection rules</dt><dd id="stat-detectors">-</dd><span>Injection, secrets, execution, exfiltration</span></div>
         <div class="stat"><dt>Agent ecosystems</dt><dd>9</dd><span>Claude, Codex, Gemini, Copilot &amp; more</span></div>
       </dl>
       <p id="statistics-error" class="statistics-error" role="status" hidden></p>
-      <h3>Unique opted-in content</h3>
+      <h3>Central fingerprint registry</h3>
       <dl class="stat-grid" aria-live="polite">
         <div class="stat"><dt>Skill snapshots</dt><dd id="unique-skills">-</dd><span>Distinct inspected content, including partial packages</span></div>
         <div class="stat"><dt>Complete supported skill versions</dt><dd id="unique-complete">-</dd><span>All listed package files inspected at a pinned GitHub commit</span></div>
@@ -185,7 +174,7 @@
         <div class="stat"><dt>Distinct findings</dt><dd id="unique-findings">-</dd><span>Per content version, detector and evidence location</span></div>
       </dl>
       <p id="uniqueness-status" class="meta" role="status">Loading uniqueness counters...</p>
-      <p class="meta">Activity totals count repeat scans. Unique counts cover opted-in content versions, not unique people, publishers or safe skills. Minor edits create new versions. No historical uniqueness is inferred.</p>
+      <p class="meta">Files scanned counts repeat activity. Security findings counts distinct finding fingerprints. Content versions are not unique people, publishers or safe skills. Minor edits create new versions. Historical unrecorded scans are not backfilled.</p>
     </section>
 
     <section class="how" id="how" aria-labelledby="how-title">

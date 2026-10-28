@@ -20,8 +20,6 @@ function syncToken() {
   $("token-field").hidden = !on;
   $("repo-token").disabled = !on;
   if (!on) $("repo-token").value = "";
-  $("uniqueness-consent").disabled = on || busy;
-  if (on) $("uniqueness-consent").checked = false;
 }
 function changeMode(next) {
   if (busy) return;
@@ -55,8 +53,8 @@ if ($("uniqueness-status")) {
         $(id).textContent = value.toLocaleString();
       }
       $("uniqueness-status").textContent = data.since
-        ? `Opt-in records since ${new Date(data.since).toLocaleDateString()}. Snapshot ${new Date(data.as_of).toLocaleString()}. ${data.consistency}`
-        : "No opted-in content has been recorded yet.";
+        ? `Records since ${new Date(data.since).toLocaleDateString()}. Snapshot ${new Date(data.as_of).toLocaleString()}. ${data.consistency}`
+        : "No content fingerprints have been recorded yet.";
     })
     .catch(() => {
       $("uniqueness-status").textContent = "Uniqueness counters are unavailable. Scan results are still available.";
@@ -287,15 +285,35 @@ function renderSnapshotReview() {
       high: hits.filter((hit) => hit.severity === "HIGH").length };
   }).sort((a, b) => b.critical - a.critical || b.high - a.high || a.artifact.root.localeCompare(b.artifact.root));
   const affected = snapshots.filter((item) => item.critical || item.high).length;
-  $("snapshot-review-summary").textContent = `${affected} of ${snapshots.length} inspected snapshots have HIGH or CRITICAL signals. Counts are finding occurrences in this report, not unique skills across the platform.${report.status !== "complete" ? " This inspection is incomplete; absence of signals cannot establish a clean result." : ""}`;
+  $("snapshot-review-summary").textContent = `${affected} of ${snapshots.length} snapshots have HIGH or CRITICAL signals in this view. Counts are finding occurrences in ${report.view_scope ? "the selected file only" : "this report"}, not unique skills across the platform.${report.status !== "complete" ? " This inspection is incomplete; absence of signals cannot establish a clean result." : ""}`;
+  const query = $("snapshot-search").value.trim().toLowerCase();
+  const filter = $("snapshot-filter").value;
   for (const { artifact, files, critical, high } of snapshots) {
-    const card = node("article", `card snapshot-card${critical || high ? " needs-review" : ""}`);
+    if (query && !`${artifact.root} ${artifact.content_id} ${artifact.evaluation_id}`.toLowerCase().includes(query)) continue;
+    if (filter === "review" && !critical && !high) continue;
+    if (filter === "seen" && artifact.seen_before !== true) continue;
+    if (filter === "new" && artifact.seen_before !== false) continue;
+    const card = node("details", `card snapshot-card${critical || high ? " needs-review" : ""}`);
     const kind = { skill_snapshot: "Skill snapshot", mcp_snapshot: "MCP definition snapshot", agent_file: "Agent file" }[artifact.kind] || "Snapshot";
-    card.append(node("h3", "", `${kind}: ${artifact.root}`),
-      node("p", critical || high ? "warning" : "meta", critical || high
+    const heading = node("summary", "snapshot-row");
+    const name = node("span", "snapshot-name", `${kind}: ${artifact.root}`);
+    heading.append(name, node("span", critical || high ? "warning" : "meta", `${critical} CRITICAL / ${high} HIGH`),
+      node("span", "meta", artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
+    if (files.length === 1 && !report.view_scope) {
+      const link = node("a", "", "Open file report");
+      link.href = `/report?file=${encodeURIComponent(files[0].path)}`;
+      heading.append(link);
+    }
+    card.append(heading, node("p", critical || high ? "warning" : "meta", critical || high
         ? `Review required: ${critical} CRITICAL, ${high} HIGH signal(s)`
         : "No HIGH or CRITICAL signals in inspected content. This is not approval."),
       node("p", "meta", artifact.scope));
+    card.append(node("p", artifact.seen_before === true ? "warning" : "meta",
+      artifact.seen_before === true ? "Seen before: this exact content fingerprint already exists in the central registry."
+        : artifact.seen_before === false ? "First recorded: this content fingerprint was new when this scan was registered."
+          : "Prior sightings unavailable for this report."));
+    const fingerprints = node("details", "snapshot-identities");
+    fingerprints.append(node("summary", "", `SHA256 ${artifact.content_id.slice(0, 16)}... | Fingerprint details`));
     for (const [label, value] of [["Content fingerprint (SHA256)", artifact.content_id], ["Evaluation fingerprint (SHA256)", artifact.evaluation_id]]) {
       const field = node("div", "snapshot-fingerprint");
       const input = node("input");
@@ -322,28 +340,23 @@ function renderSnapshotReview() {
       const caption = node("label", "meta", label);
       caption.htmlFor = input.id;
       field.append(caption, input, copy);
-      card.append(field);
+      fingerprints.append(field);
     }
+    card.append(fingerprints);
     for (const note of artifact.coverage_notes) card.append(node("p", "warning", note));
-    const target = files.find((file) => file.findings.some((hit) => hit.severity === "CRITICAL" || hit.severity === "HIGH"))
-      || files.find((file) => file.findings.length);
-    if (target) {
-      const view = node("button", "btn btn-ghost btn-small", "View file findings");
-      view.type = "button";
-      view.addEventListener("click", () => {
-        $("severity").value = "ALL";
-        $("finding-category").value = "ALL";
-        $("finding-search").value = "";
-        renderFindings();
-        const result = Array.from($("findings").querySelectorAll(".file-result")).find((element) => element.dataset.path === target.path);
-        if (result) {
-          result.scrollIntoView({ block: "start" });
-          result.querySelector("summary").focus({ preventScroll: true });
-        }
-      });
-      card.append(view);
+    const fileList = node("ul", "snapshot-file-links");
+    for (const file of files) {
+      const item = node("li");
+      const link = node("a", "", `${file.path} (${file.findings.length} signals)`);
+      link.href = `/report?file=${encodeURIComponent(file.path)}`;
+      item.append(link);
+      fileList.append(item);
     }
+    card.append(fileList);
     $("snapshot-cards").append(card);
+  }
+  if (artifacts.length && !$("snapshot-cards").childElementCount) {
+    $("snapshot-cards").append(node("p", "meta", "No snapshots match these filters."));
   }
 }
 
@@ -352,7 +365,16 @@ function renderEvaluation() {
   $("evaluation").hidden = !evaluation;
   $("finding-category").replaceChildren(node("option", "", "All categories"));
   $("finding-category").firstChild.value = "ALL";
-  if (!evaluation) return;
+  if (!evaluation) {
+    const categories = new Map(report.files.flatMap((file) => file.findings)
+      .filter((hit) => hit.category).map((hit) => [hit.category, report.category_names?.[hit.category] || hit.category]));
+    for (const [id, name] of categories) {
+      const option = node("option", "", name);
+      option.value = id;
+      $("finding-category").append(option);
+    }
+    return;
+  }
   const complete = report.status === "complete";
   const status = !complete ? "Incomplete evaluation"
     : evaluation.decision === "review_required" ? "Manual review required" : "No rule signals detected";
@@ -404,7 +426,48 @@ function renderEvaluation() {
     $("evaluation-provenance").append(item);
   }
 }
+function renderHeatmap() {
+  const categories = new Map((report.evaluation?.categories || []).map((category) => [category.id, category.name]));
+  for (const file of report.files) for (const hit of file.findings) {
+    if (!categories.has(hit.category)) categories.set(hit.category || "uncategorized", report.category_names?.[hit.category] || hit.category || "Uncategorized");
+  }
+  const table = node("table", "heatmap-table");
+  const head = node("tr");
+  head.append(node("th", "", "Category"));
+  for (const severity of ["CRITICAL", "HIGH", "MEDIUM", "LOW"]) head.append(node("th", "", severity));
+  const thead = node("thead");
+  thead.append(head);
+  table.append(thead);
+  const body = node("tbody");
+  for (const [id, name] of categories) {
+    const row = node("tr");
+    const title = node("th", "", name);
+    title.scope = "row";
+    row.append(title);
+    for (const severity of ["CRITICAL", "HIGH", "MEDIUM", "LOW"]) {
+      const count = report.files.flatMap((file) => file.findings).filter((hit) => (hit.category || "uncategorized") === id && hit.severity === severity).length;
+      const cell = node("td");
+      const button = node("button", `heatmap-cell${count ? ` heat-${severity.toLowerCase()}` : ""}`, String(count));
+      button.type = "button";
+      button.disabled = !count;
+      button.setAttribute("aria-label", `${name}, ${severity}: ${count} signals`);
+      button.addEventListener("click", () => {
+        $("severity").value = severity;
+        $("finding-category").value = Array.from($("finding-category").options).some((option) => option.value === id) ? id : "ALL";
+        $("finding-search").value = "";
+        renderFindings();
+        $("findings").scrollIntoView({ block: "start" });
+      });
+      cell.append(button);
+      row.append(cell);
+    }
+    body.append(row);
+  }
+  table.append(body);
+  $("heatmap-grid").replaceChildren(table);
+}
 function renderResults() {
+  $("finding-heatmap").before(document.querySelector(".atlas"));
   renderSnapshotReview();
   const summary = report.summary;
   const incomplete = report.status === "partial" || report.status === "no_targets";
@@ -450,11 +513,11 @@ function renderResults() {
     node("p", "meta", `Inspected: ${new Date(report.created_at).toLocaleString()}`),
   );
   if (report.commit) $("report-notes").append(node("p", "meta", `Commit: ${report.commit}`));
-  if (!report.skipped.length && report.archive.status !== "stored" && report.archive.status !== "failed") {
+  if (!report.view_scope && !report.skipped.length && report.archive.status !== "stored" && report.archive.status !== "failed") {
     $("report-notes").append(node("p", "", "All discovered files were inspected."));
   }
   if (report.archive.status === "stored") {
-    $("report-notes").append(node("p", "warning", `${report.archive.files} high-risk file(s) retained in the private investigation archive for 30 days.`));
+    $("report-notes").append(node("p", "warning", `${report.archive.files} high-risk file(s) retained in the private investigation archive for 30 days${report.view_scope ? " across the full inspection" : ""}.`));
   } else if (report.archive.status === "opted_out") {
     $("report-notes").append(node("p", "meta", "Investigation retention opted out: no files were retained."));
   } else if (report.archive.status === "failed") {
@@ -479,6 +542,7 @@ function renderResults() {
   $("severity").value = "ALL";
   $("finding-search").value = "";
   renderEvaluation();
+  renderHeatmap();
   renderAtlas(report.atlas);
   renderFindings();
   $("results").hidden = false;
@@ -501,10 +565,17 @@ function renderFindings() {
     visibleFindings += findings.length;
     const details = node("details", "file-result");
     details.dataset.path = file.path;
-    details.open = true;
+    details.open = Boolean(report.view_scope);
     const summary = node("summary", "", file.path);
     summary.append(node("span", "", `${findings.length} finding(s)`));
+    if (!report.view_scope) summary.addEventListener("click", (event) => {
+      event.preventDefault();
+      location.assign(`/report?file=${encodeURIComponent(file.path)}`);
+    });
     details.append(summary);
+    const dashboard = node("a", "btn btn-ghost btn-small", "Open file report");
+    dashboard.href = `/report?file=${encodeURIComponent(file.path)}`;
+    details.append(dashboard);
     for (const finding of findings) {
       const article = node("article", `finding sev-${finding.severity.toLowerCase()}`);
       const heading = node("div", "finding-heading");
@@ -615,6 +686,8 @@ function openFalsePositive(selectedKey) {
   $("fp-dialog").showModal();
 }
 if (reportPage) {
+  $("snapshot-search").addEventListener("input", renderSnapshotReview);
+  $("snapshot-filter").addEventListener("change", renderSnapshotReview);
   $("fp-open").addEventListener("click", () => openFalsePositive());
   $("fp-cancel").addEventListener("click", () => $("fp-dialog").close());
   $("fp-form").addEventListener("submit", async (event) => {
@@ -683,11 +756,68 @@ if (reportPage) {
   let stored = null;
   try { stored = JSON.parse(sessionStorage.getItem(REPORT_KEY)); } catch { /* ignore */ }
   if (stored?.files && stored?.atlas) {
-    report = stored;
-    renderResults();
+    const path = new URLSearchParams(location.search).get("file");
+    const file = path ? stored.files.find((item) => item.path === path) : null;
+    if (path && !file) {
+      $("results").hidden = true;
+      $("no-report").hidden = false;
+      const back = node("a", "", "Open the full report");
+      back.href = "/report";
+      $("no-report").replaceChildren(document.createTextNode("This file is not part of the current browser-tab inspection. "), back);
+    } else {
+      report = path ? fileReport(stored, file) : stored;
+      if (path) {
+        $("results-title").textContent = "File report";
+        document.title = `File report | AgentLens`;
+        $("back-to-report").hidden = false;
+        const context = $("file-context");
+        context.hidden = false;
+        context.append(node("p", "", path));
+        const fingerprint = stored.provenance?.files.find((item) => item.path === path);
+        if (fingerprint) context.append(node("p", "meta", `Inspected-text SHA256: ${fingerprint.sha256}`));
+        context.append(node("p", "meta", "Findings and threat mapping below cover this file only. Snapshot fingerprints and completeness describe its containing package from the full inspection."));
+      }
+      renderResults();
+    }
   } else {
     $("results").hidden = true;
     $("no-report").hidden = false;
+  }
+  function fileReport(full, file) {
+    const scoped = structuredClone(full);
+    scoped.files = [structuredClone(file)];
+    scoped.artifacts = (scoped.artifacts || []).filter((artifact) => artifact.files.some((entry) =>
+      (artifact.kind === "skill_snapshot" ? (artifact.root === "." ? entry.path : `${artifact.root}/${entry.path}`) : artifact.root) === file.path));
+    const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+    for (const hit of file.findings) counts[hit.severity]++;
+    scoped.summary = { files: 1, findings: file.findings.length, severities: counts,
+      verdict: counts.CRITICAL || counts.HIGH ? "REVIEW REQUIRED" : "NO HIGH-RISK SIGNALS DETECTED" };
+    scoped.inventory = null;
+    scoped.category_names = Object.fromEntries((full.evaluation?.categories || []).map((category) => [category.id, category.name]));
+    scoped.evaluation = null;
+    const techniques = scoped.atlas.techniques.filter((tech) => file.findings.some((hit) => hit.atlas?.includes(tech.id)));
+    for (const tech of techniques) {
+      const hits = file.findings.filter((hit) => hit.atlas?.includes(tech.id));
+      tech.findings = hits.length;
+      tech.rules = [...new Set(hits.map((hit) => hit.rule))];
+      if (hits.every((hit) => hit.atlas_mapping)) {
+        tech.tactics = [...new Set(hits.flatMap((hit) => hit.atlas_mapping)
+          .filter((pair) => pair.technique === tech.id).map((pair) => pair.tactic))];
+      }
+    }
+    scoped.atlas.techniques = techniques;
+    for (const tactic of scoped.atlas.tactics) {
+      const ids = new Set(techniques.filter((tech) => tech.tactics.includes(tactic.key)).map((tech) => tech.id));
+      tactic.findings = file.findings.filter((hit) => hit.atlas_mapping
+        ? hit.atlas_mapping.some((pair) => pair.tactic === tactic.key)
+        : hit.atlas?.some((id) => ids.has(id))).length;
+    }
+    for (const risk of scoped.atlas.owasp_asi?.risks || []) {
+      risk.findings = file.findings.filter((hit) => hit.owasp?.includes(risk.id)).length;
+    }
+    if (scoped.atlas.owasp_asi) scoped.atlas.owasp_asi.risks = scoped.atlas.owasp_asi.risks.filter((risk) => risk.findings);
+    scoped.view_scope = { kind: "file", path: file.path, snapshot_scope: "containing package from full inspection" };
+    return scoped;
   }
 }
 if (scannerPage) {
@@ -698,8 +828,6 @@ if (scannerPage) {
     let body;
     const headers = {};
     const workflows = mode === "repo" && $("workflows").checked;
-    const consent = $("archive-consent").checked;
-    const uniquenessConsent = $("uniqueness-consent").checked;
     if (mode === "upload") {
       if (!selected.length) return showError("Select at least one file to inspect.");
       if (selected.length > 500 || selected.some((file) => file.size > 256 * 1024)
@@ -709,15 +837,12 @@ if (scannerPage) {
       body = new FormData();
       body.append("include_workflows", String(workflows));
       body.append("discover", String(discover));
-      body.append("archive_consent", String(consent));
-      body.append("uniqueness_consent", String(uniquenessConsent));
       for (const file of selected) body.append("files", file, file.webkitRelativePath || file.name);
     } else {
       const url = $("repository").value.trim();
       if (!url) return showError("Enter a repository URL.");
       const token = $("private-repo").checked ? $("repo-token").value.trim() : "";
-      body = JSON.stringify({ url, include_workflows: workflows, archive_consent: consent,
-        uniqueness_consent: uniquenessConsent, ...(token && { token }) });
+      body = JSON.stringify({ url, include_workflows: workflows, ...(token && { token }) });
       headers["Content-Type"] = "application/json";
     }
     busy = true;
@@ -725,7 +850,7 @@ if (scannerPage) {
     $("scan-button").disabled = true;
     $("scan-button").textContent = "Inspecting…";
     $("progress").hidden = false;
-    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent", "uniqueness-consent"]) $(id).disabled = true;
+    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows"]) $(id).disabled = true;
     renderFiles();
     try {
       const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(120000) });
@@ -748,7 +873,7 @@ if (scannerPage) {
       $("scan-button").disabled = false;
       $("scan-button").replaceChildren(document.createTextNode("Run inspection "), node("span", "", "→"));
       $("progress").hidden = true;
-      for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "archive-consent", "uniqueness-consent"]) $(id).disabled = false;
+      for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows"]) $(id).disabled = false;
       $("repository").disabled = mode !== "repo";
       $("private-repo").disabled = mode !== "repo";
       syncToken();

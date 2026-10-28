@@ -255,8 +255,9 @@ az storage blob download --account-name <storage> -c skillvenom-investigations -
 - Upload `tests/benign/AGENTS.md`: no high-risk findings, no archive record.
 - Run `python tools/fixtures.py /tmp/skillvenom-fixtures` and upload
   `/tmp/skillvenom-fixtures/tests/repo/.codex/config.toml`: `CODEX-FULL-ACCESS` and a
-  private record under `investigations/`. Repeat with the consent box unticked: the
-  report says *opted out* and no blob is written.
+  private record under `investigations/`. Retention and fingerprint registration
+  happen automatically, including private-token scans; tokens themselves are not stored.
+  Repeat the scan: `seen_before` becomes true and unique finding counts stay unchanged.
 - Scan a small public GitHub repository; the report shows the pinned commit.
 - Download the JSON report; credential-shaped values are redacted.
 - Infrastructure checks:
@@ -310,7 +311,7 @@ so Microsoft Entra ID RBAC is the only data path.
 
 Investigators need their own *Storage Blob Data Reader* assignment on the container;
 there is no public archive API. Review the legal basis for retention, the pre-ticked
-consent default, the deletion workflow and access audits before going live. Keep
+automatic-retention policy, the deletion workflow and access audits before going live. Keep
 HTTP/APM body logging disabled; exported reports and file names may still be sensitive.
 
 ## 8. Remove the deployment

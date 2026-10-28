@@ -589,10 +589,28 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 
 .results-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .evaluation { margin-top: 32px; }
-.snapshot-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 14px; margin-top: 14px; }
+.snapshot-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 14px; }
+.snapshot-identities summary { cursor: pointer; font: 12px var(--mono); color: var(--muted); }
+.snapshot-file-links { padding-left: 18px; font-size: 13px; }
+.snapshot-file-links a { color: var(--cyan); overflow-wrap: anywhere; }
+#file-context { margin-top: 16px; }
+.heatmap-grid { overflow-x: auto; margin-top: 14px; }
+.heatmap-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.heatmap-table th, .heatmap-table td { padding: 6px; text-align: left; }
+.heatmap-table th { color: var(--muted); overflow-wrap: anywhere; }
+.heatmap-cell { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--panel); cursor: pointer; font: 600 14px var(--mono); }
+.heatmap-cell:disabled { opacity: .4; cursor: default; }
+.heat-critical { background: #782f47; }
+.heat-high { background: #704331; }
+.heat-medium { background: #625323; }
+.heat-low { background: #24504c; }
 .snapshot-card { min-width: 0; overflow-wrap: anywhere; }
 .snapshot-card.needs-review { border-color: #b65757; }
 .snapshot-card h3 { font-size: 16px; }
+.snapshot-card { padding: 12px 16px; }
+.snapshot-row { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 12px; }
+.snapshot-name { flex: 1 1 240px; font-weight: 600; color: var(--text); min-width: 0; }
+.snapshot-row a { color: var(--cyan); }
 .snapshot-fingerprint { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 14px 0; }
 .snapshot-fingerprint label { grid-column: 1 / -1; }
 .snapshot-fingerprint input { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font: 11px var(--mono); }

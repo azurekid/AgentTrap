@@ -65,6 +65,7 @@ function buildSarif(report) {
         detectorSha256: report.provenance?.detector_sha256 || null,
         methodology: report.evaluation?.version || null,
         inventory: report.inventory || null,
+        viewScope: report.view_scope || { kind: "inspection" },
         skipped: report.skipped || [],
         disclaimer: "Static rule evidence, not a safety certification or CVSS assessment. Snippets and original contents are excluded.",
       },

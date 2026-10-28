@@ -66,8 +66,9 @@ Supported repository URLs (default branch only, pinned to one commit SHA, `.git`
 
 Private repositories need an optional **access token**. It travels in the request body over
 HTTPS, is sent only to the provider's API host in an auth header, is never logged, stored or
-placed in a URL, and a scan that uses a token is **never archived**, whatever the consent
-checkbox says. Use short-lived read-only tokens and revoke them afterwards. Every inspected
+placed in a URL. Private scans are included in automatic digest tracking and 30-day
+high-risk original retention; the token itself is never retained.
+Use short-lived read-only tokens and revoke them afterwards. Every inspected
 file is verified against the pinned commit's git object hash. Azure DevOps and GitLab
 listings carry no file sizes, so the 500 files / 256 KiB / 5 MiB limits are enforced while reading files.
 
@@ -136,7 +137,7 @@ attestations, and a report copied or edited outside the service is not independe
 authenticated. Repository reports retain the existing pinned commit identity.
 
 No uploaded report or skill is automatically published in a searchable public
-directory. Existing retention consent, private-token handling and redaction remain
+directory. Automatic retention, private-token handling and redaction remain
 unchanged. A public directory, reputation service or verified badge requires
 separate publication consent, identity checks, expiry/rescanning and moderation.
 
@@ -210,11 +211,20 @@ sensitive, so review an export before publishing it.
 
 ### Content identities and honest uniqueness counts
 
-The report's **Snapshot review** section puts snapshots with CRITICAL/HIGH signals
-first, with per-snapshot occurrence counts, completeness notes and full, copyable
-content/evaluation fingerprints. Other agent files and MCP snapshots are labeled
-separately rather than counted as skills. "View file findings" opens the relevant
-file evidence after clearing report filters. Snapshots without high-risk signals
+The report's threat map and interactive category/severity heatmap appear above
+**Snapshot review**. Compact expandable snapshot rows put
+CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
+per-snapshot occurrence counts, completeness notes
+and expandable, copyable content/evaluation fingerprints. Central registration returns
+`seen_before: true` when the content existed before that shard's successful update,
+`false` on its first registration, and `null` if registry tracking fails. This
+observation is made for the scan, not refreshed when reopening an old report.
+Other agent files and MCP snapshots are labeled separately rather than counted as
+skills. File links open `/report?file=<path>`, a separate browser-tab report view with
+file-only findings, counts and threat mapping plus containing snapshot information.
+The full inspection remains available via the back link. Unknown file paths fail
+explicitly. File views do not create server-side report storage or a new scan.
+Snapshots without high-risk signals
 still receive fingerprints, not an approval badge. This is part of the current
 browser-tab report, not an account dashboard or additional saved-report service.
 
@@ -251,19 +261,23 @@ complete-package claim. Reference accounting is a bounded static check for those
 relative paths, not a general dependency resolver. Nothing here proves that remote
 dependencies, referenced websites or runtime behavior are safe.
 
-`GET /api/statistics/unique` exposes exact deduplicated counts for opted-in
+`GET /api/statistics/unique` exposes exact deduplicated counts for centrally recorded
 `skill_snapshots`, `complete_skill_versions`, `mcp_snapshots`, `agent_files`,
 `evaluations` and `findings`, plus `since` and `as_of`. The existing
-`GET /api/statistics` still reports repeat-inclusive activity. Historical uniqueness
+`GET /api/statistics` still reports repeat-inclusive activity for compatibility.
+The public **Security findings** counter uses `counts.findings` from the unique
+endpoint, never the activity finding total. Historical uniqueness
 is not inferred; `since` is null until the first registry entry.
 
-The separate **Contribute to unique evaluation counts** checkbox is **off by default**.
-API callers opt in with `uniqueness_consent: true` (repository JSON) or
-`uniqueness_consent=true` (multipart upload). This is independent of 30-day original-file
-retention. Private-token scans are excluded even if consent is requested. The
-uniqueness registry retains digest identities indefinitely, with no names, URLs,
-snippets, secret values or originals. Hashes can still identify known content, so
-do not opt in for confidential or low-entropy material. No reports are auto-published.
+Fingerprint tracking and high-risk original retention are automatic for all scans,
+including private-token repositories. The UI shows a policy notice, not opt-in
+checkboxes. Legacy boolean `archive_consent` and `uniqueness_consent` request fields
+are accepted for compatibility but no longer disable retention, even when false;
+invalid values remain rejected. The registry retains digests indefinitely, with no
+names, URLs, snippets, secret values or originals. Hashes can identify known content.
+Do not submit material you cannot share with the operator. Prior opted-out scans
+are not backfilled. No reports are auto-published. There is no unauthenticated
+arbitrary-fingerprint lookup endpoint; sightings are returned during bounded scans.
 
 Storage uses 16 bounded digest-set shards under `uniqueness-v1/`, outside the
 investigation lifecycle prefix. Local storage uses process locking, mode-0600 atomic
@@ -374,7 +388,7 @@ values are never published.
 
 | Path | Content |
 | --- | --- |
-| `/` | Landing page with the scanner (upload or GitHub repository, consent, results), live statistics, how it works, links to each page. `?mode=repo` opens the repository tab |
+| `/` | Landing page with scanner, automatic retention notice, live statistics and links. `?mode=repo` opens the repository tab |
 | `/scan` | Redirects to `/#scanner` (keeps `?mode=repo`) |
 | `/coverage` | Threat classes, ecosystems and file types inspected |
 | `/samples` | Use-case catalogue |
@@ -415,17 +429,18 @@ Real exposures require revocation/rotation and access-log review.
 
 ### Investigation archive and disclosure
 
-The scanner page displays a notice **before submission** and an *Allow investigation
-retention* checkbox that is **checked by default**. Users may uncheck it to opt out:
-the scan still runs, nothing is archived, and the report shows
-`archive.status = "opted_out"` (form field / JSON property `archive_consent`).
-With consent, only files with HIGH or CRITICAL findings are archived; clean files are
-not retained. Anonymous statistics (file and finding counts, no names, content or
-URLs) are always recorded. A pre-ticked box may not count as valid consent under
-GDPR/ePrivacy (CJEU *Planet49*); review this with your privacy counsel before going live.
+The scanner page displays an automatic retention notice **before submission**.
+All scans, including private repositories, retain files with HIGH or CRITICAL
+findings privately for 30 days; clean originals are not retained. Fingerprints are
+registered indefinitely and aggregate counters are updated automatically.
+Removing the checkboxes is not a claim of valid legal consent. Operators must
+establish a lawful basis, appropriate privacy disclosures and deletion procedures
+before production use, especially for private repositories and credential-bearing files.
 The archive contains original text (including any secrets), paths, hashes,
 redacted findings, and source/commit metadata. It is not anonymized.
-Scan reports remain in browser memory until a rescan, reload, or export.
+The current report remains in this browser tab's session storage across reloads
+until replaced or the tab session ends. File-report navigation does not replace
+the full inspection in session storage.
 
 - Development: `.archive/`, directories `0700`, files `0600`; ignored by Git.
 - Local retention: prune at startup, before writes, and hourly while running.

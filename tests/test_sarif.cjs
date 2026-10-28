@@ -69,3 +69,9 @@ test("invalid inputs fail explicitly rather than export a clean empty result", (
   assert.throws(() => buildSarif(report([finding({ severity: "SAFE" })])), /Invalid finding/);
   assert.throws(() => buildSarif(report([finding({ line: -1 })])), /Invalid finding/);
 });
+
+test("file exports identify their scope rather than imply full-repository coverage", () => {
+  const input = report();
+  input.view_scope = { kind: "file", path: "SKILL.md", snapshot_scope: "containing package from full inspection" };
+  assert.deepEqual(buildSarif(input).runs[0].properties.viewScope, input.view_scope);
+});

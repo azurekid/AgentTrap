@@ -43,6 +43,8 @@
         <div class="results-actions"><button id="fp-open" class="btn btn-ghost btn-small" type="button">Report false positives</button><button id="download" class="btn btn-ghost btn-small" type="button">Export JSON <span aria-hidden="true">↓</span></button><button id="download-sarif" class="btn btn-ghost btn-small" type="button">Export SARIF <span aria-hidden="true">↓</span></button></div>
       </header>
       <p id="export-status" class="warning" role="alert" hidden></p>
+      <a id="back-to-report" class="btn btn-ghost btn-small" href="/report" hidden>Back to full inspection</a>
+      <div id="file-context" class="card report-notes" hidden></div>
       <div id="verdict" class="verdict"></div>
       <div class="report-grid">
         <div class="card donut-card">
@@ -51,12 +53,21 @@
         <div id="metrics" class="card metrics"></div>
         <div id="report-notes" class="card report-notes"></div>
       </div>
+      <section id="finding-heatmap" class="evaluation" aria-labelledby="heatmap-title">
+        <h2 id="heatmap-title">Finding heatmap</h2>
+        <p class="meta">Signal occurrences by category and severity for this view. Select a count to filter file findings.</p>
+        <div id="heatmap-grid" class="heatmap-grid"></div>
+      </section>
       <section id="snapshot-review" class="evaluation" aria-labelledby="snapshot-review-title" hidden>
         <header class="atlas-head">
           <div><p class="label">Content identity</p><h2 id="snapshot-review-title">Snapshot review</h2></div>
         </header>
         <p id="snapshot-review-summary"></p>
         <p class="meta">HIGH and CRITICAL signals need manual review, not an automatic malware verdict. Every snapshot has a fingerprint, including snapshots with no high-risk signals. Fingerprints identify content, not trust or ownership.</p>
+        <div class="findings-toolbar">
+          <label>Find snapshot <input id="snapshot-search" type="search" maxlength="200" placeholder="Path or fingerprint"></label>
+          <label>Show <select id="snapshot-filter"><option value="all">All snapshots</option><option value="review">HIGH / CRITICAL signals</option><option value="seen">Seen before</option><option value="new">First recorded</option></select></label>
+        </div>
         <p id="fingerprint-status" class="meta" role="status" hidden></p>
         <div id="snapshot-cards" class="snapshot-cards"></div>
       </section>

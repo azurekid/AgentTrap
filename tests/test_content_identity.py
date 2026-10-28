@@ -204,3 +204,23 @@ def test_registry_azure_conflicts_are_idempotent():
     registry.add(report_for())
     assert registry.read()["counts"]["skill_snapshots"] == 1
     assert registry.read()["counts"]["findings"] == 2
+
+
+def test_sightings_are_reported_from_atomic_registration_and_survive_restart(tmp_path):
+    archive = SimpleNamespace(container=None, directory=tmp_path)
+    registry = Registry(archive)
+    report = report_for()
+    content = report["artifacts"][0]["content_id"]
+    assert registry.add(report) == {content: False}
+    assert Registry(archive).add(report_for("copy/skill")) == {content: True}
+    assert Registry(archive).read()["counts"]["findings"] == 2
+
+
+def test_concurrent_registrations_report_only_one_first_sighting(tmp_path):
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    report = report_for()
+    content = report["artifacts"][0]["content_id"]
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(lambda _: registry.add(report)[content], range(20)))
+    assert results.count(False) == 1
+    assert results.count(True) == 19

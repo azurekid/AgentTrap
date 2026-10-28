@@ -1,4 +1,4 @@
-"""Opt-in exact uniqueness counters. Stores only digest sets, never scan content."""
+"""Central exact fingerprint registry. Stores digest sets, never scan content."""
 import json
 import os
 import re
@@ -68,16 +68,17 @@ class Registry:
         except ResourceNotFoundError:
             return self._empty(), None
 
-    def _merge(self, shard: str, additions: dict[str, set[str]]) -> None:
+    def _merge(self, shard: str, additions: dict[str, set[str]]) -> dict[str, set[str]]:
         for _ in range(8):
             record, etag = self._load(shard)
+            existing = {key: set(record["sets"][key]) & values for key, values in additions.items()}
             changed = False
             for key, values in additions.items():
                 merged = set(record["sets"][key]) | values
                 changed |= len(merged) != len(record["sets"][key])
                 record["sets"][key] = sorted(merged)
             if not changed:
-                return
+                return existing
             payload = json.dumps(record, separators=(",", ":")).encode()
             if len(payload) > MAX_SHARD_BYTES:
                 raise RegistryError("Uniqueness capacity reached. Existing counters were not reset or approximated.")
@@ -92,19 +93,19 @@ class Registry:
                 except BaseException:
                     os.unlink(temp)
                     raise
-                return
+                return existing
             blob = self.container.get_blob_client(f"uniqueness-v1/{shard}.json")
             try:
                 if etag is None:
                     blob.upload_blob(payload, overwrite=False)
                 else:
                     blob.upload_blob(payload, overwrite=True, etag=etag, match_condition=MatchConditions.IfNotModified)
-                return
+                return existing
             except (ResourceExistsError, ResourceModifiedError):
                 continue
         raise RegistryError("Uniqueness update contention exceeded retry limit.")
 
-    def add(self, report: dict) -> None:
+    def add(self, report: dict) -> dict[str, bool]:
         additions: dict[str, dict[str, set[str]]] = {}
 
         def add(key: str, digest: str) -> None:
@@ -125,11 +126,15 @@ class Registry:
             with self.lock:
                 self.cached = None
                 if self.container is None:
-                    for shard, values in additions.items():
-                        self._merge(shard, values)
+                    results = [self._merge(shard, values) for shard, values in additions.items()]
                 else:
                     with ThreadPoolExecutor(max_workers=4) as pool:
-                        list(pool.map(lambda item: self._merge(*item), additions.items()))
+                        results = list(pool.map(lambda item: self._merge(*item), additions.items()))
+                known = set()
+                for result in results:
+                    for metric in ("skill_snapshots", "mcp_snapshots", "agent_files"):
+                        known.update(result.get(metric, set()))
+                return {artifact["content_id"]: artifact["content_id"] in known for artifact in report["artifacts"]}
         except (OSError, AzureError, ValueError, TypeError) as exc:
             raise RegistryError("Uniqueness update failed.") from exc
 
@@ -146,7 +151,7 @@ class Registry:
                     "since": min((r["since"] for r in populated), default=None),
                     "as_of": datetime.now(timezone.utc).isoformat(),
                     "counts": {key: sum(len(r["sets"][key]) for r, _ in records) for key in METRICS},
-                    "scope": "Opted-in submissions only; private-token scans excluded. Content versions, not unique people or publishers.",
+                    "scope": "Automatically recorded submissions, including private-token scans. Content versions, not unique people or publishers. Historical opt-outs are not backfilled.",
                     "consistency": "Shard snapshot, cached up to 60 seconds; in-flight or failed submissions can be partially recorded. Retries are idempotent.",
                 }
                 self.cached, self.cached_at = result, time.monotonic()

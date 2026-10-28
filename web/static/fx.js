@@ -53,11 +53,14 @@
       const response = await fetch("/api/statistics", { cache: "no-store" });
       if (!response.ok) throw new Error(`Statistics request failed (${response.status}).`);
       const totals = await response.json();
-      if (![totals.files, totals.findings].every((n) => Number.isSafeInteger(n) && n >= 0)) {
+      const uniqueResponse = await fetch("/api/statistics/unique", { cache: "no-store" });
+      if (!uniqueResponse.ok) throw new Error("Fingerprint counters unavailable.");
+      const unique = await uniqueResponse.json();
+      if (![totals.files, unique.counts.findings].every((n) => Number.isSafeInteger(n) && n >= 0)) {
         throw new Error("Invalid statistics response.");
       }
       countTo(files, totals.files);
-      countTo(findings, totals.findings);
+      countTo(findings, unique.counts.findings);
       errorMessage.hidden = true;
     } catch (error) {
       for (const element of [files, findings]) {
