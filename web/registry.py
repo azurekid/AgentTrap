@@ -74,7 +74,7 @@ class Registry:
         ):
             raise RegistryError("Invalid stored fingerprint reports.")
         for digest, summary in data.get("reports", {}).items():
-            if (set(summary) - {"name", "name_source", "evidence", "atlas"} != {"content_id", "kind", "evaluation_id", "package_complete", "inspection_status",
+            if (set(summary) - {"name", "name_source", "evidence", "atlas", "signature"} != {"content_id", "kind", "evaluation_id", "package_complete", "inspection_status",
                                  "first_seen", "last_seen", "detector_sha256", "file_count", "assessment",
                                  "findings", "severities", "rules"}
                     or summary["content_id"] != digest or summary["kind"] not in ("skill_snapshot", "mcp_snapshot", "agent_file")
@@ -87,6 +87,25 @@ class Registry:
                 raise RegistryError("Invalid stored fingerprint assessment.")
             if summary.get("name") is not None and (not isinstance(summary["name"], str) or len(summary["name"]) > 160):
                 raise RegistryError("Invalid stored frontmatter name.")
+            if summary.get("signature") is not None:
+                signature = summary["signature"]
+                if (not isinstance(signature, dict)
+                        or set(signature) != {"format", "status", "message", "performed", "publisher", "signer_sha256",
+                                              "identity_verified", "reputation", "scope", "limitations", "verification_policy_sha256"}
+                        or signature["status"] not in ("verified", "invalid", "unsigned", "untrusted", "not_verifiable", "unsupported")
+                        or any(not isinstance(signature[key], str) or len(signature[key]) > 1024
+                               for key in ("format", "message", "scope", "limitations"))
+                        or type(signature["performed"]) is not bool
+                        or type(signature["identity_verified"]) is not bool
+                        or signature["identity_verified"] != (signature["status"] == "verified")
+                        or signature["reputation"] != "not_assessed"
+                        or (signature["publisher"] is not None and
+                            (not isinstance(signature["publisher"], str) or len(signature["publisher"]) > 160))
+                        or any(not isinstance(signature[key], str) or not DIGEST.fullmatch(signature[key])
+                               for key in ("verification_policy_sha256",))
+                        or (signature["signer_sha256"] is not None and
+                            (not isinstance(signature["signer_sha256"], str) or not DIGEST.fullmatch(signature["signer_sha256"])))):
+                    raise RegistryError("Invalid stored signature metadata.")
             if "atlas" in summary:
                 atlas = summary["atlas"]
                 if (not isinstance(atlas, dict) or set(atlas) != {"source", "tactics", "technique_count"}
@@ -255,6 +274,7 @@ class Registry:
                         "source": hit.get("evidence_source", "raw"), "line": hit["line"],
                     })
             summary = {
+                "signature": artifact.get("signature"),
                 "atlas": {"source": atlas["source"], "tactics": atlas["tactics"],
                           "technique_count": len(atlas["techniques"])},
                 "name": artifact.get("name"), "name_source": artifact.get("name_source"),

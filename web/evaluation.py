@@ -68,7 +68,7 @@ if sum(len(c["rules"].split()) for c in CATEGORIES) != len(RULE_CATEGORY):
 def detector_fingerprint() -> str:
     digest = hashlib.sha256()
     for name in ("scan_agents_md.py", "credential_rules.json", "allowlist.json", "web/atlas.json",
-                 "web/evaluation.py", "web/mcp.py", "web/decoding.py", "web/artifacts.py", "web/scan_worker.py", "web/repository.py"):
+                 "web/evaluation.py", "web/mcp.py", "web/decoding.py", "web/artifacts.py", "web/scan_worker.py", "web/repository.py", "web/signatures.py"):
         content = (ROOT / name).read_bytes()
         digest.update(name.encode() + b"\0" + str(len(content)).encode() + b"\0" + content)
     return digest.hexdigest()
@@ -94,8 +94,9 @@ def methodology() -> dict:
             {"id": "mcp", "name": "Decoded JSON MCP tool-definition inspection (when applicable)", "performed": True},
             {"id": "decoding", "name": "Bounded encoded-text inspection (base64, hex and percent encodings)", "performed": True},
             {"id": "execution", "name": "Sandbox or runtime execution", "performed": False},
-            {"id": "reputation", "name": "Publisher identity and reputation verification", "performed": False},
-            {"id": "signatures", "name": "Skill signature verification", "performed": False},
+            {"id": "publisher", "name": "Publisher certificate identity verification (when applicable)", "performed": False},
+            {"id": "reputation", "name": "Publisher reputation assessment", "performed": False},
+            {"id": "signatures", "name": "NVIDIA-style OMS skill signature verification (when applicable)", "performed": False},
             {"id": "dependencies", "name": "Installed dependency or remote-content inspection", "performed": False},
         ],
         "hash_scope": "SHA256 of inspected text re-encoded as UTF-8 after removal of an optional UTF-8 BOM; "
@@ -131,7 +132,9 @@ def evaluate(files: list[dict], documents: list[dict[str, str]], status: str) ->
         "checks": [
             {**check, "performed": (
                 any(f.get("mcp", {}).get("status") in ("complete", "incomplete") for f in files)
-                if check["id"] == "mcp" else check["performed"] and bool(files)
+                if check["id"] == "mcp" else
+                any(f.get("signature", {}).get("performed", False) for f in files)
+                if check["id"] in ("signatures", "publisher") else check["performed"] and bool(files)
             )} for check in methodology()["checks"]
         ],
         "methodology_url": "/api/methodology",

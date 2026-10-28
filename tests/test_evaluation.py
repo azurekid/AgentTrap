@@ -61,7 +61,7 @@ def test_zero_is_not_a_safety_verdict():
     assert evaluation["highest_severity"] is None
     assert all(c["findings"] == 0 for c in evaluation["categories"])
     checks = {c["id"]: c["performed"] for c in evaluation["checks"]}
-    assert checks == {"static": True, "secrets": True, "execution": False, "reputation": False,
+    assert checks == {"static": True, "secrets": True, "execution": False, "reputation": False, "publisher": False,
                       "signatures": False, "dependencies": False, "mcp": False, "decoding": True}
 
 

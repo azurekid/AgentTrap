@@ -32,7 +32,8 @@
         "rules": {"type": "array", "items": {"type": "string"}, "minItems": 1},
         "artifact_kind": {"enum": ["skill_snapshot", "mcp_snapshot", "agent_file"]},
         "package_complete": {"type": "boolean"},
-        "name": {"type": "string", "maxLength": 160}
+        "name": {"type": "string", "maxLength": 160},
+        "signature_status": {"enum": ["verified", "invalid", "unsigned", "not_verifiable", "unsupported", "untrusted"]}
       }
     },
     "benign": {

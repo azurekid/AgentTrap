@@ -251,6 +251,15 @@ az storage blob download --account-name <storage> -c skillvenom-investigations -
 
 ## 5. Verify
 
+Optional OMS publisher verification requires `SKILL_TRUST_STORE` pointing to an
+absolute, read-only JSON configuration file in the application container, plus
+read-only publisher PEM certificates at the paths named in that file. Provision
+these through your image or an operator-managed mount; do not accept trust anchors
+from scan uploads. See the README's NVIDIA-style signature setup. Without this
+configuration, signatures are reported as untrusted, never verified automatically.
+Publisher labels and certificate fingerprints appear in public qualifying reports.
+Reputation, revocation and timestamp checks remain unassessed.
+
 - `https://<app>/healthz` returns `{"status":"ok"}`; `/` shows the scanner, and
   `/coverage`, `/samples` and `/sources` load.
 - Upload `tests/benign/AGENTS.md`: no high-risk findings, no archive record or central fingerprint registration.

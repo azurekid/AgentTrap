@@ -635,7 +635,7 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .fingerprint-report { padding: 0; border: 0; background: none; }
 .lookup-identity { padding: 24px; border: 1px solid var(--line-strong); border-radius: 16px; background: linear-gradient(120deg, rgba(45, 212, 191, .07), transparent 70%), var(--panel); }
 .lookup-identity h2 { font-size: 15px; color: var(--muted); font-weight: 500; }
-.lookup-hash { display: block; margin: 12px 0 20px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; color: var(--cyan); user-select: all; }
+.lookup-hash { display: block; margin: 12px 0 20px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; color: var(--cyan); user-select: all; overflow-wrap: anywhere; }
 .lookup-kind { display: inline-block; border: 1px solid var(--line-strong); border-radius: 999px; padding: 3px 10px; font-size: 11px; color: var(--teal); }
 .lookup-name { margin-top: 10px; font-size: 24px; }
 .lookup-identity .meta { font-size: 12px; margin-bottom: 0; }
@@ -712,6 +712,8 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .snapshot-fingerprint label { grid-column: 1 / -1; }
 .snapshot-fingerprint input { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font: 11px var(--mono); }
 .evaluation-categories { margin: 10px 0; }
+.signature-card + .signature-card { margin-top: 10px; }
+.signature-card summary strong { margin-right: 12px; }
 .evaluation-category h3 { font-size: 16px; }
 .evaluation-evidence { margin-top: 14px; overflow-wrap: anywhere; }
 #methodology-version { overflow-wrap: anywhere; }

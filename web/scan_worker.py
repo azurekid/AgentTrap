@@ -5,6 +5,8 @@ import sys
 from scan_agents_md import DEFAULT_ALLOW, scan_file
 from web.decoding import PayloadInspector
 from web.mcp import inspect_mcp
+from web.signatures import SIGNATURE_NAME, inspect_signatures
+from pathlib import PurePosixPath
 
 
 def main() -> None:
@@ -12,6 +14,9 @@ def main() -> None:
     result = []
     count = 0
     for document in documents:
+        if PurePosixPath(document["path"]).name == SIGNATURE_NAME:
+            result.append({"path": document["path"], "findings": []})
+            continue
         findings = scan_file("/repository/" + document["path"], document["text"], DEFAULT_ALLOW)
         payloads = PayloadInspector(document["path"])
         findings.extend(payloads.inspect(document["text"]))
@@ -26,6 +31,10 @@ def main() -> None:
             print(json.dumps({"error": "Finding limit exceeded (2,000). Scan fewer files."}))
             return
         result.append({"path": document["path"], "findings": findings, "mcp": mcp, "decoding": payloads.summary()})
+    signatures = inspect_signatures(documents)
+    for file in result:
+        if file["path"] in signatures:
+            file["signature"] = signatures[file["path"]]
     print(json.dumps({"files": result}))
 
 

@@ -1,0 +1,42 @@
+{
+  "id": "SC-017",
+  "title": "Missing signed package member",
+  "summary": "Validate NVIDIA-style OMS signature result not_verifiable with an explicitly configured sample-only trust root.",
+  "category": "SC",
+  "platforms": [
+    "any-agent"
+  ],
+  "severity": "HIGH",
+  "status": "regression",
+  "source": "AgentLens OMS verification regression, not an NVIDIA-signed artifact",
+  "artifacts": [
+    {
+      "path": "payload/skills/oms-review/SKILL.md",
+      "scan_as": "skills/oms-review/SKILL.md"
+    },
+    {
+      "path": "payload/skills/oms-review/skill.oms.sig",
+      "scan_as": "skills/oms-review/skill.oms.sig"
+    }
+  ],
+  "expected": {
+    "rules": [
+      "PROMPT-INJECTION"
+    ],
+    "signature_status": "not_verifiable"
+  },
+  "references": [
+    "https://docs.nvidia.com/skills/signing-agent-skills"
+  ],
+  "why_it_works": "Cryptographic identity and byte integrity are independent of security findings. These local test certificates are never trusted automatically and do not impersonate NVIDIA.",
+  "mitigations": [
+    "Configure the sample root only in isolated tests. Never use it as a production publisher trust anchor.",
+    "Review findings even when a signature verifies. Upload all package members with their relative paths."
+  ],
+  "tags": [
+    "oms",
+    "signature",
+    "publisher-identity",
+    "test-only"
+  ]
+}

@@ -129,6 +129,10 @@ def render_case_readme(directory, case, tax):
                   "- **Uploads:** snapshot only; never proof of package completeness"]
         if expected.get("name"):
             lines.append(f"- **Expected self-declared frontmatter name:** {expected['name']}")
+    if case["expected"].get("signature_status"):
+        lines += [f"- **Expected OMS signature:** {case['expected']['signature_status']}",
+                  "- **Test trust only:** Configure `use-cases/signature-test-root.pem` explicitly in an isolated test trust store. Never trust this root in production.",
+                  "- **Scope:** Upload the whole payload folder. This is not an NVIDIA-signed artifact and reputation is not assessed."]
     lines += ["", "## Why it works", "", case["why_it_works"], "", "## Mitigations", ""]
     lines += [f"- {m}" for m in case["mitigations"]]
     lines += ["", "## Artifacts", ""]

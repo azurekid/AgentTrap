@@ -72,6 +72,19 @@
         result.append(element("p", "This fingerprint predates stored assessments. Rescan the matching content to add an assessment. No findings or safety conclusion can be inferred."));
       } else {
         const report = data.report;
+        let signaturePanel;
+        if (report.signature) {
+          const signature = report.signature;
+          const section = element("details", "", "evaluation-evidence lookup-support");
+          section.append(element("summary", "Publisher & signatures"),
+            element("p", `Signature: ${signature.status.replaceAll("_", " ")}. ${signature.message}`),
+            element("p", signature.identity_verified ? `Publisher: ${signature.publisher} (operator-trusted certificate chain)` : "Publisher identity: not verified"),
+            element("p", signature.scope, "meta"), element("p", signature.limitations, "meta"),
+            element("p", "Stored verification at scan time, not live certificate or revocation status.", "meta"));
+          if (signature.signer_sha256) section.append(element("p", "Signing certificate SHA256", "meta"),
+            element("code", signature.signer_sha256, "lookup-hash"));
+          signaturePanel = section;
+        }
         identity.append(element("h3", report.name || "Unnamed snapshot", "lookup-name"),
           element("p", report.name ? "Self-declared frontmatter name. Not verified publisher identity or ownership."
             : "This snapshot has no supported name metadata, or predates name indexing. Rescan to refresh metadata.", "meta"));
@@ -124,6 +137,7 @@
         const dashboard = element("div", "", "lookup-dashboard");
         dashboard.append(findings, mapping);
         result.append(dashboard);
+        if (signaturePanel) result.append(signaturePanel);
         const categoryDetails = element("details", "", "evaluation-evidence lookup-support");
         categoryDetails.append(element("summary", "Signal categories and review guidance"));
         const categories = element("div", "", "evaluation-categories");

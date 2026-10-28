@@ -20,7 +20,7 @@ MAX_FILES = 500
 MAX_TREE = 16 * 1024 * 1024
 SHA = re.compile(r"[a-f0-9]{40}")
 UNSUPPORTED = ("Use an https:// repository URL on github.com, gitlab.com or dev.azure.com (or a host your operator configured), "
-               "without credentials, query, port or branch path.")
+               "without credentials, query or port. GitHub /tree/<ref>/<directory> URLs are supported.")
 LIMITS = "Repository target files exceed limits (500 files, 256 KiB/file, 5 MiB total). Upload a smaller selection."
 
 
@@ -39,7 +39,7 @@ def safe_path(value: str) -> str:
 
 def is_target(path: str, workflows: bool = False) -> bool:
     full = "/" + path
-    return bool(NAMES.search(PurePosixPath(path).name) or PATHS.search(full)
+    return bool(PurePosixPath(path).name == "skill.oms.sig" or NAMES.search(PurePosixPath(path).name) or PATHS.search(full)
                 or (workflows and WORKFLOWS.search(full)))
 
 
@@ -52,7 +52,7 @@ def decode_document(path: str, data: bytes) -> dict[str, str]:
         raise ScanInputError(f"File is not UTF-8 text: {path}") from exc
     if "\x00" in text:
         raise ScanInputError(f"Binary content is not supported: {path}")
-    if any(len(line) > 8192 for line in text.splitlines()):
+    if PurePosixPath(path).name != "skill.oms.sig" and any(len(line) > 8192 for line in text.splitlines()):
         raise ScanInputError(f"Line exceeds 8,192 characters: {path}")
     return {"path": path, "text": text}
 
@@ -63,6 +63,15 @@ AZDO_SEGMENT = re.compile(r"[A-Za-z0-9_. -]{1,100}")
 HOST = re.compile(r"[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?")
 TOKEN = re.compile(r"[\x21-\x7e]{8,256}")
 MAX_TREE_PAGES = 50
+SKILL_SUFFIXES = {".md", ".mdc", ".json", ".toml", ".yaml", ".yml", ".sh", ".bash", ".zsh",
+                  ".py", ".js", ".mjs", ".cjs", ".ts", ".ps1", ".rb"}
+
+
+def is_skill_member(path: str, roots: set[str], workflows: bool = False) -> bool:
+    if not workflows and WORKFLOWS.search("/" + path):
+        return False
+    return (PurePosixPath(path).suffix.lower() in SKILL_SUFFIXES
+            and any(root == "." or path.startswith(root + "/") for root in roots))
 
 
 @dataclass(frozen=True)
@@ -70,6 +79,8 @@ class Ref:
     provider: str
     host: str
     path: tuple[str, ...]  # GitHub/GitLab: namespace + project. Azure DevOps: collection prefix + project + repository.
+    revision: str | None = None
+    directory: str = ""
 
 
 def configured_hosts(name: str) -> set[str]:
@@ -92,13 +103,20 @@ def parse_repository(url: str) -> Ref:
     gitlab, azdo = host == "gitlab.com" or host in configured_hosts("SCM_GITLAB_HOSTS"), \
         host == "dev.azure.com" or host in configured_hosts("SCM_AZDO_HOSTS")
     if host == "github.com":
-        match = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9_.-]{1,100})", "/".join(raw))
+        match = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9_.-]{1,100})", "/".join(raw[:2]))
         if not match:
             raise ScanInputError(UNSUPPORTED)
         owner, repo = match.group(1), match.group(2).removesuffix(".git")
         if repo in ("", ".", ".."):
             raise ScanInputError("Invalid repository name.")
-        return Ref("github", host, (owner, repo))
+        revision, directory = None, ""
+        if len(raw) > 2:
+            if len(raw) < 4 or raw[2] != "tree" or not SEGMENT.fullmatch(segments[3]) or segments[3] in (".", ".."):
+                raise ScanInputError(UNSUPPORTED)
+            revision = segments[3]
+            if len(raw) > 4:
+                directory = safe_path("/".join(segments[4:]))
+        return Ref("github", host, (owner, repo), revision, directory)
     if gitlab:
         segments[-1] = segments[-1].removesuffix(".git")
         if (not 2 <= len(segments) <= 10 or "-" in segments
@@ -163,6 +181,11 @@ def select_targets(tree: dict, workflows: bool) -> tuple[list[dict], list[str]]:
     entries = tree.get("tree") if isinstance(tree, dict) else None
     if not isinstance(entries, list):
         raise ScanInputError("The repository host returned an invalid repository tree.")
+    roots = {str(PurePosixPath(safe_path(entry["path"])).parent) for entry in entries
+             if isinstance(entry, dict) and isinstance(entry.get("path"), str)
+             and PurePosixPath(entry["path"]).name.lower() == "skill.md"
+             and entry.get("type") == "blob" and entry.get("mode") in ("100644", "100755")
+             and not {".git", "node_modules"} & set(PurePosixPath(entry["path"]).parts)}
     selected, skipped, total = [], [], 0
     for entry in entries:
         if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
@@ -171,7 +194,7 @@ def select_targets(tree: dict, workflows: bool) -> tuple[list[dict], list[str]]:
         parts = PurePosixPath(path).parts
         if ".git" in parts or "node_modules" in parts or entry.get("type") == "tree":
             continue
-        if not is_target(path, workflows):
+        if not (is_target(path, workflows) or is_skill_member(path, roots, workflows)):
             continue
         if entry.get("type") != "blob" or entry.get("mode") not in ("100644", "100755"):
             skipped.append(path + " (link or non-regular file)")
@@ -263,13 +286,23 @@ def azure_devops_listing(ref: Ref, get, get_page) -> tuple[str, dict, object]:
 def github_listing(ref: Ref, get, authed: bool) -> tuple[str, dict, object]:
     owner, repo = ref.path
     api = f"https://api.github.com/repos/{owner}/{repo}"
-    sha = get(f"{api}/commits/HEAD", 128, headers={"Accept": "application/vnd.github.sha"}).decode("ascii", "replace").strip()
+    revision = quote(ref.revision or "HEAD", safe="")
+    sha = get(f"{api}/commits/{revision}", 128, headers={"Accept": "application/vnd.github.sha"}).decode("ascii", "replace").strip()
     if not SHA.fullmatch(sha):
         raise ScanInputError("GitHub returned an invalid commit ID.")
     listing = get(f"{api}/git/trees/{sha}?recursive=1", MAX_TREE,
                   "Repository file tree exceeds the 16 MiB listing limit. Upload selected files instead.",
                   {"Accept": "application/vnd.github+json"})
     tree = json_value(listing, "GitHub")
+    if ref.directory:
+        if not isinstance(tree, dict) or not isinstance(tree.get("tree"), list):
+            raise ScanInputError("The repository host returned an invalid repository tree.")
+        prefix = ref.directory + "/"
+        entries = [entry for entry in tree["tree"] if isinstance(entry, dict)
+                   and isinstance(entry.get("path"), str) and entry["path"].startswith(prefix)]
+        if not entries:
+            raise ScanInputError("Selected repository directory was not found or its listing is incomplete.")
+        tree = {**tree, "tree": entries}
 
     def blob(entry: dict) -> bytes:
         if authed:  # keep the token on api.github.com only
@@ -332,6 +365,7 @@ def fetch_repository(url: str, workflows: bool, token: str | None = None) -> tup
                 document["package_complete"] = str(
                     root not in incomplete_roots and not tree.get("truncated") and ref.provider == "github"
                 ).lower()
+                document["signature_scope_complete"] = str(root not in incomplete_roots and not tree.get("truncated")).lower()
             return document
 
         with ThreadPoolExecutor(max_workers=12) as pool:

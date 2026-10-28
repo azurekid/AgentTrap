@@ -5,3 +5,5 @@ httpx==0.28.1
 azure-identity==1.27.0
 azure-storage-blob==12.31.0
 PyYAML==6.0.3
+model-signing==1.1.1
+pyOpenSSL==26.4.0

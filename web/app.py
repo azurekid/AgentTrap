@@ -10,7 +10,7 @@ import time
 from collections import Counter, defaultdict, deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
 import httpx
@@ -32,7 +32,7 @@ from web.registry import Registry, RegistryError
 from web.statistics import Statistics, StatisticsError
 from web.repository import (
     MAX_FILE, MAX_FILES, MAX_TOTAL, ScanInputError, decode_document,
-    fetch_repository, is_target, safe_path,
+    fetch_repository, is_skill_member, is_target, safe_path,
 )
 
 ROOT = Path(__file__).resolve().parent
@@ -56,6 +56,7 @@ POLICY = {
                     "are publicly searchable with sanitized snapshot reports. "
                     "Lookup retrieves stored metadata and redacted excerpts only, never full files or repository contents, and never starts a scan. "
                     "Self-declared frontmatter names and up to 24 redacted finding excerpts are published for qualifying snapshots, including private repositories and uploads. "
+                    "Signature verification metadata, including operator publisher labels and signing-certificate fingerprints, is public for qualifying snapshots. "
                     "Detected-secret redaction cannot guarantee confidentiality. Full originals and access tokens are not published. "
                     "Source paths and repository URLs are not separate public fields. Startup removes non-high/critical and unclassifiable legacy "
                     "snapshot records and lookup links, preserving historical finding/evaluation digests and counters. "
@@ -65,6 +66,8 @@ POLICY = {
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from web.signatures import publishers
+    await run_in_threadpool(publishers)
     app.state.archive = await run_in_threadpool(Archive)
     app.state.archive.prune()
     app.state.statistics = await run_in_threadpool(Statistics, app.state.archive)
@@ -404,6 +407,12 @@ def make_report(documents: list[dict[str, str]], source: str, skipped: list[str]
     status = "partial" if skipped else ("complete" if files else "no_targets")
     evaluation, provenance = evaluate(files, documents, status)
     artifacts = identify(files, documents, provenance["detector_sha256"], bool(skipped), scan_options or {})
+    for artifact in artifacts:
+        skill_path = "SKILL.md" if artifact["root"] == "." else artifact["root"] + "/SKILL.md"
+        signature = next((file["signature"] for file in files if file.get("signature")
+                          and (file["path"] == skill_path or file["path"].lower() == skill_path.lower())), None)
+        if signature:
+            artifact["signature"] = signature
     report = {
         "id": uuid4().hex, "created_at": datetime.now(timezone.utc).isoformat(),
         "source": source, "commit": commit, "files": files, "skipped": skipped,
@@ -506,6 +515,9 @@ async def scan_uploads(request: Request):
             if unique_value not in ("true", "false"):
                 raise ScanInputError("Invalid uniqueness consent option.")
             documents, seen = [], set()
+            roots = {str(PurePosixPath(safe_path(upload.filename or "")).parent)
+                     for key, upload in form.multi_items() if key == "files" and isinstance(upload, UploadFile)
+                     and PurePosixPath(upload.filename or "").name.lower() == "skill.md"}
             total = 0
             for key, upload in form.multi_items():
                 if key in ("include_workflows", "discover", "archive_consent", "uniqueness_consent"):
@@ -516,7 +528,7 @@ async def scan_uploads(request: Request):
                 if path in seen:
                     raise ScanInputError("Duplicate file paths are not accepted.")
                 seen.add(path)
-                if discover and not is_target(path, workflows):
+                if discover and not (is_target(path, workflows) or is_skill_member(path, roots, workflows)):
                     continue
                 suffix = Path(path).suffix.lower()
                 if not (is_target(path, workflows) or suffix in UPLOAD_SUFFIXES):
@@ -528,6 +540,13 @@ async def scan_uploads(request: Request):
                 document = decode_document(path, content)
                 document.update(raw_sha256=hashlib.sha256(content).hexdigest(), raw_bytes=str(len(content)))
                 documents.append(document)
+            inspected = {doc["path"] for doc in documents}
+            for doc in documents:
+                if PurePosixPath(doc["path"]).name.lower() == "skill.md":
+                    root = str(PurePosixPath(doc["path"]).parent)
+                    doc["signature_scope_complete"] = str(not any(
+                        path not in inspected and (root == "." or path.startswith(root + "/")) for path in seen
+                    )).lower()
             if not documents and not discover:
                 raise ScanInputError("Select at least one file to inspect.")
     except ScanInputError as exc:

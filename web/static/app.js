@@ -86,8 +86,13 @@ function setFiles(files, folder = false) {
   const incoming = Array.from(files);
   discover = folder;
   if (folder) {
+    const skillRoots = incoming.filter((file) => file.name.toLowerCase() === "skill.md")
+      .map((file) => file.webkitRelativePath.slice(0, file.webkitRelativePath.lastIndexOf("/") + 1));
     // Let server discovery be authoritative; folder upload accepts supported text candidates.
     selected = incoming.filter((file) => /\.(md|mdc|json|toml|ya?ml)$/i.test(file.name)
+      || file.name === "skill.oms.sig"
+      || (skillRoots.some((root) => file.webkitRelativePath.startsWith(root))
+        && /\.(sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb)$/i.test(file.name))
       || /^\.(cursorrules|windsurfrules|clinerules)$/.test(file.name)
       || /\/\.(cursor|cline|clinerules)\/(?:rules\/)?[^/]+$/.test(file.webkitRelativePath)
       || /\/(skills\/[^/]+|\.claude\/hooks)\/.+\.(sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb)$/i.test(file.webkitRelativePath)
@@ -340,6 +345,24 @@ function renderSnapshotReview() {
 }
 
 function renderEvaluation() {
+  if ($("signature-review")) {
+    const signed = (report.artifacts || []).filter((artifact) => artifact.signature
+      && (artifact.signature.status !== "unsigned" || affectedFiles(artifact).length));
+    $("signature-review").hidden = !signed.length;
+    $("signature-cards").replaceChildren();
+    for (const artifact of signed) {
+      const signature = artifact.signature;
+      const card = node("details", "card signature-card");
+      const summary = node("summary");
+      summary.append(node("strong", "", artifact.name || artifact.root),
+        node("span", signature.status === "verified" ? "lookup-kind" : "warning", `Signature: ${signature.status.replaceAll("_", " ")}`));
+      card.append(summary, node("p", "", signature.message),
+        node("p", "meta", signature.identity_verified ? `Publisher: ${signature.publisher} (operator-trusted certificate chain)` : "Publisher identity: not verified"),
+        node("p", "meta", signature.scope), node("p", "meta", signature.limitations));
+      if (signature.signer_sha256) card.append(node("p", "lookup-hash", `Signing certificate SHA256: ${signature.signer_sha256}`));
+      $("signature-cards").append(card);
+    }
+  }
   const evaluation = report.evaluation;
   $("evaluation").hidden = !evaluation;
   $("finding-category").replaceChildren(node("option", "", "All categories"));
@@ -902,6 +925,10 @@ function sampleCard(item) {
     body.append(node("p", "sample-h", "Identity validation"),
       node("p", "sample-text", `Expected: ${expected.artifact_kind}. Complete supported package at a pinned repository commit: ${expected.package_complete ? "yes" : "no"}. Uploads remain snapshots.`));
     if (expected.name) body.append(node("p", "sample-text", `Self-declared frontmatter name: ${expected.name}`));
+  }
+  if (item.signature_validation) {
+    body.append(node("p", "sample-h", "Signature validation"),
+      node("p", "sample-text", `Expected with the explicit sample-only trust root: ${item.signature_validation}. NVIDIA-style OMS; never a publisher reputation or safety rating.`));
   }
   if (item.findings.length) {
     body.append(node("p", "sample-h", "Detections"));

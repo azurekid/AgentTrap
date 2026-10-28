@@ -61,13 +61,21 @@ below; they must not be presented as a count of distinct skills.
   Folder uploads use agent-aware discovery, not all Markdown/config files.
   Retain parent paths (for example `.claude/settings.json`) using **Select folder**.
 
-Supported repository URLs (default branch only, pinned to one commit SHA, `.git` suffix optional):
+Supported repository URLs (pinned to one commit SHA, `.git` suffix optional):
 
 | Provider | URL | Private repositories |
 |---|---|---|
 | GitHub | `https://github.com/owner/repo` | fine-grained token, Contents: read-only |
 | GitLab | `https://gitlab.com/group/[subgroup/]project` | token with `read_repository` |
 | Azure DevOps | `https://dev.azure.com/org/project/_git/repo` | PAT with Code: Read |
+
+Repository roots use the default branch. GitHub also accepts
+`https://github.com/<owner>/<repo>/tree/<ref>/<directory>`, for example
+`https://github.com/sickn33/agentic-awesome-skills/tree/main/skills`.
+The single-segment branch/tag or commit ref is resolved to a commit before retrieval;
+only files below the selected directory are considered. Paths keep their repository-relative
+names. Slash-containing refs, blob URLs and other providers' tree URLs are not
+supported. Existing file/byte limits still apply to large directories.
 
 Private repositories need an optional **access token**. It travels in the request body over
 HTTPS, is sent only to the provider's API host in an auth header, is never logged, stored or
@@ -128,8 +136,9 @@ Changing detector files requires a process restart, as with the existing scanner
 `GET /api/methodology` publishes the scoring formula, detector SHA256, rule/category
 assignments and performed/not-performed checks. The public
 [`/coverage#methodology`](web/static/coverage.html) section explains the same limits.
-There is **no** sandbox execution, publisher reputation verification, skill-signature
-verification, live credential validation or installed-dependency analysis.
+There is **no** sandbox execution, publisher reputation verification,
+live credential validation or installed-dependency analysis.
+Conditional OMS signature and publisher certificate checks are described below.
 Static config checks do not evaluate the behavior of a running MCP server.
 
 Each report records a deterministic, path-sorted manifest with file lengths and
@@ -144,6 +153,73 @@ authenticated. Repository reports retain the existing pinned commit identity.
 Original skills and full submitted reports are not published in a browsable directory.
 Exact content-fingerprint lookup publishes sanitized assessments automatically,
 including for private scans (see below). This is not a reputation service or verified badge.
+
+### NVIDIA-style skill signatures and publisher identity
+
+AgentLens supports the [NVIDIA detached OMS convention](https://docs.nvidia.com/skills/signing-agent-skills):
+`skill.oms.sig` at the skill package root. The signature authenticates an OMS v1.0
+in-toto manifest, then AgentLens compares its file-level SHA256 digests with exact
+raw-byte hashes captured during upload or pinned retrieval, **before BOM removal**.
+Supporting files must be submitted with their package-relative paths. Signature
+bundles are verification data, not prompt-injection scan targets.
+
+Verification is offline and read-only, inside the existing timeout-bounded scanner
+process. No submitted key, certificate, URL or frontmatter identity becomes a trust
+anchor. Configure an absolute path in `SKILL_TRUST_STORE` to an operator-controlled
+JSON file, for example:
+
+```json
+[
+  {
+    "publisher": "NVIDIA",
+    "certificate": "/etc/agentlens/trust/nv-agent-root-cert.pem"
+  }
+]
+```
+
+Obtain NVIDIA's current certificate from its official
+[`NVIDIA/skills` repository](https://github.com/NVIDIA/skills/blob/main/nv-agent-root-cert.pem),
+independently verify and pin it under your organization's trust policy, and provision
+it read-only. AgentLens does not download or automatically trust certificates.
+Other publishers use separately provisioned certificate-chain files and operator
+labels. Up to 16 publishers are supported. Invalid trust configuration blocks startup.
+
+The **Publisher & signatures** report panel distinguishes:
+
+- `verified`: trusted chain, signature and every submitted package file match.
+- `invalid`: malformed signature, untrusted/invalid chain, changed bytes or unsigned additions.
+- `not_verifiable`: missing signed files, unavailable raw hashes or incomplete/unsupported repository contents.
+- `untrusted`: signature present, but no publisher trust anchors are configured.
+- `unsupported`: unsupported OMS predicate/serialization; only v1.0 file-level SHA256 without symlinks is supported.
+- `unsigned`: no root `skill.oms.sig`; pasted content alone is unsigned.
+
+Unsigned additions are rejected even if the signer declares ignored paths.
+Repository verification requires a complete bounded package listing. Unsupported
+assets are not silently omitted to produce a verified result. Upload verification
+covers exactly the submitted package, not unobserved files in the original source.
+Nested skill packages are inspected separately; missing parent members prevent
+parent verification. File permissions/modes are not attested by this OMS profile.
+
+The pinned `model-signing==1.1.1` adapter validates the OMS envelope and manifest.
+AgentLens additionally validates the certificate chain at current time, because
+that library's certificate verifier uses the leaf's issuance time. Expired
+certificates are rejected, not treated as timestamp-validated historical signatures.
+Revocation and timestamp checks are **not performed**. Publisher identity means
+chain validation under an operator's named trust anchor, not a verified frontmatter
+author, repository owner or signer reputation.
+
+Signature results do not lower signal risk, suppress findings or bypass the
+HIGH/CRITICAL central-registration policy. Public qualifying assessments include
+the signature result, operator publisher label and signing-certificate fingerprint,
+not the signature bundle/certificate bytes. Stored results describe verification
+at scan time, not live trust or revocation status.
+
+Use cases **SC-014 through SC-019** cover trusted signed content, changed bytes,
+unsigned additions, missing files, unsigned content and malformed bundles.
+`use-cases/signature-test-root.pem` is a **public test-only certificate**. Trust it
+only in an isolated test configuration, never in production. The fixture generator
+`tools/build_signature_samples.py` uses temporary private keys that are not committed;
+regenerating replaces the sample root and all sample signatures together.
 
 ### Structured MCP inspection
 
@@ -555,6 +631,8 @@ retention obligations before publicly accepting submissions.
 ## Limits and public-service operation
 
 - 500 files, 256 KiB/file, 5 MiB combined text, 8,192 characters/line, UTF-8 only.
+  OMS signature JSON is exempt from the prompt line-length limit, but remains
+  subject to all file, request-size and scanner timeout limits.
 - Requests are bounded to 3 MiB **before multipart parsing**.
 - Two concurrent scan requests; 10 requests/client/10 minutes,
   60 requests/instance/10 minutes; isolated scanner timeout (`SCAN_TIMEOUT_SECONDS`, default 45).

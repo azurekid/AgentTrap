@@ -22,6 +22,17 @@ See [CATALOG.md](CATALOG.md) for the full index (generated). Browse categories:
 | TM | Tool Misuse & Privilege Abuse |
 | CR | Hardcoded Credentials & Secrets |
 
+## OMS signature fixtures
+
+SC-014 through SC-019 test NVIDIA-style `skill.oms.sig` verification, independently
+of static findings. Upload the complete `payload/` folder with relative paths intact.
+For isolated tests only, configure `signature-test-root.pem` as an explicit publisher
+trust anchor via `SKILL_TRUST_STORE` (see the main README). Without that configuration,
+signature-bearing samples are untrusted. These are AgentLens test signatures, not
+NVIDIA signatures. Never add this test certificate to a production trust store.
+Private signing keys are generated temporarily by `tools/build_signature_samples.py`
+and are not stored in the repository. Signature validation never executes payloads.
+
 ## Layout
 
 ```

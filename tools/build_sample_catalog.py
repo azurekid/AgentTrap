@@ -46,7 +46,11 @@ def build():
         }
         if case["expected"].get("artifact_kind"):
             card["artifact_validation"] = {key: value for key, value in case["expected"].items() if key != "rules"}
+        if case["expected"].get("signature_status"):
+            card["signature_validation"] = case["expected"]["signature_status"]
         for artifact in case["artifacts"]:
+            if artifact["scan_as"].endswith("/skill.oms.sig"):
+                continue
             text = (directory / artifact["path"]).read_text(encoding="utf-8")
             for finding in scan_file(artifact["scan_as"], text, DEFAULT_ALLOW):
                 entry = {"rule": finding["rule"], "severity": finding["severity"],

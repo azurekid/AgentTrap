@@ -94,7 +94,9 @@ def identify(files: list[dict], documents: list[dict[str, str]], detector: str, 
                 coverage_notes.append("Nested skill packages are evaluated separately; the parent is not claimed complete.")
         content_id = identity({"version": IDENTITY_VERSION, "kind": kind, "files": manifest,
                                "hash_scope": "raw" if all(docs[p].get("raw_sha256") for p in paths) else "inspected_text"})
+        signature = file_results.get(skill_path, {}).get("signature") if skill_path else None
         evaluation_id = identity({"artifact": content_id, "detector": detector, "options": scan_options,
+                                  "signature": signature,
                                   "package_complete": complete, "scan_partial": partial})
         artifact = {
             "kind": kind, "root": root, "content_id": content_id, "evaluation_id": evaluation_id,

@@ -31,7 +31,7 @@ function setup(report) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/app.js"), "utf8"), context);
   for (const id of ["evaluation", "finding-category", "evaluation-summary", "evaluation-categories",
     "evaluation-checks", "evaluation-provenance", "snapshot-review", "snapshot-cards", "fingerprint-status",
-    "snapshot-search", "snapshot-filter", "snapshot-review-summary"]) elements[id] = new Element();
+    "snapshot-search", "snapshot-filter", "snapshot-review-summary", "signature-review", "signature-cards"]) elements[id] = new Element();
   context.inputReport = report;
   vm.runInContext("report = inputReport;", context);
   return { elements, run: (code) => vm.runInContext(code, context) };
@@ -200,6 +200,29 @@ test("inspection summary uses exact score and category counts, with collapsed gu
   assert.ok(descendants(elements["evaluation-summary"]).some((item) => item.textContent === "Not scored"));
 });
 
+test("signature panel is independent of risk findings and renders publisher text safely", () => {
+  const { elements, run } = setup({
+    artifacts: [{ ...artifact, signature: { status: "verified", message: "Exact bytes match",
+      identity_verified: true, publisher: "<img src=x>", signer_sha256: "a".repeat(64),
+      scope: "Submitted package", limitations: "Reputation not assessed" } }],
+    files: [], status: "complete",
+  });
+  run("renderEvaluation()");
+  assert.equal(elements["signature-review"].hidden, false);
+  const nodes = descendants(elements["signature-cards"]);
+  assert.ok(nodes.some((item) => item.textContent?.includes("Publisher: <img src=x>")));
+  assert.equal(nodes.filter((item) => item.tag === "img").length, 0);
+});
+
+test("clean unsigned skills do not add provenance cards to findings-only report views", () => {
+  const { elements, run } = setup({
+    artifacts: [{ ...artifact, signature: { status: "unsigned" } }],
+    files: [{ ...file, findings: [] }], status: "complete",
+  });
+  run("renderEvaluation()");
+  assert.equal(elements["signature-review"].hidden, true);
+});
+
 async function lookupResponse(data, status = 200) {
   const elements = Object.fromEntries(["fingerprint-form", "fingerprint-hash", "lookup-status", "lookup-result"]
     .map((id) => [id, new Element()]));
@@ -256,6 +279,8 @@ test("public report renders visual metrics and untrusted excerpts only as code t
       tactics: [{ key: "initial-access", name: "Initial Access", findings: 3 },
         { key: "execution", name: "Execution", findings: 0 },
         { key: "impact", name: "Impact", findings: 1 }] },
+    signature: { status: "verified", message: "Exact bytes match", identity_verified: true,
+      publisher: "Fixture Publisher", scope: "Submitted package", limitations: "Reputation not assessed" },
   };
   const { elements } = await lookupResponse({ content_id: "a".repeat(64), kind: "skill_snapshot", report });
   assert.equal(elements["lookup-result"].hidden, false);
@@ -269,6 +294,9 @@ test("public report renders visual metrics and untrusted excerpts only as code t
   const riskPosition = nodes.findIndex((item) => item.className === "evaluation-overview lookup-risk");
   const findingsPosition = nodes.findIndex((item) => item.className === "lookup-findings");
   assert.ok(riskPosition < findingsPosition);
+  const signaturePosition = nodes.findIndex((item) => item.tag === "summary" && item.textContent === "Publisher & signatures");
+  assert.ok(signaturePosition > findingsPosition);
+  assert.ok(nodes.some((item) => item.textContent?.includes("Stored verification at scan time")));
   assert.ok(nodes.some((item) => item.tag === "summary" && item.textContent === "What does this score mean?"));
   assert.ok(nodes.some((item) => item.textContent?.includes("Critical 40, High 20, Medium 5, Low 1")));
   assert.ok(nodes.some((item) => item.tag === "code" && item.textContent === snippet));
