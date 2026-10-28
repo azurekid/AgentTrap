@@ -48,7 +48,7 @@ function descendants(element) {
 function setupScanner(response = { ok: true }) {
   const ids = ["scan-form", "private-repo", "repo-token", "token-field", "repository",
     "upload-tab", "repo-tab", "paste-tab", "upload-panel", "repo-panel", "paste-panel",
-    "files", "folder", "dropzone", "file-list", "skill-content", "error", "console",
+    "files", "folder", "dropzone", "file-list", "file-selection-status", "skill-content", "error", "console",
     "console-state", "scan-button", "progress", "workflows"];
   const elements = Object.fromEntries(ids.map((id) => [id, new Element()]));
   const tabs = new Element();
@@ -149,6 +149,44 @@ const artifact = {
   files: [{ path: "AGENTS.md" }], coverage_notes: [],
 };
 const file = { path: "AGENTS.md", findings: [{ severity: "HIGH" }] };
+
+test("folder selection excludes unsupported and out-of-scope files before listing and upload", () => {
+  const { elements, run } = setupScanner();
+  const paths = ["project/README.md", "project/package.json", "project/app.py", "project/image.png",
+    "project/AGENTS.md", "project/.vscode/settings.json", "project/.claude/hooks/preflight",
+    "project/reviewer/SKILL.md", "project/reviewer/skill.oms.sig", "project/reviewer/references/guide.md",
+    "project/reviewer/scripts/check.py", "project/reviewer/config.yaml", "project/reviewer/image.png",
+    "project/reviewer/.github/workflows/ci.yml", "project/.cursor/rules/default",
+    "project/.gemini/commands/review.toml"];
+  const files = paths.map((path) => ({ name: path.split("/").pop(), webkitRelativePath: path, size: 12 }));
+  elements.folder.events.change({ target: { files } });
+  const expected = paths.filter((_, i) => [4, 5, 6, 7, 8, 9, 10, 11, 14, 15].includes(i));
+  assert.deepEqual(Array.from(run("selected.map(file => file.webkitRelativePath)")), expected);
+  assert.deepEqual(elements["file-list"].children.map((item) => item.textContent), expected);
+  assert.match(elements["file-selection-status"].textContent, /10 supported.*6 unsupported/);
+  assert.equal(run("discover"), true);
+  elements.folder.events.change({ target: { files: files.slice(0, 4) } });
+  assert.equal(run("selected.length"), 0);
+  assert.match(elements["file-selection-status"].textContent, /No supported agent files found/);
+  elements.files.events.change({ target: { files: files.slice(0, 1) } });
+  assert.equal(run("selected.length"), 1);
+  assert.equal(elements["file-selection-status"].hidden, true);
+});
+
+test("excluded folder files do not consume upload limits or enter the request", async () => {
+  const { elements, requests, submit } = setupScanner();
+  const skill = new Blob(["Review this skill"], { type: "text/markdown" });
+  skill.name = "SKILL.md";
+  skill.webkitRelativePath = "project/reviewer/SKILL.md";
+  const unsupported = Array.from({ length: 600 }, (_, index) => ({
+    name: `${index}.png`, webkitRelativePath: `project/reviewer/${index}.png`, size: 10 * 1024 * 1024,
+  }));
+  elements.folder.events.change({ target: { files: [skill, ...unsupported] } });
+  await submit();
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].body.get("discover"), "true");
+  assert.deepEqual(requests[0].body.getAll("files").map((file) => file.name), ["project/reviewer/SKILL.md"]);
+});
 
 test("collapsed snapshot exposes plain content fingerprint and copy action", () => {
   const { elements, run } = setup({ artifacts: [artifact], files: [file], status: "complete" });

@@ -292,6 +292,10 @@ sensitive, so review an export before publishing it.
 ### Content identities and honest uniqueness counts
 
 The existing MITRE ATLAS threat map appears above **Snapshot review**.
+Folder selection automatically excludes unsupported and out-of-scope files before
+upload and limit checks. The selection status reports the excluded count. Supported
+skill-package members and `skill.oms.sig` bundles remain included; ordinary repository
+documentation and unrelated configuration files are excluded.
 The additional category/severity finding heatmap has been removed. Files without
 findings are omitted from report views, snapshot links and provenance lists;
 snapshots with no affected member files are hidden. LOW/MEDIUM-only results remain

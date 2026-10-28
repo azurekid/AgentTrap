@@ -81,26 +81,36 @@ function showError(message) {
   $("error").textContent = message;
   $("error").hidden = false;
 }
+function supportedFolderFile(file, skillRoots) {
+  const path = file.webkitRelativePath || file.name;
+  const name = file.name;
+  const agentName = /(^agents?\.md$|^claude\.md$|^gemini\.md$|^copilot-instructions\.md$|\.(instructions|agent|prompt|chatmode)\.md$|^skill\.md$|\.mdc$|^\.(cursorrules|windsurfrules|clinerules)$)/i;
+  const agentPath = /\/(\.claude\/settings(\.local)?\.json|\.codex\/config\.toml|\.gemini\/settings\.json|\.cursor\/mcp\.json|\.mcp\.json|\.vscode\/(settings|tasks|mcp)\.json|\.cursor\/rules\/[^/]+|\.windsurf\/rules\/[^/]+\.md|\.devin\/rules\/[^/]+\.md|\.clinerules\/[^/]+|\.cline\/rules\/[^/]+|\.github\/(prompts|instructions)\/[^/]+\.md|\.junie\/guidelines\.md|\.claude\/(commands|agents)\/(.+\/)?[^/]+\.md|\.claude\/hooks\/.+|\.claude-plugin\/(plugin|marketplace)\.json|hooks\/hooks\.json|\.gemini\/commands\/(.+\/)?[^/]+\.toml|skills\/[^/]+\/(.+\/)?[^/]+\.(md|sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb|json))$/i;
+  if (name === "skill.oms.sig" || agentName.test(name) || agentPath.test("/" + path)) return true;
+  if (/\/\.github\/workflows\/[^/]+\.ya?ml$/i.test("/" + path)) return false;
+  return skillRoots.some((root) => path.startsWith(root))
+    && /\.(md|mdc|json|toml|ya?ml|sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb)$/i.test(name);
+}
 function setFiles(files, folder = false) {
   if (busy) return;
   const incoming = Array.from(files);
   discover = folder;
   if (folder) {
     const skillRoots = incoming.filter((file) => file.name.toLowerCase() === "skill.md")
-      .map((file) => file.webkitRelativePath.slice(0, file.webkitRelativePath.lastIndexOf("/") + 1));
-    // Let server discovery be authoritative; folder upload accepts supported text candidates.
-    selected = incoming.filter((file) => /\.(md|mdc|json|toml|ya?ml)$/i.test(file.name)
-      || file.name === "skill.oms.sig"
-      || (skillRoots.some((root) => file.webkitRelativePath.startsWith(root))
-        && /\.(sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb)$/i.test(file.name))
-      || /^\.(cursorrules|windsurfrules|clinerules)$/.test(file.name)
-      || /\/\.(cursor|cline|clinerules)\/(?:rules\/)?[^/]+$/.test(file.webkitRelativePath)
-      || /\/(skills\/[^/]+|\.claude\/hooks)\/.+\.(sh|bash|zsh|py|js|mjs|cjs|ts|ps1|rb)$/i.test(file.webkitRelativePath)
-      || /\/\.claude\/hooks\/[^/]+$/.test(file.webkitRelativePath));
+      .map((file) => {
+        const path = file.webkitRelativePath || file.name;
+        return path.slice(0, path.lastIndexOf("/") + 1);
+      });
+    selected = incoming.filter((file) => supportedFolderFile(file, skillRoots));
   } else {
     selected = incoming;
   }
   $("error").hidden = true;
+  const status = $("file-selection-status");
+  status.hidden = !folder;
+  status.textContent = folder
+    ? `${selected.length} supported file(s) selected. ${incoming.length - selected.length} unsupported or out-of-scope file(s) excluded automatically.${selected.length ? "" : " No supported agent files found; this is not a clean inspection result."}`
+    : "";
   renderFiles();
 }
 function renderFiles() {
