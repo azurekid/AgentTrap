@@ -296,6 +296,8 @@ Folder selection automatically excludes unsupported and out-of-scope files befor
 upload and limit checks. The selection status reports the excluded count. Supported
 skill-package members and `skill.oms.sig` bundles remain included; ordinary repository
 documentation and unrelated configuration files are excluded.
+YAML (`.yml` and `.yaml`) files within a detected skill package are accepted by
+folder and multi-file uploads. GitHub Actions workflows remain opt-in.
 The additional category/severity finding heatmap has been removed. Files without
 findings are omitted from report views, snapshot links and provenance lists;
 snapshots with no affected member files are hidden. LOW/MEDIUM-only results remain

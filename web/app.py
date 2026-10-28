@@ -531,7 +531,7 @@ async def scan_uploads(request: Request):
                 if discover and not (is_target(path, workflows) or is_skill_member(path, roots, workflows)):
                     continue
                 suffix = Path(path).suffix.lower()
-                if not (is_target(path, workflows) or suffix in UPLOAD_SUFFIXES):
+                if not (is_target(path, workflows) or is_skill_member(path, roots, workflows) or suffix in UPLOAD_SUFFIXES):
                     raise ScanInputError("Upload Markdown, JSON, TOML, skill scripts, or supported agent rule/config files.")
                 content = await upload.read(MAX_FILE + 1)
                 total += len(content)
