@@ -33,7 +33,7 @@ function setup(report) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/app.js"), "utf8"), context);
   for (const id of ["evaluation", "finding-category", "evaluation-summary", "evaluation-categories",
     "evaluation-checks", "evaluation-provenance", "snapshot-review", "snapshot-cards", "fingerprint-status",
-    "snapshot-search", "snapshot-filter", "snapshot-review-summary", "signature-review", "signature-cards",
+    "snapshot-search", "snapshot-filter", "snapshot-review-summary",
     "findings", "file-findings", "severity", "finding-search", "finding-count"]) elements[id] = new Element();
   context.inputReport = report;
   vm.runInContext("report = inputReport;", context);
@@ -168,6 +168,28 @@ test("clean snapshots remain hidden", () => {
   assert.equal(elements["snapshot-cards"].children.length, 0);
 });
 
+test("snapshot rows label occurrence counts for all four severities", () => {
+  const { elements, run } = setup({
+    artifacts: [artifact], files: [{ ...file, findings: [
+      { severity: "CRITICAL" }, { severity: "HIGH" }, { severity: "HIGH" }, { severity: "MEDIUM" },
+    ] }], status: "complete",
+  });
+  run("renderSnapshotReview()");
+  const labels = descendants(elements["snapshot-cards"].firstChild.firstChild)
+    .filter((item) => item.className?.startsWith("badge "));
+  assert.deepEqual(labels.map((item) => item.textContent), ["1 CRITICAL", "2 HIGH", "1 MEDIUM", "0 LOW"]);
+  assert.deepEqual(labels.map((item) => item.className), ["badge critical", "badge high", "badge medium", "badge low"]);
+});
+
+test("file reports hide snapshot review even with affected snapshots", () => {
+  const { elements, run } = setup({
+    artifacts: [artifact], files: [file], status: "complete", view_scope: { kind: "file", path: file.path },
+  });
+  run("renderSnapshotReview()");
+  assert.equal(elements["snapshot-review"].hidden, true);
+  assert.equal(elements["snapshot-cards"].children.length, 0);
+});
+
 test("medium-only snapshots explain why their fingerprints are not centrally stored", () => {
   const { elements, run } = setup({
     artifacts: [{ ...artifact, seen_before: null, registry_status: "not_eligible" }],
@@ -204,27 +226,11 @@ test("inspection summary uses exact score and category counts, with collapsed gu
   assert.ok(descendants(elements["evaluation-summary"]).some((item) => item.textContent === "Not scored"));
 });
 
-test("signature panel is independent of risk findings and renders publisher text safely", () => {
-  const { elements, run } = setup({
-    artifacts: [{ ...artifact, signature: { status: "verified", message: "Exact bytes match",
-      identity_verified: true, publisher: "<img src=x>", signer_sha256: "a".repeat(64),
-      scope: "Submitted package", limitations: "Reputation not assessed" } }],
-    files: [], status: "complete",
-  });
-  run("renderEvaluation()");
-  assert.equal(elements["signature-review"].hidden, false);
-  const nodes = descendants(elements["signature-cards"]);
-  assert.ok(nodes.some((item) => item.textContent?.includes("Publisher: <img src=x>")));
-  assert.equal(nodes.filter((item) => item.tag === "img").length, 0);
-});
-
-test("clean unsigned skills do not add provenance cards to findings-only report views", () => {
-  const { elements, run } = setup({
-    artifacts: [{ ...artifact, signature: { status: "unsigned" } }],
-    files: [{ ...file, findings: [] }], status: "complete",
-  });
-  run("renderEvaluation()");
-  assert.equal(elements["signature-review"].hidden, true);
+test("security findings template omits the publisher and signature panel", () => {
+  const html = fs.readFileSync(path.join(__dirname, "../web/static/report.html"), "utf8");
+  assert.ok(!html.includes('id="signature-review"'));
+  assert.ok(!html.includes('id="signature-cards"'));
+  assert.ok(!html.includes("Publisher &amp; signatures"));
 });
 
 async function lookupResponse(data, status = 200) {

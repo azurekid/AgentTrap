@@ -299,7 +299,7 @@ visible. Scanned-file totals, coverage and raw JSON exports still include all
 inspected files. Only snapshots with HIGH/CRITICAL findings are centrally registered.
 Compact expandable snapshot rows put
 CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
-per-snapshot occurrence counts, completeness notes
+per-snapshot CRITICAL, HIGH, MEDIUM and LOW count labels, completeness notes
 and an always-visible, linked, copyable content fingerprint on each collapsed row.
 The same snapshot fingerprint appears at the top of file reports; the file-text hash
 is secondary and explicitly labelled as a different identity. Evaluation fingerprints
@@ -310,7 +310,8 @@ remain in expandable details. Central registration returns
 observation is made for the scan, not refreshed when reopening an old report.
 Other agent files and MCP snapshots are labeled separately rather than counted as
 skills. File links open `/report?file=<path>`, a separate browser-tab report view with
-file-only findings, counts and threat mapping plus containing snapshot information.
+file-only findings, counts and threat mapping plus containing snapshot fingerprints,
+without repeating Snapshot review.
 The full inspection remains available via the back link. Unknown file paths fail
 explicitly. File views do not create server-side report storage or a new scan.
 Snapshots without signals still receive fingerprints, not an approval badge.
@@ -327,6 +328,8 @@ use available signature/MCP evidence; missing historical outcomes are labelled
 not recorded rather than guessed. Rescanning refreshes persisted coverage.
 Detailed findings appear only on individual file reports, reached through snapshot
 file links; the full report no longer repeats a bottom file-findings listing.
+The security findings page omits the separate publisher/signature panel; verification
+still runs and remains available in coverage, exports and central fingerprint reports.
 Exports and false-positive reporting still include the full scan. Bars
 compare signal occurrences, not probabilities. Partial scans are not scored.
 

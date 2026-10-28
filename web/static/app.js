@@ -252,20 +252,23 @@ function contentFingerprint(artifact) {
 }
 function renderSnapshotReview() {
   const artifacts = (report.artifacts || []).filter((artifact) => affectedFiles(artifact).length);
-  $("snapshot-review").hidden = !artifacts.length;
+  $("snapshot-review").hidden = Boolean(report.view_scope) || !artifacts.length;
   $("snapshot-cards").replaceChildren();
   $("fingerprint-status").hidden = true;
+  if (report.view_scope) return;
   const snapshots = artifacts.map((artifact) => {
     const files = affectedFiles(artifact);
     const hits = files.flatMap((file) => file.findings);
     return { artifact, files, critical: hits.filter((hit) => hit.severity === "CRITICAL").length,
-      high: hits.filter((hit) => hit.severity === "HIGH").length };
+      high: hits.filter((hit) => hit.severity === "HIGH").length,
+      medium: hits.filter((hit) => hit.severity === "MEDIUM").length,
+      low: hits.filter((hit) => hit.severity === "LOW").length };
   }).sort((a, b) => b.critical - a.critical || b.high - a.high || a.artifact.root.localeCompare(b.artifact.root));
   const affected = snapshots.filter((item) => item.critical || item.high).length;
   $("snapshot-review-summary").textContent = `${affected} of ${snapshots.length} snapshots have HIGH or CRITICAL signals in this view. Counts are finding occurrences in ${report.view_scope ? "the selected file only" : "this report"}, not unique skills across the platform.${report.status !== "complete" ? " This inspection is incomplete; absence of signals cannot establish a clean result." : ""}`;
   const query = $("snapshot-search").value.trim().toLowerCase();
   const filter = $("snapshot-filter").value;
-  for (const { artifact, files, critical, high } of snapshots) {
+  for (const { artifact, files, critical, high, medium, low } of snapshots) {
     if (query && !`${artifact.root} ${artifact.content_id} ${artifact.evaluation_id}`.toLowerCase().includes(query)) continue;
     if (filter === "review" && !critical && !high) continue;
     if (filter === "seen" && artifact.seen_before !== true) continue;
@@ -275,8 +278,11 @@ function renderSnapshotReview() {
     const heading = node("summary", "snapshot-row");
     const name = node("span", "snapshot-name", `${kind}: ${artifact.name || artifact.root}`);
     if (artifact.name) name.append(node("span", "meta", ` | ${artifact.root} | self-declared name`));
-    heading.append(name, node("span", critical || high ? "warning" : "meta", `${critical} CRITICAL / ${high} HIGH`),
-      node("span", "meta", artifact.registry_status === "not_eligible" ? "Not centrally stored"
+    const severities = node("span", "snapshot-severities");
+    for (const [severity, count] of [["CRITICAL", critical], ["HIGH", high], ["MEDIUM", medium], ["LOW", low]]) {
+      severities.append(node("span", `badge ${severity.toLowerCase()}`, `${count} ${severity}`));
+    }
+    heading.append(name, severities, node("span", "meta", artifact.registry_status === "not_eligible" ? "Not centrally stored"
         : artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
     if (files.length === 1 && !report.view_scope) {
       const link = node("a", "", "Open file report");
@@ -345,24 +351,6 @@ function renderSnapshotReview() {
 }
 
 function renderEvaluation() {
-  if ($("signature-review")) {
-    const signed = (report.artifacts || []).filter((artifact) => artifact.signature
-      && (artifact.signature.status !== "unsigned" || affectedFiles(artifact).length));
-    $("signature-review").hidden = !signed.length;
-    $("signature-cards").replaceChildren();
-    for (const artifact of signed) {
-      const signature = artifact.signature;
-      const card = node("details", "card signature-card");
-      const summary = node("summary");
-      summary.append(node("strong", "", artifact.name || artifact.root),
-        node("span", signature.status === "verified" ? "lookup-kind" : "warning", `Signature: ${signature.status.replaceAll("_", " ")}`));
-      card.append(summary, node("p", "", signature.message),
-        node("p", "meta", signature.identity_verified ? `Publisher: ${signature.publisher} (operator-trusted certificate chain)` : "Publisher identity: not verified"),
-        node("p", "meta", signature.scope), node("p", "meta", signature.limitations));
-      if (signature.signer_sha256) card.append(node("p", "lookup-hash", `Signing certificate SHA256: ${signature.signer_sha256}`));
-      $("signature-cards").append(card);
-    }
-  }
   const evaluation = report.evaluation;
   $("evaluation").hidden = !evaluation;
   $("finding-category").replaceChildren(node("option", "", "All categories"));

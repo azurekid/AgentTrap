@@ -710,6 +710,11 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .snapshot-row { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 12px; }
 .snapshot-name { flex: 1 1 240px; font-weight: 600; color: var(--text); min-width: 0; }
 .snapshot-row a { color: var(--cyan); }
+.snapshot-severities { display: flex; flex-wrap: wrap; gap: 6px; }
+.snapshot-severities .critical { --sev: var(--critical); }
+.snapshot-severities .high { --sev: var(--high); }
+.snapshot-severities .medium { --sev: var(--medium); }
+.snapshot-severities .low { --sev: var(--low); }
 .snapshot-fingerprint { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 14px 0; }
 .snapshot-fingerprint label { grid-column: 1 / -1; }
 .snapshot-fingerprint input { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font: 11px var(--mono); }
