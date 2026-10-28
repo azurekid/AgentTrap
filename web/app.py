@@ -32,7 +32,7 @@ from web.repository import (
 
 ROOT = Path(__file__).resolve().parent
 LOG = logging.getLogger("skillvenom")
-MAX_BODY = 3 * 1024 * 1024
+MAX_BODY = 6 * 1024 * 1024
 MAX_FEEDBACK_BODY = 64 * 1024
 UPLOAD_SUFFIXES = (".md", ".mdc", ".json", ".toml", ".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts", ".ps1", ".rb")
 POLICY = {
@@ -420,7 +420,7 @@ async def scan_uploads(request: Request):
                 content = await upload.read(MAX_FILE + 1)
                 total += len(content)
                 if total > MAX_TOTAL or len(documents) >= MAX_FILES:
-                    raise ScanInputError("Upload limit exceeded (100 files, 2 MiB total).")
+                    raise ScanInputError("Upload limit exceeded (500 files, 5 MiB total).")
                 documents.append(decode_document(path, content))
             if not documents and not discover:
                 raise ScanInputError("Select at least one file to inspect.")

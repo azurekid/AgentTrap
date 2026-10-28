@@ -19,7 +19,7 @@ from web.app import app
 from web.archive import Archive, ArchiveError
 from web.statistics import Statistics, StatisticsError
 from web.repository import (
-    MAX_FILE, ScanInputError, fetch_bytes, fetch_repository, is_target,
+    MAX_FILE, MAX_FILES, ScanInputError, fetch_bytes, fetch_repository, is_target,
     parse_repository, select_targets,
 )
 
@@ -513,9 +513,9 @@ def test_tree_traversal_limits_and_truncation():
     with pytest.raises(ScanInputError):
         select_targets(tree_fixture([("AGENTS.md", b"x" * (MAX_FILE + 1), "100644")]), False)
     with pytest.raises(ScanInputError):
-        select_targets(tree_fixture([(f"d{i}/AGENTS.md", b"x", "100644") for i in range(101)]), False)
+        select_targets(tree_fixture([(f"d{i}/AGENTS.md", b"x", "100644") for i in range(MAX_FILES + 1)]), False)
     with pytest.raises(ScanInputError):
-        select_targets(tree_fixture([(f"d{i}/AGENTS.md", b"x" * (200 * 1024), "100644") for i in range(11)]), False)
+        select_targets(tree_fixture([(f"d{i}/AGENTS.md", b"x" * (200 * 1024), "100644") for i in range(26)]), False)
     with pytest.raises(ScanInputError):
         select_targets({"tree": "nope"}, False)
     files, skipped = select_targets(tree_fixture([("AGENTS.md", b"x", "100644")], truncated=True), False)
@@ -579,7 +579,7 @@ def test_fetch_rejects_invalid_commit_id(monkeypatch):
 def test_security_guards(client):
     assert upload(client, "hello").headers["x-content-type-options"] == "nosniff"
     assert client.post("/api/scan/files", headers={"origin": "https://evil.example"}).status_code == 403
-    assert client.post("/api/scan/repository", content=b"x" * (3 * 1024 * 1024 + 1)).status_code == 413
+    assert client.post("/api/scan/repository", content=b"x" * (app_module.MAX_BODY + 1)).status_code == 413
     for _ in range(8):
         upload(client, "hello")
     assert upload(client, "hello").status_code == 429

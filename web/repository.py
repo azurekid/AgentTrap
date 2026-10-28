@@ -15,13 +15,13 @@ import httpx
 from scan_agents_md import NAMES, PATHS, WORKFLOWS
 
 MAX_FILE = 256 * 1024
-MAX_TOTAL = 2 * 1024 * 1024
-MAX_FILES = 100
+MAX_TOTAL = 5 * 1024 * 1024
+MAX_FILES = 500
 MAX_TREE = 16 * 1024 * 1024
 SHA = re.compile(r"[a-f0-9]{40}")
 UNSUPPORTED = ("Use an https:// repository URL on github.com, gitlab.com or dev.azure.com (or a host your operator configured), "
                "without credentials, query, port or branch path.")
-LIMITS = "Repository target files exceed limits (100 files, 256 KiB/file, 2 MiB total). Upload a smaller selection."
+LIMITS = "Repository target files exceed limits (500 files, 256 KiB/file, 5 MiB total). Upload a smaller selection."
 
 
 class ScanInputError(ValueError):
@@ -311,7 +311,7 @@ def fetch_repository(url: str, workflows: bool, token: str | None = None) -> tup
                 raise ScanInputError(f"Content did not match the pinned commit: {entry['path']}")
             return decode_document(entry["path"], content)
 
-        with ThreadPoolExecutor(max_workers=6) as pool:
+        with ThreadPoolExecutor(max_workers=12) as pool:
             documents = list(pool.map(download, selected))
     if sum(len(item["text"].encode()) for item in documents) > MAX_TOTAL:
         raise ScanInputError(LIMITS)

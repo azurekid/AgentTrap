@@ -478,9 +478,9 @@ if (scannerPage) {
     const consent = $("archive-consent").checked;
     if (mode === "upload") {
       if (!selected.length) return showError("Select at least one file to inspect.");
-      if (selected.length > 100 || selected.some((file) => file.size > 256 * 1024)
-        || selected.reduce((total, file) => total + file.size, 0) > 2 * 1024 * 1024) {
-        return showError("Select up to 100 files, at most 256 KiB each and 2 MiB combined.");
+      if (selected.length > 500 || selected.some((file) => file.size > 256 * 1024)
+        || selected.reduce((total, file) => total + file.size, 0) > 5 * 1024 * 1024) {
+        return showError("Select up to 500 files, at most 256 KiB each and 5 MiB combined.");
       }
       body = new FormData();
       body.append("include_workflows", String(workflows));

@@ -61,7 +61,7 @@ HTTPS, is sent only to the provider's API host in an auth header, is never logge
 placed in a URL, and a scan that uses a token is **never archived**, whatever the consent
 checkbox says. Use short-lived read-only tokens and revoke them afterwards. Every inspected
 file is verified against the pinned commit's git object hash. Azure DevOps and GitLab
-listings carry no file sizes, so the 100 files / 256 KiB / 2 MiB limits are enforced while reading files.
+listings carry no file sizes, so the 500 files / 256 KiB / 5 MiB limits are enforced while reading files.
 
 Self-managed servers are **operator-configured**: set `SCM_GITLAB_HOSTS` and/or
 `SCM_AZDO_HOSTS` to comma-separated host names (for example `git.corp.example`). Users cannot
@@ -268,7 +268,7 @@ retention obligations before publicly accepting submissions.
 
 ## Limits and public-service operation
 
-- 100 files, 256 KiB/file, 2 MiB combined text, 8,192 characters/line, UTF-8 only.
+- 500 files, 256 KiB/file, 5 MiB combined text, 8,192 characters/line, UTF-8 only.
 - Requests are bounded to 3 MiB **before multipart parsing**.
 - Two concurrent scan requests; 10 requests/client/10 minutes,
   60 requests/instance/10 minutes; isolated scanner timeout (`SCAN_TIMEOUT_SECONDS`, default 45).
