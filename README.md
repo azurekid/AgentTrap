@@ -136,10 +136,9 @@ repository-selection implementations. These fingerprints are not signed
 attestations, and a report copied or edited outside the service is not independently
 authenticated. Repository reports retain the existing pinned commit identity.
 
-No uploaded report or skill is automatically published in a searchable public
-directory. Automatic retention, private-token handling and redaction remain
-unchanged. A public directory, reputation service or verified badge requires
-separate publication consent, identity checks, expiry/rescanning and moderation.
+Original skills and full submitted reports are not published in a browsable directory.
+Exact content-fingerprint lookup publishes sanitized assessments automatically,
+including for private scans (see below). This is not a reputation service or verified badge.
 
 ### Structured MCP inspection
 
@@ -211,8 +210,12 @@ sensitive, so review an export before publishing it.
 
 ### Content identities and honest uniqueness counts
 
-The report's threat map and interactive category/severity heatmap appear above
-**Snapshot review**. Compact expandable snapshot rows put
+The existing MITRE ATLAS threat map appears above **Snapshot review**.
+The additional category/severity finding heatmap has been removed. Files without
+findings are omitted from report views, snapshot links and provenance lists;
+snapshots with no affected member files are hidden. LOW/MEDIUM-only results remain
+visible. Scanned-file totals, coverage, raw JSON exports and registry identities
+still include all inspected files. Compact expandable snapshot rows put
 CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
 per-snapshot occurrence counts, completeness notes
 and expandable, copyable content/evaluation fingerprints. Central registration returns
@@ -224,9 +227,9 @@ skills. File links open `/report?file=<path>`, a separate browser-tab report vie
 file-only findings, counts and threat mapping plus containing snapshot information.
 The full inspection remains available via the back link. Unknown file paths fail
 explicitly. File views do not create server-side report storage or a new scan.
-Snapshots without high-risk signals
-still receive fingerprints, not an approval badge. This is part of the current
-browser-tab report, not an account dashboard or additional saved-report service.
+Snapshots without signals still receive fingerprints, not an approval badge.
+Full reports remain in the current browser tab, not a personal dashboard.
+The central registry stores only a sanitized assessment for each content fingerprint.
 
 Every report now includes `artifacts` and an `inventory`. A skill snapshot is the
 inspected files under a folder containing `SKILL.md`, not one skill per uploaded
@@ -268,18 +271,40 @@ dependencies, referenced websites or runtime behavior are safe.
 The public **Security findings** counter uses `counts.findings` from the unique
 endpoint, never the activity finding total. Historical uniqueness
 is not inferred; `since` is null until the first registry entry.
+The landing page presents files inspected, unique skill snapshots and unique
+findings directly below the introduction, before the scanner. Coverage is shown
+separately; registry breakdown and counting details are expandable. The findings
+count is not duplicated. Counters refresh together after scans and every minute,
+with independent unavailable states for activity and registry storage failures.
 
 Fingerprint tracking and high-risk original retention are automatic for all scans,
 including private-token repositories. The UI shows a policy notice, not opt-in
 checkboxes. Legacy boolean `archive_consent` and `uniqueness_consent` request fields
 are accepted for compatibility but no longer disable retention, even when false;
-invalid values remain rejected. The registry retains digests indefinitely, with no
-names, URLs, snippets, secret values or originals. Hashes can identify known content.
+invalid values remain rejected. The registry retains digests and sanitized assessment
+summaries indefinitely, with no names, URLs, snippets, secret values or originals.
+Hashes can identify known content.
 Do not submit material you cannot share with the operator. Prior opted-out scans
-are not backfilled. No reports are auto-published. There is no unauthenticated
-arbitrary-fingerprint lookup endpoint; sightings are returned during bounded scans.
+are not backfilled.
 
-Storage uses 16 bounded digest-set shards under `uniqueness-v1/`, outside the
+**Central search:** `/fingerprints?hash=<content-id>` and
+`GET /api/fingerprints/<content-id>` provide public exact lookup, including fingerprints
+registered by private-token scans. Paste the 64-hex **content fingerprint** from
+Snapshot review, not a raw file hash, evaluation ID or finding ID. The shareable page
+works without the original browser tab. It shows artifact type, file count, severity
+and rule counts, per-artifact signal risk, methodology, coverage checks, detector and
+evaluation fingerprints and first/latest stored-assessment times. It excludes paths,
+repository URLs, messages, snippets, originals and credentials. Whoever knows matching
+content can infer that it was scanned, even if it came from a private repository.
+Only the latest recorded assessment is retained per content ID, not an evaluation
+history or a merged verdict across detectors. Its evaluation/detector IDs identify
+the exact assessment; partial originating scans remain unscored. An old digest-only
+record returns “assessment unavailable” until rescanned, never an invented clean result.
+Unknown hashes return 404, malformed hashes 422, unavailable storage 503 and lookup
+limits 429 (60 requests/client/minute, 300/instance/minute). No prefix or directory
+enumeration is provided.
+
+Storage uses 16 bounded digest/assessment shards under `uniqueness-v1/`, outside the
 investigation lifecycle prefix. Local storage uses process locking, mode-0600 atomic
 files and the existing single-process deployment model. Azure uses the existing
 private container/managed identity and conditional ETag writes, with idempotent
@@ -291,7 +316,8 @@ transactional database before larger-scale registry use.
 Counts are a cross-shard snapshot, cached up to 60 seconds; concurrent writes are not
 a global transaction. A failed submission may have recorded some digests, disclosed
 in the response, and retries do not duplicate them. Registry failure does not hide
-scan results. Public counters are aggregates only; there is no public digest lookup.
+scan results. Content assessments and their shard's digest registration use the same
+atomic write; this does not make the entire multi-shard scan a transaction.
 
 ### MITRE ATLAS case-study coverage
 
@@ -548,7 +574,7 @@ pip install -r requirements-dev.txt
 python -m pytest -q tests/
 pwsh -NoProfile -File tests/Test-Scanner.ps1
 for f in web/static/*.js; do node --check "$f"; done
-node --test tests/test_sarif.cjs
+node --test tests/*.cjs
 ```
 
 The parity test in the Python suite requires PowerShell (`pwsh`). Synthetic

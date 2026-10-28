@@ -26,6 +26,7 @@
       </a>
       <nav class="nav" aria-label="Pages">
         <a href="/#scanner">Scanner</a>
+        <a href="/fingerprints">Fingerprint search</a>
         <a href="/coverage" aria-current="page">Coverage</a>
         <a href="/samples">Samples</a>
         <a href="/sources">Research</a>
@@ -76,7 +77,7 @@
         <header class="section-head">
           <p class="label">Evaluation transparency</p>
           <h2 id="methodology-title">Evidence before trust</h2>
-          <p>AgentLens reports static signals, not a malware verdict or safety certification. Submissions are not automatically published in a directory.</p>
+          <p>AgentLens reports static signals, not a malware verdict or safety certification. Original submissions are not published in a directory. Sanitized assessments are publicly available through exact content-fingerprint lookup.</p>
         </header>
         <div class="card">
           <h3>What a score means</h3>
@@ -98,7 +99,7 @@
           <h3>Counting content, not claiming trust</h3>
           <p>A skill snapshot groups inspected files under a SKILL.md folder. Its content ID binds package-relative paths, raw-byte hashes and file modes where known. An evaluation ID also binds the detector, options and completeness; finding IDs bind evidence locations within that evaluation. Matching copies with equivalent metadata count once, while content edits create new versions. Unknown file modes are not treated as known modes.</p>
           <p>Only eligible pinned GitHub packages with every listed file inspected can count as complete supported versions. Uploads and other repository providers remain snapshots. Missing files, unsupported assets, nested skills and partial scans prevent complete-parent claims. This is not exhaustive dependency resolution, signature verification or proof of safe behavior.</p>
-          <p>All scans, including private-token scans, automatically register digest identities indefinitely for repeat detection. High-risk originals are retained privately for 30 days, separately from the digest registry. Tokens are never retained. Digests can identify known content. Security findings count distinct finding fingerprints, not repeat scan hits. Public counts are cached shard snapshots, not unique people, publishers or adoption figures. Storage is bounded and errors are disclosed.</p>
+          <p>All scans, including private-token scans, automatically register digest identities and sanitized assessment summaries indefinitely. <a href="/fingerprints">Central fingerprint search</a> publishes the latest stored assessment by exact content ID, including private-scan fingerprints. Summaries omit paths, repository URLs, snippets and originals. Knowing a content fingerprint can reveal that private content was scanned. High-risk originals are retained privately for 30 days, separately from public summaries. Tokens are never retained. Security findings count distinct finding fingerprints, not repeat scan hits. Public counts are cached shard snapshots, not unique people, publishers or adoption figures. Storage is bounded and errors are disclosed.</p>
         </div>
         <p><a href="/api/methodology">Read the machine-readable methodology and rule categories</a>. <span id="methodology-version" role="status">Loading detector identity...</span></p>
       </section>
@@ -112,7 +113,8 @@
         <span class="credit">Designed &amp; built by <a href="https://github.com/azurekid" target="_blank" rel="noopener">azurekid</a></span>
       </div>
       <nav class="footer-links" aria-label="Footer">
-        <a href="/#scanner">Scanner</a><a href="/coverage">Coverage</a><a href="/samples">Samples</a><a href="/sources">Research</a>
+        <a href="/#scanner">Scanner</a><a href="/fingerprints">Fingerprint search</a>
+        <a href="/coverage">Coverage</a><a href="/samples">Samples</a><a href="/sources">Research</a>
       </nav>
       <span class="footer-note">Heuristic analysis, not a safety certification.</span>
     </div>

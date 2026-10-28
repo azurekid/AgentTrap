@@ -149,8 +149,11 @@ def test_registry_persists_exact_unique_counts_and_concurrent_resubmissions(tmp_
     assert registry.read()["counts"]["skill_snapshots"] == 1
     assert registry.read()["counts"]["evaluations"] == 2
     assert registry.read()["counts"]["findings"] == 4
+    content = report_for()["artifacts"][0]["content_id"]
+    assert registry.lookup(content)["report"]["evaluation_id"] == report_for(detector="b" * 64, complete=True)["artifacts"][0]["evaluation_id"]
     payloads = [p.read_text() for p in registry.directory.glob("*.json")]
-    assert all("SKILL.md" not in p and "PROMPT-INJECTION" not in p and "[REDACTED]" not in p for p in payloads)
+    assert all("SKILL.md" not in p and "[REDACTED]" not in p for p in payloads)
+    assert any("PROMPT-INJECTION" in p for p in payloads)  # Fixed detector IDs are public assessment metadata.
     assert all(p.stat().st_mode & 0o777 == 0o600 for p in registry.directory.glob("*.json"))
 
 
@@ -204,6 +207,8 @@ def test_registry_azure_conflicts_are_idempotent():
     registry.add(report_for())
     assert registry.read()["counts"]["skill_snapshots"] == 1
     assert registry.read()["counts"]["findings"] == 2
+    content = report_for()["artifacts"][0]["content_id"]
+    assert Registry(SimpleNamespace(container=container, directory=Path("/unused"))).lookup(content)["report"]["findings"] == 2
 
 
 def test_sightings_are_reported_from_atomic_registration_and_survive_restart(tmp_path):
@@ -224,3 +229,52 @@ def test_concurrent_registrations_report_only_one_first_sighting(tmp_path):
         results = list(pool.map(lambda _: registry.add(report)[content], range(20)))
     assert results.count(False) == 1
     assert results.count(True) == 19
+
+
+def test_central_lookup_sanitized_report_persists_without_private_input(tmp_path):
+    archive = SimpleNamespace(container=None, directory=tmp_path)
+    registry = Registry(archive)
+    report = report_for("private/project/secret-skill")
+    report.update(source="https://private.example/repo", created_at="2026-10-28T18:00:00+00:00",
+                  status="complete", provenance={"detector_sha256": "a" * 64})
+    for file in report["files"]:
+        file["findings"][0]["snippet"] = "PRIVATE SECRET VALUE"
+    content = report["artifacts"][0]["content_id"]
+    registry.add(report)
+    found = Registry(archive).lookup(content)
+    assert found["report"]["findings"] == 2
+    assert found["report"]["severities"]["HIGH"] == 2
+    assert found["report"]["file_count"] == 2
+    assert found["report"]["assessment"]["score"] == 20
+    assert found["report"]["rules"] == [{"rule": "PROMPT-INJECTION", "severity": "HIGH", "count": 2}]
+    assert found["report"]["first_seen"] == "2026-10-28T18:00:00+00:00"
+    payload = json.dumps(found)
+    assert all(value not in payload for value in ("private.example", "secret-skill", "PRIVATE SECRET VALUE", "run.py", "SKILL.md"))
+    report["created_at"] = "2026-10-28T19:00:00+00:00"
+    registry.add(report)
+    found = registry.lookup(content)
+    assert found["report"]["first_seen"] == "2026-10-28T18:00:00+00:00"
+    assert found["report"]["last_seen"] == "2026-10-28T19:00:00+00:00"
+    assert registry.lookup("0" * 64) is None
+
+
+def test_legacy_digest_records_can_be_looked_up_without_inventing_assessments(tmp_path):
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    digest = "a" * 64
+    record = registry._empty()
+    record["sets"]["skill_snapshots"] = [digest]
+    (registry.directory / "a.json").write_text(json.dumps(record))
+    assert registry.lookup(digest)["report"] is None
+
+
+def test_clean_fingerprints_are_still_registered_and_partial_assessments_unscored(tmp_path):
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    report = report_for()
+    report["status"] = "partial"
+    for file in report["files"]:
+        file["findings"] = []
+    registry.add(report)
+    summary = registry.lookup(report["artifacts"][0]["content_id"])["report"]
+    assert summary["findings"] == 0
+    assert summary["assessment"]["score"] is None
+    assert summary["assessment"]["decision"] == "incomplete"

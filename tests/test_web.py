@@ -501,7 +501,7 @@ def test_evaluation_report_and_public_methodology(client):
     assert 'id="evaluation"' in html
     assert 'id="snapshot-review"' in html
     assert 'id="snapshot-cards"' in html
-    assert 'id="finding-heatmap"' in html
+    assert 'id="finding-heatmap"' not in html
     assert 'id="back-to-report"' in html
     assert 'id="finding-search"' in html
     assert 'id="finding-category"' in html
@@ -597,6 +597,44 @@ def test_private_token_scans_automatically_tracked_and_risky_originals_retained(
     assert "token-for-testing" not in json.dumps(report)
     records = list(app.state.archive.directory.glob("*.json"))
     assert records and "token-for-testing" not in records[0].read_text()
+    content = report["artifacts"][0]["content_id"]
+    lookup = client.get(f"/api/fingerprints/{content.upper()}")
+    assert lookup.status_code == 200
+    public = lookup.json()
+    assert public["report"]["findings"] > 0
+    assert "token-for-testing" not in lookup.text
+    assert "https://github.com/test/repo" not in lookup.text
+    assert "SKILL.md" not in lookup.text
+
+
+def test_central_fingerprint_search_routes_and_explicit_failures(client, monkeypatch):
+    assert client.get("/fingerprints").status_code == 200
+    assert client.get("/assets/fingerprints.js").status_code == 200
+    assert client.get("/api/fingerprints/not-a-hash").status_code == 422
+    assert client.get("/api/fingerprints/" + "0" * 64).status_code == 404
+    from web.registry import Registry, RegistryError
+    def fail(*args):
+        raise RegistryError("unavailable")
+    monkeypatch.setattr(Registry, "lookup", fail)
+    assert client.get("/api/fingerprints/" + "0" * 64).status_code == 503
+
+
+def test_fingerprint_lookup_rate_limited_independently_of_scans(client):
+    for _ in range(60):
+        assert client.get("/api/fingerprints/" + "0" * 64).status_code == 404
+    response = client.get("/api/fingerprints/" + "0" * 64)
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "60"
+    assert client.get("/api/policy").status_code == 200
+
+
+def test_platform_metrics_above_scanner_without_duplicate_findings(client):
+    html = client.get("/").text
+    assert html.index('aria-labelledby="stats-title"') < html.index('id="scanner"')
+    assert html.count('id="total-findings"') == 1
+    assert 'id="unique-findings"' not in html
+    assert '<details class="registry-details">' in html
+    assert "Evidence of inspection, not a safety rating." in html
 
 
 def test_unique_registry_failures_do_not_hide_scan_results(client, monkeypatch):

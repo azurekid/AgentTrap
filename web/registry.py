@@ -1,4 +1,5 @@
-"""Central exact fingerprint registry. Stores digest sets, never scan content."""
+"""Central fingerprints and public, sanitized assessment summaries. Never stores original content."""
+from collections import Counter
 import json
 import os
 import re
@@ -10,6 +11,8 @@ from datetime import datetime, timezone
 
 from azure.core import MatchConditions
 from azure.core.exceptions import AzureError, ResourceExistsError, ResourceModifiedError, ResourceNotFoundError
+
+from web.evaluation import evaluate
 
 METRICS = ("skill_snapshots", "complete_skill_versions", "mcp_snapshots", "agent_files", "evaluations", "findings")
 SHARDS = "0123456789abcdef"
@@ -40,7 +43,7 @@ class Registry:
         if len(payload) > MAX_SHARD_BYTES:
             raise RegistryError("Uniqueness storage shard exceeds its supported capacity.")
         data = json.loads(payload)
-        if (not isinstance(data, dict) or set(data) != {"since", "sets"}
+        if (not isinstance(data, dict) or set(data) not in ({"since", "sets"}, {"since", "sets", "reports"})
                 or not isinstance(data["since"], str) or not isinstance(data["sets"], dict)
                 or set(data["sets"]) != set(METRICS)):
             raise RegistryError("Invalid uniqueness record.")
@@ -50,6 +53,26 @@ class Registry:
                 raise RegistryError("Invalid uniqueness digest.")
             if len(values) != len(set(values)):
                 raise RegistryError("Duplicate uniqueness digest in storage.")
+        if "reports" in data and (
+            not isinstance(data["reports"], dict)
+            or any(not DIGEST.fullmatch(key) or not isinstance(value, dict)
+                   for key, value in data["reports"].items())
+        ):
+            raise RegistryError("Invalid stored fingerprint reports.")
+        for digest, summary in data.get("reports", {}).items():
+            if (set(summary) != {"content_id", "kind", "evaluation_id", "package_complete", "inspection_status",
+                                 "first_seen", "last_seen", "detector_sha256", "file_count", "assessment",
+                                 "findings", "severities", "rules"}
+                    or summary["content_id"] != digest or summary["kind"] not in ("skill_snapshot", "mcp_snapshot", "agent_file")
+                    or not isinstance(summary["assessment"], dict)
+                    or set(summary["assessment"]) != {"version", "score", "highest_severity", "decision", "categories", "checks", "methodology_url"}
+                    or not isinstance(summary["severities"], dict)
+                    or set(summary["severities"]) != {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+                    or any(type(value) is not int or value < 0 for value in summary["severities"].values())
+                    or summary["findings"] != sum(summary["severities"].values())):
+                raise RegistryError("Invalid stored fingerprint assessment.")
+            datetime.fromisoformat(summary["first_seen"])
+            datetime.fromisoformat(summary["last_seen"])
         return data
 
     def _load(self, shard: str) -> tuple[dict, str | None]:
@@ -68,11 +91,17 @@ class Registry:
         except ResourceNotFoundError:
             return self._empty(), None
 
-    def _merge(self, shard: str, additions: dict[str, set[str]]) -> dict[str, set[str]]:
+    def _merge(self, shard: str, additions: dict[str, set[str]],
+               summaries: dict[str, dict] | None = None) -> dict[str, set[str]]:
         for _ in range(8):
             record, etag = self._load(shard)
             existing = {key: set(record["sets"][key]) & values for key, values in additions.items()}
             changed = False
+            for digest, summary in (summaries or {}).items():
+                reports = record.setdefault("reports", {})
+                previous = reports.get(digest)
+                reports[digest] = {**summary, "first_seen": previous["first_seen"] if previous else summary["last_seen"]}
+                changed |= previous != reports[digest]
             for key, values in additions.items():
                 merged = set(record["sets"][key]) | values
                 changed |= len(merged) != len(record["sets"][key])
@@ -107,6 +136,7 @@ class Registry:
 
     def add(self, report: dict) -> dict[str, bool]:
         additions: dict[str, dict[str, set[str]]] = {}
+        summaries: dict[str, dict[str, dict]] = {}
 
         def add(key: str, digest: str) -> None:
             if not DIGEST.fullmatch(digest):
@@ -119,6 +149,31 @@ class Registry:
             if artifact["package_complete"]:
                 add("complete_skill_versions", artifact["content_id"])
             add("evaluations", artifact["evaluation_id"])
+            paths = {
+                (entry["path"] if artifact["root"] == "." else f"{artifact['root']}/{entry['path']}")
+                if artifact["kind"] == "skill_snapshot" else artifact["root"]
+                for entry in artifact["files"]
+            }
+            files = [file for file in report["files"] if file["path"] in paths]
+            hits = [hit for file in files for hit in file["findings"]]
+            counts = Counter(hit["severity"] for hit in hits)
+            rules = Counter((hit["rule"], hit["severity"]) for hit in hits)
+            assessment, _ = evaluate(files, [], report.get("status", "unknown"))
+            # Only fixed detector metadata and aggregates are published, never submitter-controlled text.
+            summary = {
+                "content_id": artifact["content_id"], "kind": artifact["kind"],
+                "evaluation_id": artifact["evaluation_id"], "package_complete": artifact["package_complete"],
+                "inspection_status": report.get("status", "unknown"),
+                "last_seen": report.get("created_at", datetime.now(timezone.utc).isoformat()),
+                "detector_sha256": report.get("provenance", {}).get("detector_sha256"),
+                "file_count": len(artifact["files"]),
+                "assessment": assessment,
+                "findings": sum(counts.values()),
+                "severities": {severity: counts[severity] for severity in ("CRITICAL", "HIGH", "MEDIUM", "LOW")},
+                "rules": [{"rule": rule, "severity": severity, "count": count}
+                          for (rule, severity), count in sorted(rules.items())],
+            }
+            summaries.setdefault(artifact["content_id"][0], {})[artifact["content_id"]] = summary
         for file in report["files"]:
             for finding in file["findings"]:
                 add("findings", finding["id"])
@@ -126,10 +181,10 @@ class Registry:
             with self.lock:
                 self.cached = None
                 if self.container is None:
-                    results = [self._merge(shard, values) for shard, values in additions.items()]
+                    results = [self._merge(shard, values, summaries.get(shard)) for shard, values in additions.items()]
                 else:
                     with ThreadPoolExecutor(max_workers=4) as pool:
-                        results = list(pool.map(lambda item: self._merge(*item), additions.items()))
+                        results = list(pool.map(lambda item: self._merge(*item, summaries.get(item[0])), additions.items()))
                 known = set()
                 for result in results:
                     for metric in ("skill_snapshots", "mcp_snapshots", "agent_files"):
@@ -137,6 +192,23 @@ class Registry:
                 return {artifact["content_id"]: artifact["content_id"] in known for artifact in report["artifacts"]}
         except (OSError, AzureError, ValueError, TypeError) as exc:
             raise RegistryError("Uniqueness update failed.") from exc
+
+    def lookup(self, digest: str) -> dict | None:
+        if not DIGEST.fullmatch(digest):
+            raise ValueError("A full lowercase SHA256 content fingerprint is required.")
+        try:
+            with self.lock:
+                record, _ = self._load(digest[0])
+                kind = next((metric for metric in ("skill_snapshots", "mcp_snapshots", "agent_files")
+                             if digest in record["sets"][metric]), None)
+                if kind is None:
+                    return None
+                return {"content_id": digest, "recorded": True, "kind": kind.removesuffix("s"),
+                        "report": record.get("reports", {}).get(digest),
+                        "disclaimer": "Latest recorded static assessment, not a safety certification. "
+                                      "Private-scan fingerprints are discoverable. No source paths, URLs or content are published."}
+        except (OSError, AzureError, ValueError, TypeError) as exc:
+            raise RegistryError("Fingerprint lookup unavailable.") from exc
 
     def read(self) -> dict:
         try:

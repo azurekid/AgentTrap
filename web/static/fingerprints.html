@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Search AgentLens for a skill snapshot's content fingerprint and latest recorded assessment.">
+  <meta name="theme-color" content="#05080d">
+  <title>Fingerprint search | AgentLens</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/fingerprints.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <div class="backdrop" aria-hidden="true"></div>
+  <header class="topbar"><div class="topbar-inner">
+    <a class="logo" href="/" aria-label="AgentLens home"><span class="wordmark">Agent<b>Lens</b></span></a>
+    <nav class="nav" aria-label="Pages">
+      <a href="/#scanner">Scanner</a><a href="/fingerprints" aria-current="page">Fingerprint search</a>
+      <a href="/coverage">Coverage</a><a href="/samples">Samples</a><a href="/sources">Research</a>
+    </nav>
+  </div></header>
+  <main id="content" class="research">
+    <header class="section-head">
+      <p class="label">Central registry</p><h1>Fingerprint search</h1>
+      <p>Look up an exact skill, MCP or agent-file snapshot and its latest stored assessment. No account or current browser-tab scan is required.</p>
+    </header>
+    <form id="fingerprint-form" class="fingerprint-search" action="/fingerprints" method="get">
+      <label for="fingerprint-hash">Content fingerprint (SHA256, 64 hexadecimal characters)</label>
+      <input id="fingerprint-hash" name="hash" type="search" required maxlength="64" minlength="64" pattern="[a-fA-F0-9]{64}" autocomplete="off" spellcheck="false" placeholder="Paste an AgentLens content fingerprint">
+      <button class="btn btn-primary" type="submit">Search registry</button>
+    </form>
+    <p class="meta">Use the content fingerprint from Snapshot review, not a raw file hash, evaluation ID or finding ID. This is exact lookup, not filename or prefix search. Private-scan fingerprints are discoverable too. Reports omit paths, repository URLs, snippets, original content and credentials.</p>
+    <p id="lookup-status" role="status" class="meta"></p>
+    <section id="lookup-result" class="card fingerprint-report" aria-label="Stored fingerprint report" hidden></section>
+  </main>
+  <footer class="footer"><div class="footer-inner">
+    <span class="logo-small"><b>AgentLens</b> · Static signals. Human judgment.</span>
+    <a href="/#scanner">Run an inspection</a>
+  </div></footer>
+</body>
+</html>

@@ -43,33 +43,52 @@
     });
 
   let loading = false;
-  async function refreshStatistics() {
-    if (loading) return;
-    loading = true;
-    const files = document.getElementById("total-files");
-    const findings = document.getElementById("total-findings");
-    const errorMessage = document.getElementById("statistics-error");
+  async function loadCounters(url, fields) {
     try {
-      const response = await fetch("/api/statistics", { cache: "no-store" });
-      if (!response.ok) throw new Error(`Statistics request failed (${response.status}).`);
-      const totals = await response.json();
-      const uniqueResponse = await fetch("/api/statistics/unique", { cache: "no-store" });
-      if (!uniqueResponse.ok) throw new Error("Fingerprint counters unavailable.");
-      const unique = await uniqueResponse.json();
-      if (![totals.files, unique.counts.findings].every((n) => Number.isSafeInteger(n) && n >= 0)) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Counter request failed (${response.status}).`);
+      const data = await response.json();
+      const counts = data.counts || data;
+      if (!fields.every(([, key]) => Number.isSafeInteger(counts[key]) && counts[key] >= 0)) {
         throw new Error("Invalid statistics response.");
       }
-      countTo(files, totals.files);
-      countTo(findings, unique.counts.findings);
-      errorMessage.hidden = true;
+      for (const [id, key] of fields) countTo(document.getElementById(id), counts[key]);
+      return data;
     } catch (error) {
-      for (const element of [files, findings]) {
+      for (const [id] of fields) {
+        const element = document.getElementById(id);
         element.textContent = "Unavailable";
         delete element.dataset.value;
       }
-      errorMessage.textContent = "Activity totals are temporarily unavailable. File inspection is still available.";
-      errorMessage.hidden = false;
-      console.error("Unable to load activity totals:", error);
+      throw error;
+    }
+  }
+  async function refreshStatistics() {
+    if (loading) return;
+    loading = true;
+    const errorMessage = document.getElementById("statistics-error");
+    const registryStatus = document.getElementById("uniqueness-status");
+    try {
+      const results = await Promise.allSettled([
+        loadCounters("/api/statistics", [["total-files", "files"]]),
+        loadCounters("/api/statistics/unique", [["unique-skills", "skill_snapshots"], ["total-findings", "findings"],
+          ["unique-complete", "complete_skill_versions"], ["unique-mcp", "mcp_snapshots"]]),
+      ]);
+      const registry = results[1];
+      if (registry.status === "fulfilled") {
+        const data = registry.value;
+        registryStatus.textContent = data.since
+          ? `Records since ${new Date(data.since).toLocaleDateString()}. Updated ${new Date(data.as_of).toLocaleString()}. ${data.consistency}`
+          : "No content fingerprints have been recorded yet.";
+      } else {
+        registryStatus.textContent = "Registry counters are temporarily unavailable.";
+      }
+      const failed = results.filter((result) => result.status === "rejected");
+      errorMessage.hidden = !failed.length;
+      if (failed.length) {
+        errorMessage.textContent = "Some platform totals are temporarily unavailable. File inspection is still available.";
+        for (const result of failed) console.error("Unable to load platform totals:", result.reason);
+      }
     } finally {
       loading = false;
     }

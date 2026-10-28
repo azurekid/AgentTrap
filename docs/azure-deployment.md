@@ -29,7 +29,8 @@ below are intentionally unchanged so existing deployments continue to work.
                       └─ skillvenom-investigations/
                            ├─ investigations/…   deleted after 30 days (lifecycle rule)
                            ├─ feedback/…         false-positive reports, deleted after 180 days (lifecycle rule)
-                           └─ statistics/totals.json   aggregate counts, kept
+                           ├─ statistics/totals.json   aggregate counts, kept
+                           └─ uniqueness-v1/…   fingerprints and sanitized assessments, kept
  App Service logs/metrics + Blob audit logs ──▶ Log Analytics workspace (30 days)
 ```
 
@@ -310,7 +311,15 @@ storage must be unreachable from the internet. Shared-key access is already disa
 so Microsoft Entra ID RBAC is the only data path.
 
 Investigators need their own *Storage Blob Data Reader* assignment on the container;
-there is no public archive API. Review the legal basis for retention, the pre-ticked
+there is no public archive API. `/fingerprints` and `/api/fingerprints/<content-id>`
+serve sanitized assessments through the application, not anonymous Blob access.
+Private-scan fingerprints are publicly discoverable by exact content ID. No paths,
+source URLs, snippets or originals are published. Legacy digest-only records have no
+assessment until rescanned. Summaries share each shard's conditional write and its
+2 MiB limit, outside the 30-day investigation lifecycle. Keep `uniqueness-v1/` out of
+archive-deletion rules; it is retained indefinitely. Lookup limits are 60/client/minute
+and 300/instance/minute, single-process controls rather than DDoS protection.
+Review the legal basis for retention and public fingerprint lookup, the
 automatic-retention policy, the deletion workflow and access audits before going live. Keep
 HTTP/APM body logging disabled; exported reports and file names may still be sensitive.
 

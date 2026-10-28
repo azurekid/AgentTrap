@@ -27,6 +27,7 @@
       </a>
       <nav class="nav" aria-label="Pages">
         <a href="/#scanner">Scanner</a>
+        <a href="/fingerprints">Fingerprint search</a>
         <a href="/coverage">Coverage</a>
         <a href="/samples">Samples</a>
         <a href="/sources">Research</a>
@@ -61,6 +62,34 @@
         <canvas id="flow-canvas"></canvas>
         <ol class="flow-log" id="flow-log"></ol>
       </figure>
+    </section>
+
+    <section class="platform-stats" aria-labelledby="stats-title">
+      <header class="platform-stats-head">
+        <div><p class="label">The platform in numbers</p><h2 id="stats-title">Inspection at a glance</h2></div>
+        <a href="/fingerprints">Explore the fingerprint registry <span aria-hidden="true">&rarr;</span></a>
+      </header>
+      <dl class="stat-grid" aria-live="polite">
+        <div class="stat"><dt>Files inspected</dt><dd id="total-files">-</dd><span>All-time activity, including repeat scans</span></div>
+        <div class="stat"><dt>Unique skill snapshots</dt><dd id="unique-skills">-</dd><span>Distinct inspected content fingerprints</span></div>
+        <div class="stat stat-alert"><dt>Unique security findings</dt><dd id="total-findings">-</dd><span>Distinct findings, not repeat scan hits</span></div>
+      </dl>
+      <p id="statistics-error" class="statistics-error" role="status" hidden></p>
+      <div class="platform-coverage" aria-label="Scanner coverage">
+        <span><b id="stat-detectors">-</b> detection rules</span>
+        <span><b>9</b> agent ecosystems</span>
+        <a href="/coverage#methodology">How we evaluate</a>
+      </div>
+      <p class="stats-caveat">Evidence of inspection, not a safety rating. Snapshots can be partial; content versions are not unique people, publishers or approved skills.</p>
+      <details class="registry-details">
+        <summary>Registry breakdown &amp; counting methodology</summary>
+        <dl class="registry-breakdown">
+          <div><dt>Complete supported skill versions</dt><dd id="unique-complete">-</dd></div>
+          <div><dt>MCP definition snapshots</dt><dd id="unique-mcp">-</dd></div>
+        </dl>
+        <p class="meta">Complete supported versions have all listed package files inspected at a pinned GitHub commit. MCP snapshots cover saved tool definitions, not running servers. Finding identities bind a content version, detector and evidence location. Minor content edits create new versions; historical unrecorded scans are not backfilled.</p>
+        <p id="uniqueness-status" class="meta" role="status">Loading registry details...</p>
+      </details>
     </section>
 
     <section class="scanner" id="scanner" aria-labelledby="scanner-title">
@@ -136,7 +165,7 @@
                 </label>
               </div>
 
-              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories, record digest identities centrally for repeat detection and unique counters, retained indefinitely. High-risk original files are retained privately for 30 days. Tokens are never retained. Digests can identify known content; do not submit material you cannot share with the operator. Reports and originals are not published.</p>
+              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories, record fingerprints and sanitized assessment summaries centrally, retained indefinitely and publicly searchable by content fingerprint. These summaries omit paths, repository URLs, snippets and originals. High-risk original files are retained privately for 30 days. Tokens are never retained. Digests can identify known content; do not submit material you cannot share with the operator.</p>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
                 <button id="scan-button" class="btn btn-primary btn-scan" type="submit">Run inspection <span aria-hidden="true">→</span></button>
@@ -157,24 +186,14 @@
       </div>
     </section>
 
-    <section class="stats" aria-labelledby="stats-title">
-      <h2 id="stats-title" class="visually-hidden">Inspection activity</h2>
-      <dl class="stat-grid" aria-live="polite">
-        <div class="stat"><dt>Files scanned</dt><dd id="total-files">-</dd><span>All-time, site-wide</span></div>
-        <div class="stat stat-alert"><dt>Unique security findings</dt><dd id="total-findings">-</dd><span>Distinct finding fingerprints, not repeat scan hits</span></div>
-        <div class="stat"><dt>Detection rules</dt><dd id="stat-detectors">-</dd><span>Injection, secrets, execution, exfiltration</span></div>
-        <div class="stat"><dt>Agent ecosystems</dt><dd>9</dd><span>Claude, Codex, Gemini, Copilot &amp; more</span></div>
-      </dl>
-      <p id="statistics-error" class="statistics-error" role="status" hidden></p>
-      <h3>Central fingerprint registry</h3>
-      <dl class="stat-grid" aria-live="polite">
-        <div class="stat"><dt>Skill snapshots</dt><dd id="unique-skills">-</dd><span>Distinct inspected content, including partial packages</span></div>
-        <div class="stat"><dt>Complete supported skill versions</dt><dd id="unique-complete">-</dd><span>All listed package files inspected at a pinned GitHub commit</span></div>
-        <div class="stat"><dt>MCP definition snapshots</dt><dd id="unique-mcp">-</dd><span>Saved tool definitions, not running servers</span></div>
-        <div class="stat"><dt>Distinct findings</dt><dd id="unique-findings">-</dd><span>Per content version, detector and evidence location</span></div>
-      </dl>
-      <p id="uniqueness-status" class="meta" role="status">Loading uniqueness counters...</p>
-      <p class="meta">Files scanned counts repeat activity. Security findings counts distinct finding fingerprints. Content versions are not unique people, publishers or safe skills. Minor edits create new versions. Historical unrecorded scans are not backfilled.</p>
+    <section class="stats" aria-labelledby="fingerprint-search-title">
+      <h2 id="fingerprint-search-title">Seen this skill before?</h2>
+      <p class="meta">Search the central registry for a content fingerprint and its latest stored assessment, including fingerprints registered by private scans.</p>
+      <form class="fingerprint-search" action="/fingerprints" method="get">
+        <label for="central-fingerprint">Content fingerprint (SHA256)</label>
+        <input id="central-fingerprint" type="search" name="hash" required minlength="64" maxlength="64" pattern="[a-fA-F0-9]{64}" placeholder="Paste an AgentLens content fingerprint" autocomplete="off" spellcheck="false">
+        <button class="btn btn-primary" type="submit">Search registry</button>
+      </form>
     </section>
 
     <section class="how" id="how" aria-labelledby="how-title">
@@ -243,7 +262,8 @@
         <span class="credit">Designed &amp; built by <a href="https://github.com/azurekid" target="_blank" rel="noopener">azurekid</a></span>
       </div>
       <nav class="footer-links" aria-label="Footer">
-        <a href="/#scanner">Scanner</a><a href="/coverage">Coverage</a><a href="/samples">Samples</a><a href="/sources">Research</a>
+        <a href="/#scanner">Scanner</a><a href="/fingerprints">Fingerprint search</a>
+        <a href="/coverage">Coverage</a><a href="/samples">Samples</a><a href="/sources">Research</a>
       </nav>
       <span class="footer-note">Heuristic analysis, not a safety certification.</span>
     </div>

@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
@@ -49,8 +50,9 @@ POLICY = {
     "uniqueness_consent_default": True,
     "automatic_retention": True,
     "private_scans_retained": True,
-    "fingerprints": "Content, evaluation and finding digests are automatically recorded centrally and retained indefinitely. "
-                    "Tokens are never stored. Historical unrecorded scans are not backfilled.",
+    "fingerprints": "Content, evaluation and finding digests and sanitized assessment summaries are recorded centrally indefinitely. "
+                    "Content fingerprints from all scans, including private scans, are publicly searchable with sanitized reports. "
+                    "No paths, URLs, snippets, originals or tokens are published. Historical unrecorded scans are not backfilled.",
 }
 
 
@@ -114,6 +116,8 @@ class PublicGuard:
         self.global_requests: deque[float] = deque()
         self.feedback: dict[str, deque[float]] = defaultdict(deque)
         self.feedback_global: deque[float] = deque()
+        self.lookups: dict[str, deque[float]] = defaultdict(deque)
+        self.lookups_global: deque[float] = deque()
         self.active = 0
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
@@ -122,6 +126,23 @@ class PublicGuard:
         path = scope["path"]
         is_scan = path.startswith("/api/scan")
         is_feedback = path == "/api/feedback"
+        if path.startswith("/api/fingerprints/"):
+            now = time.monotonic()
+            for key in list(self.lookups):
+                if not self.lookups[key] or now - self.lookups[key][-1] > 60:
+                    del self.lookups[key]
+            key = client_key(scope, self.trusted_hops)
+            if key not in self.lookups and len(self.lookups) >= 5000:
+                return await JSONResponse({"detail": "Service is busy. Try later."}, 429)(scope, receive, send)
+            window = self.lookups[key]
+            for queue in (window, self.lookups_global):
+                while queue and now - queue[0] > 60:
+                    queue.popleft()
+            if len(window) >= 60 or len(self.lookups_global) >= 300:
+                return await JSONResponse({"detail": "Fingerprint lookup limit reached. Try later."}, 429,
+                                          headers={"Retry-After": "60"})(scope, receive, send)
+            window.append(now)
+            self.lookups_global.append(now)
         headers = dict(scope["headers"])
         limit = MAX_FEEDBACK_BODY if is_feedback else MAX_BODY
         if is_feedback:
@@ -274,6 +295,25 @@ def report_page():
     return FileResponse(ROOT / "static" / "report.html")
 
 
+@app.get("/fingerprints")
+def fingerprint_page():
+    return FileResponse(ROOT / "static" / "fingerprints.html")
+
+
+@app.get("/api/fingerprints/{digest}")
+def fingerprint_lookup(digest: str, request: Request):
+    if not re.fullmatch(r"[a-fA-F0-9]{64}", digest):
+        raise HTTPException(422, "Enter a full 64-character SHA256 content fingerprint.")
+    try:
+        result = request.app.state.registry.lookup(digest.lower())
+    except RegistryError as exc:
+        LOG.error("Fingerprint lookup failed")
+        raise HTTPException(503, "Fingerprint lookup is temporarily unavailable.") from exc
+    if result is None:
+        raise HTTPException(404, "This content fingerprint has not been recorded. This does not mean it is safe.")
+    return result
+
+
 @app.get("/samples")
 def samples_page():
     return FileResponse(ROOT / "static" / "samples.html")
@@ -281,7 +321,7 @@ def samples_page():
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "style.css"):
+    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "fingerprints.js", "style.css"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 
