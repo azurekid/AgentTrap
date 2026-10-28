@@ -74,6 +74,11 @@ $benign = Scan (Join-Path $PSScriptRoot 'benign/AGENTS.md')
 $serious = @($benign | Where-Object { $script:Severity[$_.severity] -ge 3 })
 Assert ($serious.Count -eq 0) "no HIGH/CRITICAL on benign file (got: $(($serious.rule) -join ', '))"
 Assert (-not ($benign.rule -contains 'VARIATION-SELECTOR-SMUGGLING')) 'single emoji variation selector not flagged'
+$ngc = 'echo "<NGC_API_KEY>" | docker login nvcr.io --username ''$oauthtoken'' --password-stdin'
+$ngcFindings = @(Invoke-AgentFileScan -File 'SKILL.md' -Text $ngc -Config $config)
+Assert ($ngcFindings.Count -eq 0) 'NGC placeholder and literal registry username are not credentials'
+$tokenFindings = @(Invoke-AgentFileScan -File 'SKILL.md' -Text ($ngc.Replace('<NGC_API_KEY>', '$GITHUB_TOKEN')) -Config $config)
+Assert ($tokenFindings.rule -contains 'OAUTH-TOKEN') 'other token references beside literal registry usernames remain detected'
 
 Write-Host "`n[5] JSON output and parity with scan_agents_md.py"
 $paths = @(('samples', 'poc/Downloads', 'tests/repo' | ForEach-Object { Join-Path $scratch $_ }) + (Join-Path $root 'tests/benign'))

@@ -311,6 +311,11 @@ def mask_denied(lines):
     return out
 
 
+DOCKER_LITERAL_USERNAME = re.compile(
+    r"(\bdocker[ \t]+login\b[^;\n|&]*?[ \t](?:--username(?:[ \t]+|=)|-u[ \t]+))'\$oauthtoken'(?=[ \t]|$)"
+)
+
+
 def scan_text(text, allow):
     out = []
     lines = re.split(r"\r?\n", text)
@@ -320,7 +325,10 @@ def scan_text(text, allow):
             if rx.search(ln):
                 out.append(finding(i, sev, rid, msg, "[REDACTED: potential credential]"))
         for rid, sev, msg, rx in RULES:
-            if rx.search(masked[i - 1]):
+            candidate = masked[i - 1]
+            if rid == "OAUTH-TOKEN":
+                candidate = DOCKER_LITERAL_USERNAME.sub(r"\1'literal-registry-username'", candidate)
+            if rx.search(candidate):
                 out.append(finding(i, sev, rid, msg, ln))
         out += url_findings(i, ln, allow)
         out += base64_findings(i, ln)

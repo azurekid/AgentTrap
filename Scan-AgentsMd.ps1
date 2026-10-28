@@ -323,7 +323,11 @@ function Get-RuleMatch {
     param([int]$LineNo, [string]$Line, [array]$Rules, [hashtable]$Refs = @{}, [string]$Masked = $null)
     if ($null -eq $Masked) { $Masked = $Line }
     foreach ($r in $Rules) {
-        if ($r[3].IsMatch($Masked)) { New-Finding $LineNo $r[1] $r[0] $r[2] $Line $Refs[$r[0]] }
+        $candidate = $Masked
+        if ($r[0] -eq 'OAUTH-TOKEN') {
+            $candidate = [regex]::Replace($candidate, '(\bdocker[ \t]+login\b[^;\n|&]*?[ \t](?:--username(?:[ \t]+|=)|-u[ \t]+))''\$oauthtoken''(?=[ \t]|$)', '$1''literal-registry-username''')
+        }
+        if ($r[3].IsMatch($candidate)) { New-Finding $LineNo $r[1] $r[0] $r[2] $Line $Refs[$r[0]] }
     }
 }
 

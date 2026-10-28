@@ -298,6 +298,9 @@ skill-package members and `skill.oms.sig` bundles remain included; ordinary repo
 documentation and unrelated configuration files are excluded.
 YAML (`.yml` and `.yaml`) files within a detected skill package are accepted by
 folder and multi-file uploads. GitHub Actions workflows remain opt-in.
+The OAuth-token reference rule ignores the single-quoted literal Docker login
+username `'$oauthtoken'` used in NGC examples. This is not a token value or shell
+variable expansion. Other token references and literal-secret detection remain active.
 The additional category/severity finding heatmap has been removed. Files without
 findings are omitted from report views, snapshot links and provenance lists;
 snapshots with no affected member files are hidden. LOW/MEDIUM-only results remain
