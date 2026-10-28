@@ -71,7 +71,7 @@
       </header>
       <dl class="stat-grid" aria-live="polite">
         <div class="stat"><dt>Files inspected</dt><dd id="total-files">-</dd><span>All-time activity, including repeat scans</span></div>
-        <div class="stat"><dt>Unique skill snapshots</dt><dd id="unique-skills">-</dd><span>Distinct inspected content fingerprints</span></div>
+        <div class="stat"><dt>Unique skill snapshots</dt><dd id="unique-skills">-</dd><span>Registered HIGH/CRITICAL snapshots</span></div>
         <div class="stat stat-alert"><dt>Unique security findings</dt><dd id="total-findings">-</dd><span>Distinct findings, not repeat scan hits</span></div>
       </dl>
       <p id="statistics-error" class="statistics-error" role="status" hidden></p>
@@ -87,7 +87,7 @@
           <div><dt>Complete supported skill versions</dt><dd id="unique-complete">-</dd></div>
           <div><dt>MCP definition snapshots</dt><dd id="unique-mcp">-</dd></div>
         </dl>
-        <p class="meta">Complete supported versions have all listed package files inspected at a pinned GitHub commit. MCP snapshots cover saved tool definitions, not running servers. Finding identities bind a content version, detector and evidence location. Minor content edits create new versions; historical unrecorded scans are not backfilled.</p>
+        <p class="meta">Only snapshots with HIGH or CRITICAL findings are registered. New unique finding counts include only HIGH/CRITICAL findings; historical finding/evaluation counts are preserved and may include lower severities. Complete supported versions have all listed package files inspected at a pinned GitHub commit. MCP snapshots cover saved tool definitions, not running servers. Finding identities bind a content version, detector and evidence location. Minor content edits create new versions; historical unrecorded scans are not backfilled.</p>
         <p id="uniqueness-status" class="meta" role="status">Loading registry details...</p>
       </details>
     </section>
@@ -174,7 +174,7 @@
                 <p id="paste-help" class="field-hint">Inspected as <code>SKILL.md</code>, up to 256 KiB of UTF-8 text. Include frontmatter to identify the skill by name. This is a single-file snapshot; referenced files are not fetched. Content is never executed.</p>
               </div>
 
-              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including pasted content, private repositories and uploads, publish fingerprints, self-declared frontmatter names, redacted finding excerpts and assessment summaries indefinitely. Names and excerpts can disclose private code or identifiers; detected-secret redaction is not a guarantee of confidentiality. Source paths, repository URLs and full originals are not separate public fields. High-risk originals are retained privately for 30 days. Access tokens are never retained. Only submit material you can publish.</p>
+              <p class="field-hint"><strong>Automatic high-risk fingerprint tracking and retention.</strong> Only snapshots with HIGH or CRITICAL findings publish fingerprints, self-declared frontmatter names, redacted finding excerpts and assessment summaries indefinitely, including pasted content, private repositories and uploads. Clean, LOW-only and MEDIUM-only snapshots are not centrally registered. Names and excerpts can disclose private code or identifiers; detected-secret redaction is not a guarantee of confidentiality. Source paths, repository URLs and full originals are not separate public fields. High-risk originals are retained privately for 30 days. Access tokens are never retained. Only submit material you can publish.</p>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
                 <button id="scan-button" class="btn btn-primary btn-scan" type="submit">Run inspection <span aria-hidden="true">→</span></button>

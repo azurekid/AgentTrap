@@ -212,6 +212,19 @@ def test_registry_azure_conflicts_are_idempotent():
     content = report_for()["artifacts"][0]["content_id"]
     assert Registry(SimpleNamespace(container=container, directory=Path("/unused"))).lookup(content)["report"]["findings"] == 2
     assert registry.lookup("a" * 64)["matches"][0]["content_id"] == content
+    for blob in blobs.values():
+        if blob.payload is None:
+            continue
+        record = json.loads(blob.payload)
+        for summary in record.get("reports", {}).values():
+            summary["severities"] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 2, "LOW": 0}
+        blob.payload = json.dumps(record).encode()
+        blob.conflict = True
+    cleaned = Registry(SimpleNamespace(container=container, directory=Path("/unused")))
+    assert cleaned.lookup(content) is None
+    assert cleaned.lookup("a" * 64) is None
+    assert cleaned.read()["counts"]["findings"] == 2
+    assert cleaned.read()["counts"]["evaluations"] == 1
 
 
 def test_sightings_are_reported_from_atomic_registration_and_survive_restart(tmp_path):
@@ -262,26 +275,79 @@ def test_central_lookup_sanitized_report_persists_without_private_input(tmp_path
     assert registry.lookup("0" * 64) is None
 
 
-def test_legacy_digest_records_can_be_looked_up_without_inventing_assessments(tmp_path):
+def test_legacy_digest_without_severity_is_removed_on_restart(tmp_path):
     registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
     digest = "a" * 64
     record = registry._empty()
     record["sets"]["skill_snapshots"] = [digest]
     (registry.directory / "a.json").write_text(json.dumps(record))
-    assert registry.lookup(digest)["report"] is None
+    registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
+    assert registry.lookup(digest) is None
 
 
-def test_clean_fingerprints_are_still_registered_and_partial_assessments_unscored(tmp_path):
+@pytest.mark.parametrize("severity", [None, "LOW", "MEDIUM"])
+def test_non_high_risk_fingerprints_are_not_registered(tmp_path, severity):
     registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
     report = report_for()
     report["status"] = "partial"
     for file in report["files"]:
-        file["findings"] = []
+        file["findings"] = [] if severity is None else [{**hit, "severity": severity} for hit in file["findings"]]
+    content = report["artifacts"][0]["content_id"]
+    assert registry.add(report) == {content: None}
+    assert registry.lookup(content) is None
+    assert not any(registry.read()["counts"].values())
+
+
+def test_historical_cleanup_removes_low_risk_reports_aliases_and_preserves_counters(tmp_path):
+    archive = SimpleNamespace(container=None, directory=tmp_path)
+    registry = Registry(archive)
+    report = report_for()
+    content = report["artifacts"][0]["content_id"]
+    report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
     registry.add(report)
-    summary = registry.lookup(report["artifacts"][0]["content_id"])["report"]
-    assert summary["findings"] == 0
-    assert summary["assessment"]["score"] is None
-    assert summary["assessment"]["decision"] == "incomplete"
+    counts = registry.read()["counts"]
+    shard = registry.directory / f"{content[0]}.json"
+    record = json.loads(shard.read_bytes())
+    summary = record["reports"][content]
+    summary["severities"] = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 2, "LOW": 0}
+    shard.write_text(json.dumps(record))
+    registry = Registry(archive)
+    assert registry.lookup(content) is None
+    assert registry.lookup("a" * 64) is None
+    assert registry.read()["counts"]["skill_snapshots"] == 0
+    assert registry.read()["counts"]["findings"] == counts["findings"]
+    assert registry.read()["counts"]["evaluations"] == counts["evaluations"]
+    assert all(content not in path.read_text() for path in registry.directory.glob("*.json"))
+
+
+@pytest.mark.parametrize("severity", ["HIGH", "CRITICAL"])
+def test_registration_gates_each_snapshot_and_each_file_hash(tmp_path, severity):
+    archive = SimpleNamespace(container=None, directory=tmp_path)
+    registry = Registry(archive)
+    high = report_for()
+    high["files"][0]["findings"][0]["severity"] = severity
+    high["files"][1]["findings"][0]["severity"] = "MEDIUM"
+    medium = report_for("other/skill", changed=True)
+    for file in medium["files"]:
+        file["findings"][0]["severity"] = "MEDIUM"
+    high_id = high["artifacts"][0]["content_id"]
+    medium_id = medium["artifacts"][0]["content_id"]
+    combined = {"files": high["files"] + medium["files"], "artifacts": high["artifacts"] + medium["artifacts"],
+                "status": "partial", "provenance": {"files": [
+                    {"path": high["files"][0]["path"], "sha256": "a" * 64},
+                    {"path": high["files"][1]["path"], "sha256": "b" * 64},
+                    {"path": medium["files"][0]["path"], "sha256": "c" * 64},
+                ]}}
+    assert registry.add(combined) == {high_id: False, medium_id: None}
+    assert registry.lookup("a" * 64)["matches"][0]["content_id"] == high_id
+    assert registry.lookup("b" * 64) is None
+    assert registry.lookup("c" * 64) is None
+    assert registry.lookup(medium_id) is None
+    assert registry.read()["counts"]["findings"] == 1
+    restarted = Registry(archive)
+    assert restarted.lookup(high_id)["report"]["assessment"]["score"] is None
+    assert restarted.lookup(high_id)["report"]["findings"] == 2
+    assert restarted.read()["counts"]["findings"] == 1
 
 
 def test_inspected_text_hash_resolves_containing_snapshot_without_counting_a_new_skill(tmp_path):

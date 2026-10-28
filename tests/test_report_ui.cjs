@@ -165,6 +165,17 @@ test("clean snapshots remain hidden", () => {
   assert.equal(elements["snapshot-cards"].children.length, 0);
 });
 
+test("medium-only snapshots explain why their fingerprints are not centrally stored", () => {
+  const { elements, run } = setup({
+    artifacts: [{ ...artifact, seen_before: null, registry_status: "not_eligible" }],
+    files: [{ ...file, findings: [{ severity: "MEDIUM" }] }],
+  });
+  run("renderSnapshotReview()");
+  const nodes = descendants(elements["snapshot-cards"]);
+  assert.ok(nodes.some((item) => item.textContent === "Not centrally stored"));
+  assert.ok(nodes.some((item) => item.textContent?.includes("only snapshots with HIGH or CRITICAL findings")));
+});
+
 test("inspection summary uses exact score and category counts, with collapsed guidance", () => {
   const evaluation = {
     score: 20, decision: "review_required", highest_severity: "HIGH",

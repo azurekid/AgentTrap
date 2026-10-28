@@ -37,6 +37,15 @@ class Registry:
         self.cached_at = 0.0
         if self.container is None:
             self.directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+        try:
+            for shard in SHARDS:
+                self._merge(shard, {}, prune=True)
+        except (OSError, AzureError, ValueError, TypeError) as exc:
+            raise RegistryError("Historical fingerprint cleanup failed.") from exc
+
+    @staticmethod
+    def _qualifies(summary: dict) -> bool:
+        return any(summary["severities"][severity] > 0 for severity in ("HIGH", "CRITICAL"))
 
     @staticmethod
     def _empty() -> dict:
@@ -130,11 +139,27 @@ class Registry:
 
     def _merge(self, shard: str, additions: dict[str, set[str]],
                summaries: dict[str, dict] | None = None,
-               text_hashes: dict[str, set[str]] | None = None) -> dict[str, set[str]]:
+               text_hashes: dict[str, set[str]] | None = None, *, prune: bool = False) -> dict[str, set[str]]:
         for _ in range(8):
             record, etag = self._load(shard)
             existing = {key: set(record["sets"][key]) & values for key, values in additions.items()}
             changed = False
+            if prune and (any(record["sets"].values()) or record.get("reports") or record.get("text_hashes")):
+                before = json.dumps(record, sort_keys=True)
+                reports = {digest: summary for digest, summary in record.get("reports", {}).items()
+                           if self._qualifies(summary)}
+                record["reports"] = reports
+                for metric in ("skill_snapshots", "complete_skill_versions", "mcp_snapshots", "agent_files"):
+                    record["sets"][metric] = [digest for digest in record["sets"][metric] if digest in reports]
+                aliases = record.get("text_hashes", {})
+                targets = {digest[0] for values in aliases.values() for digest in values}
+                target_records = {key: self._load(key)[0] for key in targets - {shard}}
+                target_records[shard] = record
+                retained = {digest for target in target_records.values()
+                            for digest, summary in target.get("reports", {}).items() if self._qualifies(summary)}
+                record["text_hashes"] = {digest: [value for value in values if value in retained]
+                                         for digest, values in aliases.items() if any(value in retained for value in values)}
+                changed = before != json.dumps(record, sort_keys=True)
             for digest, values in (text_hashes or {}).items():
                 aliases = record.setdefault("text_hashes", {})
                 merged = sorted(set(aliases.get(digest, [])) | values)
@@ -179,7 +204,7 @@ class Registry:
                 continue
         raise RegistryError("Uniqueness update contention exceeded retry limit.")
 
-    def add(self, report: dict) -> dict[str, bool]:
+    def add(self, report: dict) -> dict[str, bool | None]:
         additions: dict[str, dict[str, set[str]]] = {}
         summaries: dict[str, dict[str, dict]] = {}
         text_hashes: dict[str, dict[str, set[str]]] = {}
@@ -192,10 +217,6 @@ class Registry:
 
         for artifact in report["artifacts"]:
             metric = {"skill_snapshot": "skill_snapshots", "mcp_snapshot": "mcp_snapshots", "agent_file": "agent_files"}[artifact["kind"]]
-            add(metric, artifact["content_id"])
-            if artifact["package_complete"]:
-                add("complete_skill_versions", artifact["content_id"])
-            add("evaluations", artifact["evaluation_id"])
             paths = {
                 (entry["path"] if artifact["root"] == "." else f"{artifact['root']}/{entry['path']}")
                 if artifact["kind"] == "skill_snapshot" else artifact["root"]
@@ -204,6 +225,15 @@ class Registry:
             files = [file for file in report["files"] if file["path"] in paths]
             hits = [hit for file in files for hit in file["findings"]]
             counts = Counter(hit["severity"] for hit in hits)
+            if not (counts["HIGH"] or counts["CRITICAL"]):
+                continue
+            add(metric, artifact["content_id"])
+            if artifact["package_complete"]:
+                add("complete_skill_versions", artifact["content_id"])
+            add("evaluations", artifact["evaluation_id"])
+            for hit in hits:
+                if hit["severity"] in ("HIGH", "CRITICAL"):
+                    add("findings", hit["id"])
             rules = Counter((hit["rule"], hit["severity"]) for hit in hits)
             assessment, _ = evaluate(files, [], report.get("status", "unknown"))
             atlas = annotate(files)
@@ -243,14 +273,13 @@ class Registry:
             }
             summaries.setdefault(artifact["content_id"][0], {})[artifact["content_id"]] = summary
             for file in files:
+                if not any(hit["severity"] in ("HIGH", "CRITICAL") for hit in file["findings"]):
+                    continue
                 digest = provenance.get(file["path"])
                 if digest is not None:
                     if not DIGEST.fullmatch(digest):
                         raise RegistryError("Invalid inspected-text hash.")
                     text_hashes.setdefault(digest[0], {}).setdefault(digest, set()).add(artifact["content_id"])
-        for file in report["files"]:
-            for finding in file["findings"]:
-                add("findings", finding["id"])
         try:
             with self.lock:
                 self.cached = None
@@ -259,7 +288,7 @@ class Registry:
                                for shard, values in additions.items()]
                 else:
                     with ThreadPoolExecutor(max_workers=4) as pool:
-                        results = list(pool.map(lambda item: self._merge(*item, summaries.get(item[0]),
+                        results = list(pool.map(lambda item: self._merge(item[0], item[1], summaries.get(item[0]),
                                                                         text_hashes.get(item[0])), additions.items()))
                 for shard in text_hashes.keys() - additions.keys():
                     self._merge(shard, {}, text_hashes=text_hashes[shard])
@@ -267,7 +296,9 @@ class Registry:
                 for result in results:
                     for metric in ("skill_snapshots", "mcp_snapshots", "agent_files"):
                         known.update(result.get(metric, set()))
-                return {artifact["content_id"]: artifact["content_id"] in known for artifact in report["artifacts"]}
+                registered = {digest for values in summaries.values() for digest in values}
+                return {artifact["content_id"]: artifact["content_id"] in known
+                        if artifact["content_id"] in registered else None for artifact in report["artifacts"]}
         except (OSError, AzureError, ValueError, TypeError) as exc:
             raise RegistryError("Uniqueness update failed.") from exc
 
@@ -301,6 +332,8 @@ class Registry:
         return {"content_id": digest, "recorded": True, "kind": kind.removesuffix("s"),
                 "report": record.get("reports", {}).get(digest),
                 "disclaimer": "Latest recorded snapshot assessment, not a safety certification or a file-only assessment. "
+                              "Lookup retrieves stored assessment metadata and redacted excerpts only, never full files or repository contents. "
+                              "Only snapshots with HIGH or CRITICAL findings are registered. "
                               "Private-scan fingerprints, self-declared names and redacted finding excerpts are public. "
                               "Source paths and repository URLs are omitted. Excerpts may contain submitter-controlled text; never execute them."}
 
@@ -317,7 +350,10 @@ class Registry:
                     "since": min((r["since"] for r in populated), default=None),
                     "as_of": datetime.now(timezone.utc).isoformat(),
                     "counts": {key: sum(len(r["sets"][key]) for r, _ in records) for key in METRICS},
-                    "scope": "Automatically recorded submissions, including private-token scans. Content versions, not unique people or publishers. Historical opt-outs are not backfilled.",
+                    "scope": "Only snapshots with HIGH or CRITICAL findings are registered, including private-token scans. "
+                             "New unique finding counts include only HIGH/CRITICAL findings. Historical finding/evaluation "
+                             "digests and counters are preserved and may include lower severities. Unclassifiable legacy snapshot digests are removed. "
+                             "Content versions, not unique people or publishers.",
                     "consistency": "Shard snapshot, cached up to 60 seconds; in-flight or failed submissions can be partially recorded. Retries are idempotent.",
                 }
                 self.cached, self.cached_at = result, time.monotonic()

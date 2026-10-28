@@ -50,12 +50,16 @@ POLICY = {
     "uniqueness_consent_default": True,
     "automatic_retention": True,
     "private_scans_retained": True,
-    "fingerprints": "Content, evaluation and finding digests and sanitized assessment summaries are recorded centrally indefinitely. "
-                    "Content fingerprints and indexed inspected-text hashes from all scans, including private scans, "
+    "fingerprints": "Only snapshots with HIGH or CRITICAL findings are recorded centrally indefinitely. "
+                    "New finding digests include only HIGH/CRITICAL findings. Report-local identities still cover all files. "
+                    "Qualifying content fingerprints and indexed inspected-text hashes, including private scans, "
                     "are publicly searchable with sanitized snapshot reports. "
-                    "Self-declared frontmatter names and up to 24 redacted finding excerpts are published for all scans, including private repositories and uploads. "
+                    "Lookup retrieves stored metadata and redacted excerpts only, never full files or repository contents, and never starts a scan. "
+                    "Self-declared frontmatter names and up to 24 redacted finding excerpts are published for qualifying snapshots, including private repositories and uploads. "
                     "Detected-secret redaction cannot guarantee confidentiality. Full originals and access tokens are not published. "
-                    "Source paths and repository URLs are not separate public fields. Historical unrecorded scans are not backfilled.",
+                    "Source paths and repository URLs are not separate public fields. Startup removes non-high/critical and unclassifiable legacy "
+                    "snapshot records and lookup links, preserving historical finding/evaluation digests and counters. "
+                    "Historical unrecorded scans are not backfilled.",
 }
 
 
@@ -452,6 +456,7 @@ async def execute(documents: list[dict[str, str]], source: str, skipped: list[st
         known = await run_in_threadpool(request.app.state.registry.add, report)
         for artifact in report["artifacts"]:
             artifact["seen_before"] = known[artifact["content_id"]]
+            artifact["registry_status"] = "not_eligible" if artifact["seen_before"] is None else "recorded"
         report["uniqueness"] = {"status": "recorded"}
     except RegistryError:
         LOG.error("Uniqueness update failed; scan_id=%s", report["id"])

@@ -25,13 +25,14 @@
     <header class="section-head">
       <p class="label">Central registry</p><h1>Fingerprint search</h1>
       <p>Look up an exact skill, MCP or agent-file snapshot and its latest stored assessment. No account or current browser-tab scan is required.</p>
+      <p><strong>Metadata lookup only.</strong> Search retrieves stored assessment metadata and bounded, redacted finding excerpts. It never downloads the full skill, original files or repository contents, and does not run a new scan. Only snapshots with HIGH or CRITICAL findings are registered.</p>
     </header>
     <form id="fingerprint-form" class="fingerprint-search" action="/fingerprints" method="get">
       <label for="fingerprint-hash">Snapshot fingerprint or file-text hash (SHA256)</label>
       <input id="fingerprint-hash" name="hash" type="search" required maxlength="64" minlength="64" pattern="[a-fA-F0-9]{64}" autocomplete="off" spellcheck="false" placeholder="Paste an AgentLens content fingerprint">
       <button class="btn btn-primary" type="submit">Search registry</button>
     </form>
-    <p class="meta">Paste a snapshot fingerprint or indexed file-text hash. A text hash may match several snapshots; older scans need a rescan. Raw-download hashes, evaluation IDs and finding IDs are not search keys. All sources, including private scans and uploads, publish self-declared names and redacted finding excerpts. Names are not verified identity. Full originals stay private; excerpts can disclose private information despite detected-secret redaction.</p>
+    <p class="meta">Paste a snapshot fingerprint or indexed file-text hash. A text hash may match several snapshots; older scans need a rescan. Raw-download hashes, evaluation IDs and finding IDs are not search keys. Qualifying HIGH/CRITICAL snapshots from all sources, including private scans and uploads, publish self-declared names and redacted finding excerpts. Names are not verified identity. Full originals stay private; excerpts can disclose private information despite detected-secret redaction.</p>
     <p id="lookup-status" role="status" class="meta"></p>
     <section id="lookup-result" class="card fingerprint-report" aria-label="Stored fingerprint report" hidden></section>
   </main>

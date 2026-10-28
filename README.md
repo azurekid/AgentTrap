@@ -219,8 +219,9 @@ The existing MITRE ATLAS threat map appears above **Snapshot review**.
 The additional category/severity finding heatmap has been removed. Files without
 findings are omitted from report views, snapshot links and provenance lists;
 snapshots with no affected member files are hidden. LOW/MEDIUM-only results remain
-visible. Scanned-file totals, coverage, raw JSON exports and registry identities
-still include all inspected files. Compact expandable snapshot rows put
+visible. Scanned-file totals, coverage and raw JSON exports still include all
+inspected files. Only snapshots with HIGH/CRITICAL findings are centrally registered.
+Compact expandable snapshot rows put
 CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
 per-snapshot occurrence counts, completeness notes
 and an always-visible, linked, copyable content fingerprint on each collapsed row.
@@ -228,7 +229,8 @@ The same snapshot fingerprint appears at the top of file reports; the file-text 
 is secondary and explicitly labelled as a different identity. Evaluation fingerprints
 remain in expandable details. Central registration returns
 `seen_before: true` when the content existed before that shard's successful update,
-`false` on its first registration, and `null` if registry tracking fails. This
+`false` on its first registration, and `null` if ineligible or registry tracking fails.
+`registry_status: "not_eligible"` distinguishes skipped snapshots from failures. This
 observation is made for the scan, not refreshed when reopening an old report.
 Other agent files and MCP snapshots are labeled separately rather than counted as
 skills. File links open `/report?file=<path>`, a separate browser-tab report view with
@@ -289,13 +291,22 @@ separately; registry breakdown and counting details are expandable. The findings
 count is not duplicated. Counters refresh together after scans and every minute,
 with independent unavailable states for activity and registry storage failures.
 
-Fingerprint tracking and high-risk original retention are automatic for all scans,
+Fingerprint tracking is automatic only for snapshots with HIGH or CRITICAL findings;
+new finding digests include only HIGH/CRITICAL findings. Clean, LOW-only and MEDIUM-only
+snapshots retain report-local identities but are not centrally registered.
+At startup, local and Azure registries remove historical non-high/critical snapshot
+reports, content digests and associated lookup links. Legacy snapshot digests without
+severity metadata are removed too. Historical finding/evaluation digests and counters
+are preserved, so those counters may include older lower-severity findings.
+Cleanup uses the same atomic local writes or Azure ETag retries as registration;
+failure blocks startup rather than claiming cleanup succeeded.
+High-risk original retention is automatic for all scans,
 including private-token repositories. The UI shows a policy notice, not opt-in
 checkboxes. Legacy boolean `archive_consent` and `uniqueness_consent` request fields
 are accepted for compatibility but no longer disable retention, even when false;
 invalid values remain rejected. The registry retains digests and sanitized assessment
 summaries indefinitely. **Public data includes self-declared frontmatter names and
-redacted finding excerpts from all scans, including uploads and private repositories.**
+redacted finding excerpts from qualifying snapshots, including uploads and private repositories.**
 Source paths, repository URLs and full originals are not published as separate
 metadata. Excerpts or names can themselves contain private identifiers or URLs.
 Detected secrets are masked, not a guarantee of complete de-identification.
@@ -305,7 +316,9 @@ are not backfilled.
 
 **Central search:** `/fingerprints?hash=<content-id>` and
 `GET /api/fingerprints/<content-id>` provide public exact lookup, including fingerprints
-registered by private-token scans. Paste the 64-hex **content fingerprint** from
+registered by private-token scans. Lookup retrieves stored assessment metadata and
+bounded redacted excerpts only, never full original files or repository contents,
+and does not perform a new scan. Paste the 64-hex **content fingerprint** from
 Snapshot review. Newly registered scans also index **inspected-text SHA256** hashes,
 resolving to the containing snapshot assessment(s). This is not a file-only verdict.
 Several snapshots can contain matching file text; search lists them instead of
@@ -503,8 +516,9 @@ Real exposures require revocation/rotation and access-log review.
 
 The scanner page displays an automatic retention notice **before submission**.
 All scans, including private repositories, retain files with HIGH or CRITICAL
-findings privately for 30 days; clean originals are not retained. Fingerprints are
-registered indefinitely and aggregate counters are updated automatically.
+findings privately for 30 days; clean originals are not retained. Only HIGH/CRITICAL
+snapshot fingerprints are registered indefinitely; aggregate activity counters still
+include every scan.
 Removing the checkboxes is not a claim of valid legal consent. Operators must
 establish a lawful basis, appropriate privacy disclosures and deletion procedures
 before production use, especially for private repositories and credential-bearing files.

@@ -37,7 +37,7 @@
       const response = await fetch(`/api/fingerprints/${hash}`, { signal: controller.signal, cache: "no-store" });
       if (controller.signal.aborted) return;
       if (response.status === 404) {
-        status.textContent = "No matching snapshot or indexed file-text hash found. Older scans need a rescan to index file-text hashes. This is not evidence that the content is safe.";
+        status.textContent = "No matching snapshot or indexed file-text hash found. Only HIGH/CRITICAL snapshots are registered. Older scans need a rescan to index file-text hashes. This is not evidence that the content is safe.";
         return;
       }
       if (response.status === 429) throw new Error("Fingerprint lookup limit reached. Wait a minute before searching again.");

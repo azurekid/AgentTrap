@@ -271,7 +271,8 @@ function renderSnapshotReview() {
     const name = node("span", "snapshot-name", `${kind}: ${artifact.name || artifact.root}`);
     if (artifact.name) name.append(node("span", "meta", ` | ${artifact.root} | self-declared name`));
     heading.append(name, node("span", critical || high ? "warning" : "meta", `${critical} CRITICAL / ${high} HIGH`),
-      node("span", "meta", artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
+      node("span", "meta", artifact.registry_status === "not_eligible" ? "Not centrally stored"
+        : artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
     if (files.length === 1 && !report.view_scope) {
       const link = node("a", "", "Open file report");
       link.href = `/report?file=${encodeURIComponent(files[0].path)}`;
@@ -285,7 +286,8 @@ function renderSnapshotReview() {
     card.append(node("p", artifact.seen_before === true ? "warning" : "meta",
       artifact.seen_before === true ? "Seen before: this exact content fingerprint already exists in the central registry."
         : artifact.seen_before === false ? "First recorded: this content fingerprint was new when this scan was registered."
-          : "Prior sightings unavailable for this report."));
+          : artifact.registry_status === "not_eligible" ? "Not centrally stored: only snapshots with HIGH or CRITICAL findings are registered. The fingerprint remains available in this scan report."
+            : "Prior sightings unavailable for this report."));
     const fingerprints = node("details", "snapshot-identities");
     fingerprints.append(node("summary", "", "Evaluation fingerprint"));
     for (const [label, value] of [["Evaluation fingerprint (SHA256)", artifact.evaluation_id]]) {

@@ -253,7 +253,12 @@ az storage blob download --account-name <storage> -c skillvenom-investigations -
 
 - `https://<app>/healthz` returns `{"status":"ok"}`; `/` shows the scanner, and
   `/coverage`, `/samples` and `/sources` load.
-- Upload `tests/benign/AGENTS.md`: no high-risk findings, no archive record.
+- Upload `tests/benign/AGENTS.md`: no high-risk findings, no archive record or central fingerprint registration.
+- Startup cleans historical non-high/critical snapshot reports and lookup links in
+  `uniqueness-v1/`, including legacy digests without severity metadata. Historical
+  finding/evaluation digests and counters remain unchanged. Back up storage before
+  rollout if required by your operational policy. Cleanup failures block startup.
+  New registration accepts only HIGH/CRITICAL snapshots and finding digests.
 - Run `python tools/fixtures.py /tmp/skillvenom-fixtures` and upload
   `/tmp/skillvenom-fixtures/tests/repo/.codex/config.toml`: `CODEX-FULL-ACCESS` and a
   private record under `investigations/`. Retention and fingerprint registration
