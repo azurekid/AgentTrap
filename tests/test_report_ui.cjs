@@ -168,7 +168,7 @@ test("clean snapshots remain hidden", () => {
   assert.equal(elements["snapshot-cards"].children.length, 0);
 });
 
-test("snapshot rows label occurrence counts for all four severities", () => {
+test("snapshot rows show only the highest applicable severity label", () => {
   const { elements, run } = setup({
     artifacts: [artifact], files: [{ ...file, findings: [
       { severity: "CRITICAL" }, { severity: "HIGH" }, { severity: "HIGH" }, { severity: "MEDIUM" },
@@ -177,8 +177,14 @@ test("snapshot rows label occurrence counts for all four severities", () => {
   run("renderSnapshotReview()");
   const labels = descendants(elements["snapshot-cards"].firstChild.firstChild)
     .filter((item) => item.className?.startsWith("badge "));
-  assert.deepEqual(labels.map((item) => item.textContent), ["1 CRITICAL", "2 HIGH", "1 MEDIUM", "0 LOW"]);
-  assert.deepEqual(labels.map((item) => item.className), ["badge critical", "badge high", "badge medium", "badge low"]);
+  assert.deepEqual(labels.map((item) => item.textContent), ["CRITICAL"]);
+  assert.deepEqual(labels.map((item) => item.className), ["badge critical"]);
+  for (const severity of ["HIGH", "MEDIUM", "LOW"]) {
+    run(`report.files[0].findings = [{ severity: "${severity}" }]; renderSnapshotReview()`);
+    const badges = descendants(elements["snapshot-cards"].firstChild.firstChild)
+      .filter((item) => item.className?.startsWith("badge "));
+    assert.deepEqual(badges.map((item) => item.textContent), [severity]);
+  }
 });
 
 test("file reports hide snapshot review even with affected snapshots", () => {

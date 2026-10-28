@@ -299,7 +299,7 @@ visible. Scanned-file totals, coverage and raw JSON exports still include all
 inspected files. Only snapshots with HIGH/CRITICAL findings are centrally registered.
 Compact expandable snapshot rows put
 CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
-per-snapshot CRITICAL, HIGH, MEDIUM and LOW count labels, completeness notes
+one label for the highest detected severity (CRITICAL, HIGH, MEDIUM or LOW), completeness notes
 and an always-visible, linked, copyable content fingerprint on each collapsed row.
 The same snapshot fingerprint appears at the top of file reports; the file-text hash
 is secondary and explicitly labelled as a different identity. Evaluation fingerprints

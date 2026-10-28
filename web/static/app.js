@@ -280,7 +280,10 @@ function renderSnapshotReview() {
     if (artifact.name) name.append(node("span", "meta", ` | ${artifact.root} | self-declared name`));
     const severities = node("span", "snapshot-severities");
     for (const [severity, count] of [["CRITICAL", critical], ["HIGH", high], ["MEDIUM", medium], ["LOW", low]]) {
-      severities.append(node("span", `badge ${severity.toLowerCase()}`, `${count} ${severity}`));
+      if (count) {
+        severities.append(node("span", `badge ${severity.toLowerCase()}`, severity));
+        break;
+      }
     }
     heading.append(name, severities, node("span", "meta", artifact.registry_status === "not_eligible" ? "Not centrally stored"
         : artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
