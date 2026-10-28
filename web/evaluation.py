@@ -104,6 +104,37 @@ def methodology() -> dict:
     }
 
 
+def inspection_checks(files: list[dict]) -> list[dict]:
+    signatures = [file["signature"] for file in files if file.get("signature")]
+    results = []
+    for check in methodology()["checks"]:
+        key = check["id"]
+        state, detail = "not_supported", "This inspection does not perform this check."
+        if key in ("static", "secrets", "decoding"):
+            state = "performed" if files else "not_applicable"
+            detail = "Inspected submitted files." if files else "No files were inspected."
+            if key == "decoding" and any(file.get("decoding", {}).get("status") == "incomplete" for file in files):
+                state, detail = "incomplete", "Encoded-text inspection ran but coverage limits were reached."
+        elif key == "mcp":
+            mcp = [file["mcp"] for file in files if file.get("mcp", {}).get("status") in ("complete", "incomplete")]
+            state = "incomplete" if any(item["status"] == "incomplete" for item in mcp) else "performed" if mcp else "not_applicable"
+            detail = "Saved MCP tool definitions inspected; no running server contacted." if mcp else "No saved MCP tool definitions detected."
+        elif key in ("publisher", "signatures"):
+            present = [item for item in signatures if item["status"] != "unsigned"]
+            if not present:
+                state, detail = "not_applicable", "No supported skill.oms.sig bundle is available for a skill package."
+            else:
+                performed = sum(bool(item.get("performed")) for item in present)
+                state = "blocked" if not performed else "incomplete"
+                if performed == len(present) and all(item["status"] != "not_verifiable" for item in present):
+                    state = "performed"
+                outcomes = ", ".join(sorted({item["status"].replace("_", " ") for item in present}))
+                detail = f"Bundle outcomes: {outcomes}. " + " ".join(dict.fromkeys(item["message"] for item in present))
+        results.append({**check, "performed": state in ("performed", "incomplete"),
+                        "status": state, "detail": detail})
+    return results
+
+
 def evaluate(files: list[dict], documents: list[dict[str, str]], status: str) -> tuple[dict, dict]:
     grouped: dict[str, list[dict]] = {c["id"]: [] for c in CATEGORIES}
     rule_severities: dict[str, str] = {}
@@ -129,14 +160,7 @@ def evaluate(files: list[dict], documents: list[dict[str, str]], status: str) ->
         "highest_severity": max(rule_severities.values(), key=SEV.get, default=None),
         "decision": "incomplete" if status != "complete" else ("review_required" if rule_severities else "no_signals"),
         "categories": categories,
-        "checks": [
-            {**check, "performed": (
-                any(f.get("mcp", {}).get("status") in ("complete", "incomplete") for f in files)
-                if check["id"] == "mcp" else
-                any(f.get("signature", {}).get("performed", False) for f in files)
-                if check["id"] in ("signatures", "publisher") else check["performed"] and bool(files)
-            )} for check in methodology()["checks"]
-        ],
+        "checks": inspection_checks(files),
         "methodology_url": "/api/methodology",
     }
     manifest = []

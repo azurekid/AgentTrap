@@ -96,3 +96,44 @@ def test_methodology_exposes_all_rule_assignments():
 def test_empty_scan_does_not_claim_checks_were_performed():
     evaluation, _ = evaluate([], [], "no_targets")
     assert not any(check["performed"] for check in evaluation["checks"])
+
+
+@pytest.mark.parametrize("signature_status,performed,expected", [
+    ("verified", True, "performed"), ("invalid", True, "performed"),
+    ("untrusted", False, "blocked"), ("not_verifiable", False, "blocked"),
+    ("not_verifiable", True, "incomplete"), ("unsupported", False, "blocked"),
+    ("unsigned", False, "not_applicable"),
+])
+def test_signature_coverage_reports_execution_not_trust_verdict(signature_status, performed, expected):
+    files = [{"path": "SKILL.md", "findings": [], "signature": {
+        "status": signature_status, "performed": performed, "message": "Explicit signature outcome",
+    }}]
+    checks = {check["id"]: check for check in evaluate(files, [], "complete")[0]["checks"]}
+    for key in ("signatures", "publisher"):
+        assert checks[key]["status"] == expected
+        assert checks[key]["performed"] is performed
+    for key in ("reputation", "execution", "dependencies"):
+        assert checks[key]["status"] == "not_supported"
+    assert checks["mcp"]["status"] == "not_applicable"
+
+
+def test_mixed_signature_and_partial_mcp_coverage_are_not_reported_as_unchecked():
+    files = [
+        {"path": "one/SKILL.md", "findings": [], "signature": {
+            "status": "verified", "performed": True, "message": "Verified bytes"}},
+        {"path": "two/SKILL.md", "findings": [], "signature": {
+            "status": "untrusted", "performed": False, "message": "No configured certificate"}},
+        {"path": "mcp.json", "findings": [], "mcp": {"status": "incomplete"}},
+    ]
+    checks = {check["id"]: check for check in evaluate(files, [], "partial")[0]["checks"]}
+    for key in ("signatures", "publisher", "mcp"):
+        assert checks[key]["status"] == "incomplete"
+        assert checks[key]["performed"] is True
+    assert "No configured certificate" in checks["signatures"]["detail"]
+
+
+def test_complete_mcp_definitions_are_reported_as_checked():
+    checks = evaluate([{"path": "mcp.json", "findings": [], "mcp": {"status": "complete"}}], [], "complete")[0]["checks"]
+    mcp = next(check for check in checks if check["id"] == "mcp")
+    assert mcp["status"] == "performed"
+    assert mcp["performed"] is True

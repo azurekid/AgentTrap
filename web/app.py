@@ -331,7 +331,7 @@ def samples_page():
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "fingerprints.js", "style.css"):
+    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "checks.js", "fingerprints.js", "style.css"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 

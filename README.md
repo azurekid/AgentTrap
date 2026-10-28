@@ -316,9 +316,18 @@ explicitly. File views do not create server-side report storage or a new scan.
 Snapshots without signals still receive fingerprints, not an approval badge.
 Full reports remain in the current browser tab, not a personal dashboard.
 The central registry stores only a sanitized assessment for each content fingerprint.
-The **Inspection summary** uses a signal-risk meter, category occurrence bars and
-performed/not-checked coverage groups. Review guidance is expandable per affected
-category; scoring methodology and technical provenance remain in details. Bars
+The **Inspection summary** keeps the signal-risk overview visible, with affected
+category bars, review guidance, coverage and technical provenance collapsed into
+details. Categories without signals are not listed. Coverage distinguishes checks
+performed, partially checked, verification blocked, not applicable and outside
+inspection scope, with reasons. A present signature without configured trust
+certificates is **blocked**, not an unimplemented feature or a successful verification.
+Performed means a check ran, not that its outcome passed. Older boolean-only reports
+use available signature/MCP evidence; missing historical outcomes are labelled
+not recorded rather than guessed. Rescanning refreshes persisted coverage.
+Detailed findings appear only on individual file reports, reached through snapshot
+file links; the full report no longer repeats a bottom file-findings listing.
+Exports and false-positive reporting still include the full scan. Bars
 compare signal occurrences, not probabilities. Partial scans are not scored.
 
 Every report now includes `artifacts` and an `inventory`. A skill snapshot is the

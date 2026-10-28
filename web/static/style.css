@@ -694,7 +694,9 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .coverage-check-group { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
 .coverage-check-group h3 { font-size: 14px; }
 .coverage-check-list { list-style: none; padding: 0; margin-bottom: 0; font-size: 12px; color: var(--muted); }
-.coverage-check-list li { display: flex; gap: 8px; margin: 8px 0; }
+.coverage-check-list li { display: block; margin: 12px 0; overflow-wrap: anywhere; }
+.coverage-check-list li::before { margin-right: 8px; }
+.coverage-check-list li p { margin: 4px 0 0 18px; }
 .check-performed::before { content: "+"; color: var(--teal); font: 600 14px var(--mono); }
 .check-not-performed::before { content: "-"; font: 600 14px var(--mono); }
 @media (max-width: 520px) {

@@ -403,6 +403,7 @@ function renderEvaluation() {
     const option = node("option", "", category.name);
     option.value = category.id;
     $("finding-category").append(option);
+    if (!category.findings) continue;
     const card = node("div", `evaluation-category-row${category.findings ? " has-signals" : ""}`);
     const title = node("span", "", category.name);
     const count = node("span", category.findings ? "warning" : "meta", `${category.findings} signals`);
@@ -419,17 +420,7 @@ function renderEvaluation() {
     }
     $("evaluation-categories").append(card);
   }
-  $("evaluation-checks").replaceChildren();
-  for (const [performed, title] of [[true, "Checks performed"], [false, "Not checked"]]) {
-    const group = node("div", "coverage-check-group");
-    group.append(node("h3", "", title));
-    const list = node("ul", "coverage-check-list");
-    for (const check of evaluation.checks.filter((item) => item.performed === performed)) {
-      list.append(node("li", performed ? "check-performed" : "check-not-performed", check.name));
-    }
-    group.append(list);
-    $("evaluation-checks").append(group);
-  }
+  AgentLensChecks.render($("evaluation-checks"), evaluation.checks, report.files, report.artifacts || []);
   const provenance = report.provenance;
   $("evaluation-provenance").replaceChildren();
   if (provenance) {
@@ -538,6 +529,8 @@ function renderResults() {
 }
 function renderFindings() {
   $("findings").replaceChildren();
+  $("file-findings").hidden = !report.view_scope;
+  if (!report.view_scope) return;
   const filter = $("severity").value;
   const category = $("finding-category").value;
   const query = $("finding-search").value.trim().toLowerCase();
@@ -562,9 +555,6 @@ function renderFindings() {
       location.assign(`/report?file=${encodeURIComponent(file.path)}`);
     });
     details.append(summary);
-    const dashboard = node("a", "btn btn-ghost btn-small", "Open file report");
-    dashboard.href = `/report?file=${encodeURIComponent(file.path)}`;
-    details.append(dashboard);
     for (const finding of findings) {
       const article = node("article", `finding sev-${finding.severity.toLowerCase()}`);
       const heading = node("div", "finding-heading");

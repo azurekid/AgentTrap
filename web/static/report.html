@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/sarif.js" defer></script>
   <script src="/assets/radar.js" defer></script>
+  <script src="/assets/checks.js" defer></script>
   <script src="/assets/app.js" defer></script>
 </head>
 <body>
@@ -80,9 +81,15 @@
           <a class="btn btn-ghost btn-small" href="/coverage#methodology">How evaluation works</a>
         </header>
         <div id="evaluation-summary" class="card"></div>
-        <h3 class="evaluation-subheading">Where signals were detected</h3>
-        <div id="evaluation-categories" class="evaluation-categories"></div>
-        <div id="evaluation-checks" class="coverage-checks"></div>
+        <details class="card evaluation-evidence">
+          <summary>Signal categories &amp; review guidance</summary>
+          <div id="evaluation-categories" class="evaluation-categories"></div>
+        </details>
+        <details class="card evaluation-evidence">
+          <summary>Inspection coverage &amp; verification outcomes</summary>
+          <p class="meta">Performed means a check ran, not that it passed. Blocked verification, absent inputs and unsupported checks are listed separately.</p>
+          <div id="evaluation-checks" class="coverage-checks"></div>
+        </details>
         <details class="card evaluation-evidence">
           <summary>Scope, checks and content fingerprints</summary>
           <p>These fingerprints identify the inspected text and detector build. They are not signed attestations or proof that a skill is safe.</p>
@@ -111,13 +118,15 @@
         <p class="atlas-note">Mapping is AgentLens analyst judgement against <span id="atlas-version">MITRE ATLAS</span>. Mitigations are ATLAS mitigations linked to each technique; where ATLAS lists none, AgentLens guidance is shown instead.</p>
       </section>
 
+      <section id="file-findings" hidden aria-labelledby="file-findings-title">
       <div class="findings-toolbar">
-        <h3>File findings <span id="finding-count"></span></h3>
+        <h3 id="file-findings-title">Findings <span id="finding-count"></span></h3>
         <label>Search <input id="finding-search" type="search" maxlength="200" placeholder="File, rule or finding text"></label>
         <label>Category <select id="finding-category"><option value="ALL">All categories</option></select></label>
         <label>Severity <select id="severity"><option value="ALL">All severities</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select></label>
       </div>
       <div id="findings"></div>
+      </section>
       <p class="disclaimer" id="disclaimer"></p>
     </section>
   </main>

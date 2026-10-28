@@ -159,6 +159,11 @@ def test_static_page_and_policy(client):
     assert client.get("/assets/app.js").status_code == 200
     assert client.get("/assets/fx.js").status_code == 200
     assert client.get("/assets/research.js").status_code == 200
+    assert client.get("/assets/checks.js").status_code == 200
+    report_page = client.get("/report").text
+    assert 'src="/assets/checks.js"' in report_page
+    assert "Where signals were detected" not in report_page
+    assert '<section id="file-findings" hidden' in report_page
     sarif_script = client.get("/assets/sarif.js")
     assert sarif_script.status_code == 200 and "javascript" in sarif_script.headers["content-type"]
     assert 'src="/assets/sarif.js"' in client.get("/report").text
@@ -1092,6 +1097,10 @@ def test_signature_use_cases_through_scan_and_public_lookup(client, monkeypatch,
     assert report["evaluation"]["score"] == 20
     assert any(check["id"] == "signatures" and check["performed"] == artifact["signature"]["performed"]
                for check in report["evaluation"]["checks"])
+    coverage = {check["id"]: check for check in report["evaluation"]["checks"]}
+    expected_coverage = {"unsigned": "not_applicable", "not_verifiable": "incomplete"}
+    assert coverage["signatures"]["status"] == expected_coverage.get(artifact["signature"]["status"], "performed")
+    assert coverage["mcp"]["status"] == "not_applicable"
     assert not next(check for check in report["evaluation"]["checks"] if check["id"] == "reputation")["performed"]
     lookup = client.get("/api/fingerprints/" + artifact["content_id"])
     assert lookup.status_code == 200

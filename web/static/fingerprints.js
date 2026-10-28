@@ -173,18 +173,10 @@
           if (report.evidence.omitted) findings.append(element("p", `${report.evidence.omitted} additional finding excerpts omitted by the storage limit. Counts above include all signals.`, "meta"));
         }
         const checks = element("div", "", "coverage-checks");
-        for (const performed of [true, false]) {
-          const group = element("div", "", "coverage-check-group");
-          group.append(element("h3", performed ? "Checks performed" : "Not checked"));
-          const list = element("ul", "", "coverage-check-list");
-          for (const check of report.assessment.checks.filter((check) => check.performed === performed)) {
-            list.append(element("li", check.name, performed ? "check-performed" : "check-not-performed"));
-          }
-          group.append(list);
-          checks.append(group);
-        }
+        AgentLensChecks.render(checks, report.assessment.checks, [], report.signature ? [{ signature: report.signature }] : []);
         const coverage = element("details", "", "evaluation-evidence lookup-support");
-        coverage.append(element("summary", "Inspection coverage: what was and was not checked"), checks);
+        coverage.append(element("summary", "Inspection coverage & verification outcomes"),
+          element("p", "Performed means a check ran, not that it passed. Missing inputs and blocked verification are not successful checks.", "meta"), checks);
         result.append(categoryDetails, coverage);
         const details = element("details", "", "evaluation-evidence lookup-support");
         details.append(element("summary", "Assessment scope and technical identities"),

@@ -9,6 +9,7 @@ class Element {
     this.tag = tag;
     this.children = [];
     this.attributes = {};
+    this.dataset = {};
     this.events = {};
     this.value = "";
     this.open = false;
@@ -28,10 +29,12 @@ function setup(report) {
   const context = vm.createContext({
     document: { getElementById: (id) => elements[id] || null, createElement: (tag) => new Element(tag) },
   });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/checks.js"), "utf8"), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/app.js"), "utf8"), context);
   for (const id of ["evaluation", "finding-category", "evaluation-summary", "evaluation-categories",
     "evaluation-checks", "evaluation-provenance", "snapshot-review", "snapshot-cards", "fingerprint-status",
-    "snapshot-search", "snapshot-filter", "snapshot-review-summary", "signature-review", "signature-cards"]) elements[id] = new Element();
+    "snapshot-search", "snapshot-filter", "snapshot-review-summary", "signature-review", "signature-cards",
+    "findings", "file-findings", "severity", "finding-search", "finding-count"]) elements[id] = new Element();
   context.inputReport = report;
   vm.runInContext("report = inputReport;", context);
   return { elements, run: (code) => vm.runInContext(code, context) };
@@ -194,6 +197,7 @@ test("inspection summary uses exact score and category counts, with collapsed gu
   assert.equal(rows.find((item) => item.tag === "meter").value, 3);
   assert.equal(rows.find((item) => item.tag === "details").open, false);
   assert.equal(elements["evaluation-checks"].children.length, 2);
+  assert.equal(elements["evaluation-categories"].children.length, 1);
   evaluation.score = null;
   run("report.status = 'partial'; renderEvaluation()");
   assert.equal(descendants(elements["evaluation-summary"]).filter((item) => item.tag === "meter").length, 0);
@@ -239,6 +243,7 @@ async function lookupResponse(data, status = 200) {
     },
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/radar.js"), "utf8"), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/checks.js"), "utf8"), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/fingerprints.js"), "utf8"), context);
   elements["fingerprint-hash"].value = "A".repeat(64);
   elements["fingerprint-form"].events.submit({ preventDefault() {} });
@@ -272,14 +277,15 @@ test("public report renders visual metrics and untrusted excerpts only as code t
     assessment: {
       score: 20, version: "signal-risk-v1",
       categories: [{ name: "Instruction control", findings: 3, highest_severity: "HIGH", guidance: "Review overrides." }],
-      checks: [{ name: "Static analysis", performed: true }, { name: "Runtime execution", performed: false }],
+      checks: [{ name: "Static analysis", performed: true }, { id: "execution", name: "Runtime execution", performed: false },
+        { id: "signatures", name: "OMS signature verification", performed: false }],
     },
     evidence: { excerpts: [{ rule: "PROMPT-INJECTION", severity: "HIGH", snippet, line: 4, source: "raw" }], omitted: 2 },
     atlas: { source: "Recorded ATLAS mapping", technique_count: 1,
       tactics: [{ key: "initial-access", name: "Initial Access", findings: 3 },
         { key: "execution", name: "Execution", findings: 0 },
         { key: "impact", name: "Impact", findings: 1 }] },
-    signature: { status: "verified", message: "Exact bytes match", identity_verified: true,
+    signature: { status: "verified", performed: true, message: "Exact bytes match", identity_verified: true,
       publisher: "Fixture Publisher", scope: "Submitted package", limitations: "Reputation not assessed" },
   };
   const { elements } = await lookupResponse({ content_id: "a".repeat(64), kind: "skill_snapshot", report });
@@ -303,6 +309,13 @@ test("public report renders visual metrics and untrusted excerpts only as code t
   assert.equal(nodes.filter((item) => ["img", "script"].includes(item.tag)).length, 0);
   assert.ok(nodes.some((item) => item.textContent === report.name));
   assert.ok(nodes.some((item) => typeof item.textContent === "string" && item.textContent.includes("2 additional finding excerpts omitted")));
+  const performedGroup = nodes.find((item) => item.className === "coverage-check-group"
+    && item.children[0].textContent === "Checks performed");
+  assert.ok(descendants(performedGroup).some((item) => item.textContent === "OMS signature verification"));
+  report.signature = { ...report.signature, status: "untrusted", performed: false, identity_verified: false,
+    message: "No operator certificates configured" };
+  const blocked = await lookupResponse({ content_id: "a".repeat(64), kind: "skill_snapshot", report });
+  assert.ok(descendants(blocked.elements["lookup-result"]).some((item) => item.textContent === "Verification blocked"));
   delete report.evidence;
   delete report.atlas;
   const legacy = await lookupResponse({ content_id: "a".repeat(64), kind: "skill_snapshot", report });
@@ -315,6 +328,40 @@ test("archive-success notice is not rendered but storage errors remain visible",
   assert.equal(script.includes("high-risk file(s) retained in the private investigation archive"), false);
   assert.ok(script.includes('report.archive.status === "failed"'));
   assert.ok(script.includes('report.archive.message'));
+});
+
+test("full report omits duplicate file findings; file report retains evidence without a self link", () => {
+  const { elements, run } = setup({ files: [{ ...file, findings: [
+    { severity: "HIGH", rule: "PROMPT-INJECTION", line: 1, message: "Override", snippet: "Ignore previous instructions" },
+  ] }], summary: { findings: 1 } });
+  run("renderFindings()");
+  assert.equal(elements["file-findings"].hidden, true);
+  assert.equal(elements.findings.children.length, 0);
+  elements.severity.value = "ALL";
+  elements["finding-category"].value = "ALL";
+  run("report.view_scope = {kind: 'file'}; renderFindings()");
+  assert.equal(elements["file-findings"].hidden, false);
+  const nodes = descendants(elements.findings);
+  assert.ok(nodes.some((item) => item.tag === "pre" && item.textContent === "Ignore previous instructions"));
+  assert.ok(!nodes.some((item) => item.textContent === "Open file report"));
+});
+
+test("report coverage separates blocked verification, absent MCP and unsupported execution", () => {
+  const { elements, run } = setup({
+    artifacts: [{ ...artifact, signature: { status: "untrusted", performed: false, message: "No operator certificates configured" } }],
+    files: [{ ...file, mcp: { status: "not_applicable" } }], status: "complete",
+    evaluation: { score: 20, categories: [], checks: [
+      { id: "signatures", name: "OMS signature verification", performed: false },
+      { id: "mcp", name: "MCP definitions", performed: false },
+      { id: "execution", name: "Runtime execution", performed: false },
+    ] },
+  });
+  run("renderEvaluation()");
+  const nodes = descendants(elements["evaluation-checks"]);
+  const headings = nodes.filter((item) => item.tag === "h3").map((item) => item.textContent);
+  assert.deepEqual(headings, ["Verification blocked", "Not applicable", "Outside inspection scope"]);
+  assert.ok(nodes.some((item) => item.textContent === "No operator certificates configured"));
+  assert.ok(!nodes.some((item) => item.textContent === "Not checked"));
 });
 
 test("shared spiderweb draws all axes and preserves exact count labels, including empty results", () => {
