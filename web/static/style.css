@@ -589,6 +589,13 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 
 .results-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .evaluation { margin-top: 32px; }
+.snapshot-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 14px; margin-top: 14px; }
+.snapshot-card { min-width: 0; overflow-wrap: anywhere; }
+.snapshot-card.needs-review { border-color: #b65757; }
+.snapshot-card h3 { font-size: 16px; }
+.snapshot-fingerprint { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 14px 0; }
+.snapshot-fingerprint label { grid-column: 1 / -1; }
+.snapshot-fingerprint input { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); font: 11px var(--mono); }
 .evaluation-categories { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; margin: 14px 0; }
 .evaluation-category h3 { font-size: 16px; }
 .evaluation-evidence { margin-top: 14px; overflow-wrap: anywhere; }

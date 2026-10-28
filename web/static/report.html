@@ -51,6 +51,15 @@
         <div id="metrics" class="card metrics"></div>
         <div id="report-notes" class="card report-notes"></div>
       </div>
+      <section id="snapshot-review" class="evaluation" aria-labelledby="snapshot-review-title" hidden>
+        <header class="atlas-head">
+          <div><p class="label">Content identity</p><h2 id="snapshot-review-title">Snapshot review</h2></div>
+        </header>
+        <p id="snapshot-review-summary"></p>
+        <p class="meta">HIGH and CRITICAL signals need manual review, not an automatic malware verdict. Every snapshot has a fingerprint, including snapshots with no high-risk signals. Fingerprints identify content, not trust or ownership.</p>
+        <p id="fingerprint-status" class="meta" role="status" hidden></p>
+        <div id="snapshot-cards" class="snapshot-cards"></div>
+      </section>
       <section id="evaluation" class="evaluation" aria-labelledby="evaluation-title" hidden>
         <header class="atlas-head">
           <div><p class="label">Evidence, not endorsement</p><h2 id="evaluation-title">Skill evaluation</h2></div>

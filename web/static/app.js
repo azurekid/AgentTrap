@@ -273,6 +273,80 @@ function renderAtlas(atlas) {
   }
 }
 
+function renderSnapshotReview() {
+  const artifacts = report.artifacts || [];
+  $("snapshot-review").hidden = !artifacts.length;
+  $("snapshot-cards").replaceChildren();
+  $("fingerprint-status").hidden = true;
+  const snapshots = artifacts.map((artifact) => {
+    const paths = new Set(artifact.files.map((file) => artifact.kind === "skill_snapshot"
+      ? (artifact.root === "." ? file.path : `${artifact.root}/${file.path}`) : artifact.root));
+    const files = report.files.filter((file) => paths.has(file.path));
+    const hits = files.flatMap((file) => file.findings);
+    return { artifact, files, critical: hits.filter((hit) => hit.severity === "CRITICAL").length,
+      high: hits.filter((hit) => hit.severity === "HIGH").length };
+  }).sort((a, b) => b.critical - a.critical || b.high - a.high || a.artifact.root.localeCompare(b.artifact.root));
+  const affected = snapshots.filter((item) => item.critical || item.high).length;
+  $("snapshot-review-summary").textContent = `${affected} of ${snapshots.length} inspected snapshots have HIGH or CRITICAL signals. Counts are finding occurrences in this report, not unique skills across the platform.${report.status !== "complete" ? " This inspection is incomplete; absence of signals cannot establish a clean result." : ""}`;
+  for (const { artifact, files, critical, high } of snapshots) {
+    const card = node("article", `card snapshot-card${critical || high ? " needs-review" : ""}`);
+    const kind = { skill_snapshot: "Skill snapshot", mcp_snapshot: "MCP definition snapshot", agent_file: "Agent file" }[artifact.kind] || "Snapshot";
+    card.append(node("h3", "", `${kind}: ${artifact.root}`),
+      node("p", critical || high ? "warning" : "meta", critical || high
+        ? `Review required: ${critical} CRITICAL, ${high} HIGH signal(s)`
+        : "No HIGH or CRITICAL signals in inspected content. This is not approval."),
+      node("p", "meta", artifact.scope));
+    for (const [label, value] of [["Content fingerprint (SHA256)", artifact.content_id], ["Evaluation fingerprint (SHA256)", artifact.evaluation_id]]) {
+      const field = node("div", "snapshot-fingerprint");
+      const input = node("input");
+      input.type = "text";
+      input.readOnly = true;
+      input.value = value;
+      input.id = `snapshot-${$("snapshot-cards").childElementCount}-${label.startsWith("Content") ? "content" : "evaluation"}`;
+      input.setAttribute("aria-label", `${label}: ${artifact.root}`);
+      const copy = node("button", "btn btn-ghost btn-small", "Copy");
+      copy.type = "button";
+      copy.setAttribute("aria-label", `Copy ${label}: ${artifact.root}`);
+      copy.addEventListener("click", async () => {
+        const status = $("fingerprint-status");
+        status.hidden = false;
+        try {
+          await navigator.clipboard.writeText(value);
+          status.textContent = `${label} copied.`;
+        } catch {
+          input.focus();
+          input.select();
+          status.textContent = "Clipboard unavailable. The full fingerprint is selected; copy it manually.";
+        }
+      });
+      const caption = node("label", "meta", label);
+      caption.htmlFor = input.id;
+      field.append(caption, input, copy);
+      card.append(field);
+    }
+    for (const note of artifact.coverage_notes) card.append(node("p", "warning", note));
+    const target = files.find((file) => file.findings.some((hit) => hit.severity === "CRITICAL" || hit.severity === "HIGH"))
+      || files.find((file) => file.findings.length);
+    if (target) {
+      const view = node("button", "btn btn-ghost btn-small", "View file findings");
+      view.type = "button";
+      view.addEventListener("click", () => {
+        $("severity").value = "ALL";
+        $("finding-category").value = "ALL";
+        $("finding-search").value = "";
+        renderFindings();
+        const result = Array.from($("findings").querySelectorAll(".file-result")).find((element) => element.dataset.path === target.path);
+        if (result) {
+          result.scrollIntoView({ block: "start" });
+          result.querySelector("summary").focus({ preventScroll: true });
+        }
+      });
+      card.append(view);
+    }
+    $("snapshot-cards").append(card);
+  }
+}
+
 function renderEvaluation() {
   const evaluation = report.evaluation;
   $("evaluation").hidden = !evaluation;
@@ -331,6 +405,7 @@ function renderEvaluation() {
   }
 }
 function renderResults() {
+  renderSnapshotReview();
   const summary = report.summary;
   const incomplete = report.status === "partial" || report.status === "no_targets";
   const risky = summary.severities.CRITICAL || summary.severities.HIGH;
@@ -425,6 +500,7 @@ function renderFindings() {
     visible++;
     visibleFindings += findings.length;
     const details = node("details", "file-result");
+    details.dataset.path = file.path;
     details.open = true;
     const summary = node("summary", "", file.path);
     summary.append(node("span", "", `${findings.length} finding(s)`));

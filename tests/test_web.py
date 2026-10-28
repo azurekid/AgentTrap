@@ -494,6 +494,8 @@ def test_evaluation_report_and_public_methodology(client):
     assert report["archive"]["status"] == "opted_out"
     html = client.get("/report").text
     assert 'id="evaluation"' in html
+    assert 'id="snapshot-review"' in html
+    assert 'id="snapshot-cards"' in html
     assert 'id="finding-search"' in html
     assert 'id="finding-category"' in html
     assert 'id="methodology"' in client.get("/coverage").text

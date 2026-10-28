@@ -204,6 +204,14 @@ sensitive, so review an export before publishing it.
 
 ### Content identities and honest uniqueness counts
 
+The report's **Snapshot review** section puts snapshots with CRITICAL/HIGH signals
+first, with per-snapshot occurrence counts, completeness notes and full, copyable
+content/evaluation fingerprints. Other agent files and MCP snapshots are labeled
+separately rather than counted as skills. "View file findings" opens the relevant
+file evidence after clearing report filters. Snapshots without high-risk signals
+still receive fingerprints, not an approval badge. This is part of the current
+browser-tab report, not an account dashboard or additional saved-report service.
+
 Every report now includes `artifacts` and an `inventory`. A skill snapshot is the
 inspected files under a folder containing `SKILL.md`, not one skill per uploaded
 file. Nested skills are assigned their own files rather than double counted as a
