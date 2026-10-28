@@ -77,7 +77,7 @@ Links to agent files are skipped and reported as a partial scan.
 
 Each finding carries the [MITRE ATLAS](https://atlas.mitre.org/) technique IDs its
 rule maps to, and every report includes an `atlas` summary: findings per tactic
-(the 10 tactics observable in static agent files, in ATLAS matrix order) and each
+(the 11 tactics observable in static agent files, in ATLAS matrix order) and each
 hit technique with its ATLAS mitigations. The results page draws this as a radar
 ("spiderweb") chart with technique and mitigation cards. Where ATLAS lists no
 mitigation for a technique, the card shows clearly labelled **SkillVenom guidance**.

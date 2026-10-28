@@ -17,6 +17,7 @@ from scan_agents_md import DEFAULT_ALLOW, RULE_REFS, RULES, SECRET_RULES, scan_f
 from synthetic_secrets import synthetic_secrets
 from web.app import app
 from web.archive import Archive, ArchiveError
+from web.atlas import TACTIC_ORDER
 from web.statistics import Statistics, StatisticsError
 from web.repository import (
     MAX_FILE, MAX_FILES, ScanInputError, fetch_bytes, fetch_repository, is_target,
@@ -608,6 +609,7 @@ def test_every_detector_maps_to_valid_atlas_technique():
         for pair in atlas["rules"][rule]:
             technique = atlas["techniques"][pair["technique"]]
             assert pair["tactic"] in technique["tactics"]
+            assert pair["tactic"] in TACTIC_ORDER, (rule, pair["tactic"])
             assert technique["mitigations"] or technique.get("guidance")
             assert all(m in atlas["mitigations"] for m in technique["mitigations"])
 
@@ -632,7 +634,7 @@ def test_report_includes_atlas_mapping(client):
     atlas = report["atlas"]
     assert atlas["source"].startswith("MITRE ATLAS")
     assert [t["id"] for t in atlas["tactics"]][:2] == ["AML.TA0004", "AML.TA0005"]
-    assert len(atlas["tactics"]) == 10
+    assert len(atlas["tactics"]) == len(TACTIC_ORDER) == 11
     findings = [f for file in report["files"] for f in file["findings"]]
     assert findings and all(f["atlas"] for f in findings)
     assert "AML.T0051.001" in {t for f in findings for t in f["atlas"]}

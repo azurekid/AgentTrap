@@ -5,7 +5,7 @@ from pathlib import Path
 DATA = json.loads((Path(__file__).resolve().parent / "atlas.json").read_text("utf-8"))
 
 # ATLAS matrix order, limited to tactics observable in static agent files.
-TACTIC_ORDER = ["initial-access", "execution", "persistence", "defense-evasion", "credential-access",
+TACTIC_ORDER = ["initial-access", "execution", "persistence", "privilege-escalation", "defense-evasion", "credential-access",
                 "discovery", "collection", "command-and-control", "exfiltration", "impact"]
 
 
