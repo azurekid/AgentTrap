@@ -169,6 +169,27 @@ test("clean snapshots remain hidden", () => {
   assert.equal(elements["snapshot-cards"].children.length, 0);
 });
 
+test("collapsed snapshots expose file report actions for every affected file", () => {
+  const paths = ["skills/review/SKILL.md", "skills/review/scripts/check.py"];
+  for (const count of [1, 2]) {
+    const { elements, run } = setup({
+      artifacts: [{ ...artifact, kind: "skill_snapshot", root: "skills/review",
+        files: [{ path: "SKILL.md" }, { path: "scripts/check.py" }, { path: "clean.md" }] }],
+      files: [...paths.slice(0, count).map((path) => ({ ...file, path })),
+        { path: "skills/review/clean.md", findings: [] }],
+      status: "complete",
+    });
+    run("renderSnapshotReview()");
+    const card = elements["snapshot-cards"].firstChild;
+    assert.equal(card.open, false);
+    const links = descendants(card.firstChild).filter((item) => item.href?.startsWith("/report?file="));
+    assert.deepEqual(links.map((item) => item.href),
+      paths.slice(0, count).map((path) => `/report?file=${encodeURIComponent(path)}`));
+    assert.ok(links.every((item) => item.textContent.startsWith("Open file report")));
+    assert.equal(descendants(card).filter((item) => item.href?.startsWith("/report?file=")).length, count);
+  }
+});
+
 test("snapshot rows show only the highest applicable severity label", () => {
   const { elements, run } = setup({
     artifacts: [artifact], files: [{ ...file, findings: [

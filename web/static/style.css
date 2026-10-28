@@ -710,6 +710,8 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .snapshot-row { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 12px; }
 .snapshot-name { flex: 1 1 240px; font-weight: 600; color: var(--text); min-width: 0; }
 .snapshot-row a { color: var(--cyan); }
+.snapshot-report-links { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.snapshot-report-links a { white-space: normal; overflow-wrap: anywhere; }
 .snapshot-severities { display: flex; flex-wrap: wrap; gap: 6px; }
 .snapshot-severities .critical { --sev: var(--critical); }
 .snapshot-severities .high { --sev: var(--high); }

@@ -328,6 +328,8 @@ use available signature/MCP evidence; missing historical outcomes are labelled
 not recorded rather than guessed. Rescanning refreshes persisted coverage.
 Detailed findings appear only on individual file reports, reached through snapshot
 file links; the full report no longer repeats a bottom file-findings listing.
+Each affected file has an explicit **Open file report** action on the collapsed
+snapshot row, including snapshots containing multiple affected files.
 The full security findings page omits the separate publisher/signature panel.
 File reports show signature/publisher results for their containing package and
 coverage outcomes recorded by the full inspection, explicitly labelled with that

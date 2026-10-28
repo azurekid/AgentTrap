@@ -284,11 +284,15 @@ function renderSnapshotReview() {
     }
     heading.append(name, severities, node("span", "meta", artifact.registry_status === "not_eligible" ? "Not centrally stored"
         : artifact.seen_before === true ? "Seen before" : artifact.seen_before === false ? "First recorded" : "Sighting unknown"));
-    if (files.length === 1 && !report.view_scope) {
-      const link = node("a", "", "Open file report");
-      link.href = `/report?file=${encodeURIComponent(files[0].path)}`;
-      heading.append(link);
+    const fileLinks = node("span", "snapshot-report-links");
+    for (const file of files) {
+      const link = node("a", "btn btn-ghost btn-small",
+        files.length === 1 ? "Open file report" : `Open file report: ${file.path}`);
+      link.href = `/report?file=${encodeURIComponent(file.path)}`;
+      link.setAttribute("aria-label", `Open file report: ${file.path}`);
+      fileLinks.append(link);
     }
+    heading.append(fileLinks);
     heading.append(contentFingerprint(artifact));
     card.append(heading, node("p", critical || high ? "warning" : "meta", critical || high
         ? `Review required: ${critical} CRITICAL, ${high} HIGH signal(s)`
@@ -334,15 +338,6 @@ function renderSnapshotReview() {
     lookup.href = `/fingerprints?hash=${artifact.content_id}`;
     card.append(lookup);
     for (const note of artifact.coverage_notes) card.append(node("p", "warning", note));
-    const fileList = node("ul", "snapshot-file-links");
-    for (const file of files) {
-      const item = node("li");
-      const link = node("a", "", `${file.path} (${file.findings.length} signals)`);
-      link.href = `/report?file=${encodeURIComponent(file.path)}`;
-      item.append(link);
-      fileList.append(item);
-    }
-    card.append(fileList);
     $("snapshot-cards").append(card);
   }
   if (artifacts.length && !$("snapshot-cards").childElementCount) {
