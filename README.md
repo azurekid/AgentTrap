@@ -300,7 +300,7 @@ inspected files. Only snapshots with HIGH/CRITICAL findings are centrally regist
 Compact expandable snapshot rows put
 CRITICAL/HIGH signals first, with path/fingerprint search and severity/sighting filters,
 one label for the highest detected severity (CRITICAL, HIGH, MEDIUM or LOW), completeness notes
-and an always-visible, linked, copyable content fingerprint on each collapsed row.
+and an always-visible, plain-text, copyable content fingerprint on each collapsed row.
 The same snapshot fingerprint appears at the top of file reports; the file-text hash
 is secondary and explicitly labelled as a different identity. Evaluation fingerprints
 remain in expandable details. Central registration returns
@@ -328,8 +328,10 @@ use available signature/MCP evidence; missing historical outcomes are labelled
 not recorded rather than guessed. Rescanning refreshes persisted coverage.
 Detailed findings appear only on individual file reports, reached through snapshot
 file links; the full report no longer repeats a bottom file-findings listing.
-The security findings page omits the separate publisher/signature panel; verification
-still runs and remains available in coverage, exports and central fingerprint reports.
+The full security findings page omits the separate publisher/signature panel.
+File reports show signature/publisher results for their containing package and
+coverage outcomes recorded by the full inspection, explicitly labelled with that
+scope. Verification also remains available in exports and central fingerprint reports.
 Exports and false-positive reporting still include the full scan. Bars
 compare signal occurrences, not probabilities. Partial scans are not scored.
 

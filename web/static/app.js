@@ -228,10 +228,7 @@ function affectedFiles(artifact) {
 }
 function contentFingerprint(artifact) {
   const field = node("span", "content-fingerprint");
-  const link = node("a", "fingerprint-value");
-  link.href = `/fingerprints?hash=${artifact.content_id}`;
-  link.setAttribute("aria-label", `Look up content fingerprint ${artifact.content_id}`);
-  link.append(node("code", "", artifact.content_id));
+  const value = node("code", "fingerprint-value", artifact.content_id);
   const copy = node("button", "btn btn-ghost btn-small", "Copy");
   copy.type = "button";
   copy.setAttribute("aria-label", `Copy content fingerprint for ${artifact.root}`);
@@ -244,10 +241,10 @@ function contentFingerprint(artifact) {
       await navigator.clipboard.writeText(artifact.content_id);
       status.textContent = "Copied";
     } catch {
-      status.textContent = "Clipboard unavailable. Select and copy the linked fingerprint.";
+      status.textContent = "Clipboard unavailable. Select and copy the fingerprint.";
     }
   });
-  field.append(node("span", "meta fingerprint-caption", "Content fingerprint"), link, copy, status);
+  field.append(node("span", "meta fingerprint-caption", "Content fingerprint"), value, copy, status);
   return field;
 }
 function renderSnapshotReview() {
@@ -354,6 +351,29 @@ function renderSnapshotReview() {
 }
 
 function renderEvaluation() {
+  const checks = report.evaluation?.checks || report.inspection_checks;
+  $("inspection-coverage").hidden = !checks;
+  $("inspection-coverage-scope").textContent = report.view_scope
+    ? "Recorded outcomes from the full inspection containing this file. Package verification applies to its containing snapshot, not this file alone."
+    : "Recorded outcomes for this inspection.";
+  if (checks) AgentLensChecks.render($("evaluation-checks"), checks, report.files, report.artifacts || []);
+  $("signature-review").hidden = !report.view_scope;
+  $("signature-cards").replaceChildren();
+  if (report.view_scope) {
+    const signed = (report.artifacts || []).filter((artifact) => artifact.signature);
+    for (const artifact of signed) {
+      const signature = artifact.signature;
+      const card = node("div", "card signature-card");
+      card.append(node("h3", "", artifact.name || artifact.root),
+        node("p", signature.status === "verified" ? "meta" : "warning", `Signature: ${signature.status.replaceAll("_", " ")}`),
+        node("p", "", signature.message),
+        node("p", "meta", signature.identity_verified ? `Publisher: ${signature.publisher} (operator-trusted certificate chain)` : "Publisher identity: not verified"),
+        node("p", "meta", signature.scope), node("p", "meta", signature.limitations));
+      if (signature.signer_sha256) card.append(node("p", "lookup-hash", `Signing certificate SHA256: ${signature.signer_sha256}`));
+      $("signature-cards").append(card);
+    }
+    if (!signed.length) $("signature-cards").append(node("p", "meta", "No signature or publisher verification outcome was recorded for this file. Rescan to refresh verification metadata."));
+  }
   const evaluation = report.evaluation;
   $("evaluation").hidden = !evaluation;
   $("finding-category").replaceChildren(node("option", "", "All categories"));
@@ -411,7 +431,6 @@ function renderEvaluation() {
     }
     $("evaluation-categories").append(card);
   }
-  AgentLensChecks.render($("evaluation-checks"), evaluation.checks, report.files, report.artifacts || []);
   const provenance = report.provenance;
   $("evaluation-provenance").replaceChildren();
   if (provenance) {
@@ -777,6 +796,7 @@ if (reportPage) {
       verdict: counts.CRITICAL || counts.HIGH ? "REVIEW REQUIRED" : "NO HIGH-RISK SIGNALS DETECTED" };
     scoped.inventory = null;
     scoped.category_names = Object.fromEntries((full.evaluation?.categories || []).map((category) => [category.id, category.name]));
+    scoped.inspection_checks = full.evaluation?.checks || null;
     scoped.evaluation = null;
     const techniques = scoped.atlas.techniques.filter((tech) => file.findings.some((hit) => hit.atlas?.includes(tech.id)));
     for (const tech of techniques) {

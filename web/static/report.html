@@ -80,15 +80,21 @@
           <div id="evaluation-categories" class="evaluation-categories"></div>
         </details>
         <details class="card evaluation-evidence">
-          <summary>Inspection coverage &amp; verification outcomes</summary>
-          <p class="meta">Performed means a check ran, not that it passed. Blocked verification, absent inputs and unsupported checks are listed separately.</p>
-          <div id="evaluation-checks" class="coverage-checks"></div>
-        </details>
-        <details class="card evaluation-evidence">
           <summary>Scope, checks and content fingerprints</summary>
           <p>These fingerprints identify the inspected text and detector build. They are not signed attestations or proof that a skill is safe.</p>
           <div id="evaluation-provenance"></div>
         </details>
+      </section>
+      <details id="inspection-coverage" class="card evaluation-evidence" hidden>
+        <summary>Inspection coverage &amp; verification outcomes</summary>
+        <p id="inspection-coverage-scope" class="meta"></p>
+        <p class="meta">Performed means a check ran, not that it passed. Blocked verification, absent inputs and unsupported checks are listed separately.</p>
+        <div id="evaluation-checks" class="coverage-checks"></div>
+      </details>
+      <section id="signature-review" class="evaluation" aria-labelledby="signature-title" hidden>
+        <header class="results-head"><h2 id="signature-title">Signature &amp; publisher</h2></header>
+        <p class="meta">Verification describes the containing package from the full inspection. Publisher reputation is not assessed. A verified signature is not a safety endorsement.</p>
+        <div id="signature-cards" class="evaluation-categories"></div>
       </section>
       <section class="atlas" aria-labelledby="atlas-title">
         <header class="atlas-head">

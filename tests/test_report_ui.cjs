@@ -33,7 +33,8 @@ function setup(report) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/app.js"), "utf8"), context);
   for (const id of ["evaluation", "finding-category", "evaluation-summary", "evaluation-categories",
     "evaluation-checks", "evaluation-provenance", "snapshot-review", "snapshot-cards", "fingerprint-status",
-    "snapshot-search", "snapshot-filter", "snapshot-review-summary",
+    "snapshot-search", "snapshot-filter", "snapshot-review-summary", "inspection-coverage",
+    "inspection-coverage-scope", "signature-review", "signature-cards",
     "findings", "file-findings", "severity", "finding-search", "finding-count"]) elements[id] = new Element();
   context.inputReport = report;
   vm.runInContext("report = inputReport;", context);
@@ -149,7 +150,7 @@ const artifact = {
 };
 const file = { path: "AGENTS.md", findings: [{ severity: "HIGH" }] };
 
-test("collapsed snapshot exposes full searchable content fingerprint and copy action", () => {
+test("collapsed snapshot exposes plain content fingerprint and copy action", () => {
   const { elements, run } = setup({ artifacts: [artifact], files: [file], status: "complete" });
   run("renderSnapshotReview()");
   const card = elements["snapshot-cards"].firstChild;
@@ -157,7 +158,7 @@ test("collapsed snapshot exposes full searchable content fingerprint and copy ac
   const summary = card.firstChild;
   const nodes = descendants(summary);
   assert.ok(nodes.some((item) => item.tag === "code" && item.textContent === artifact.content_id));
-  assert.ok(nodes.some((item) => item.href === `/fingerprints?hash=${artifact.content_id}`));
+  assert.ok(!nodes.some((item) => item.href === `/fingerprints?hash=${artifact.content_id}`));
   assert.ok(nodes.some((item) => item.tag === "button" && item.textContent === "Copy"));
 });
 
@@ -232,11 +233,24 @@ test("inspection summary uses exact score and category counts, with collapsed gu
   assert.ok(descendants(elements["evaluation-summary"]).some((item) => item.textContent === "Not scored"));
 });
 
-test("security findings template omits the publisher and signature panel", () => {
-  const html = fs.readFileSync(path.join(__dirname, "../web/static/report.html"), "utf8");
-  assert.ok(!html.includes('id="signature-review"'));
-  assert.ok(!html.includes('id="signature-cards"'));
-  assert.ok(!html.includes("Publisher &amp; signatures"));
+test("publisher and signature panel appears only on file reports, with coverage outside evaluation", () => {
+  const { elements, run } = setup({
+    artifacts: [{ ...artifact, signature: { status: "verified", message: "Exact bytes match",
+      identity_verified: true, publisher: "<img src=x>", scope: "Submitted package", limitations: "Reputation not assessed" } }],
+    files: [file], inspection_checks: [{ id: "static", name: "Static analysis", performed: true }],
+  });
+  run("renderEvaluation()");
+  assert.equal(elements["signature-review"].hidden, true);
+  run("report.view_scope = {kind: 'file'}; renderEvaluation()");
+  assert.equal(elements.evaluation.hidden, true);
+  assert.equal(elements["inspection-coverage"].hidden, false);
+  assert.equal(elements["signature-review"].hidden, false);
+  assert.match(elements["inspection-coverage-scope"].textContent, /full inspection/);
+  const nodes = descendants(elements["signature-cards"]);
+  assert.ok(nodes.some((item) => item.textContent?.includes("Publisher: <img src=x>")));
+  assert.equal(nodes.filter((item) => item.tag === "img").length, 0);
+  run("report.artifacts = []; renderEvaluation()");
+  assert.match(elements["signature-cards"].firstChild.textContent, /No signature or publisher verification outcome/);
 });
 
 async function lookupResponse(data, status = 200) {
