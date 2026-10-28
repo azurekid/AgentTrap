@@ -12,12 +12,13 @@ class Element {
     this.events = {};
     this.value = "";
     this.open = false;
-    this.classList = { add() {}, remove() {} };
+    this.classList = { add() {}, remove() {}, toggle() {} };
   }
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children = children; }
   setAttribute(name, value) { this.attributes[name] = value; }
   addEventListener(name, callback) { this.events[name] = callback; }
+  focus() { this.focused = true; }
   get firstChild() { return this.children[0]; }
   get childElementCount() { return this.children.length; }
 }
@@ -39,6 +40,105 @@ function setup(report) {
 function descendants(element) {
   return [element, ...element.children.flatMap(descendants)];
 }
+
+function setupScanner(response = { ok: true }) {
+  const ids = ["scan-form", "private-repo", "repo-token", "token-field", "repository",
+    "upload-tab", "repo-tab", "paste-tab", "upload-panel", "repo-panel", "paste-panel",
+    "files", "folder", "dropzone", "file-list", "skill-content", "error", "console",
+    "console-state", "scan-button", "progress", "workflows"];
+  const elements = Object.fromEntries(ids.map((id) => [id, new Element()]));
+  const tabs = new Element();
+  const requests = [];
+  const saved = new Map();
+  const destinations = [];
+  const context = vm.createContext({
+    document: {
+      getElementById: (id) => elements[id] || null,
+      createElement: (tag) => new Element(tag), createTextNode: (text) => ({ textContent: text }),
+      querySelector: () => tabs, body: new Element(), dispatchEvent() {},
+    },
+    location: { search: "", assign: (url) => destinations.push(url) },
+    sessionStorage: { setItem: (key, value) => saved.set(key, value) },
+    URLSearchParams, Blob, FormData, AbortSignal, Event,
+    fetch: async (url, options) => {
+      requests.push({ url, ...options });
+      assert.equal(elements["skill-content"].disabled, true);
+      return { ok: response.ok, headers: new Headers({ "content-type": "application/json" }),
+        json: async () => response.ok ? { status: "complete" } : { detail: "Scanner unavailable" } };
+    },
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, "../web/static/app.js"), "utf8"), context);
+  return { elements, tabs, requests, saved, destinations,
+    run: (code) => vm.runInContext(code, context),
+    submit: () => elements["scan-form"].events.submit({ preventDefault() {} }) };
+}
+
+test("paste submits exact skill text through upload pipeline and opens the stored report", async () => {
+  const { elements, requests, saved, destinations, run, submit } = setupScanner();
+  run("changeMode('paste')");
+  const content = "---\nname: Review helper\n---\n\n  caf\u00e9\n";
+  elements["skill-content"].value = content;
+  await submit();
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, "/api/scan/files");
+  const body = requests[0].body;
+  const file = body.get("files");
+  assert.equal(file.name, "SKILL.md");
+  assert.equal(await file.text(), content);
+  assert.equal(body.get("discover"), "false");
+  assert.equal(body.get("include_workflows"), "false");
+  assert.equal(saved.get("skillvenom:report"), '{"status":"complete"}');
+  assert.deepEqual(destinations, ["/report"]);
+  assert.equal(elements["skill-content"].disabled, false);
+  assert.equal(elements["skill-content"].value, content);
+});
+
+test("paste rejects whitespace and enforces UTF-8 bytes with an inclusive 256 KiB limit", async () => {
+  const { elements, requests, run, submit } = setupScanner();
+  run("changeMode('paste')");
+  elements["skill-content"].value = " \n\t ";
+  await submit();
+  assert.match(elements.error.textContent, /Paste skill content/);
+  elements["skill-content"].value = "\u00e9".repeat(131073);
+  await submit();
+  assert.match(elements.error.textContent, /256 KiB/);
+  assert.equal(requests.length, 0);
+  elements["skill-content"].value = "\u00e9".repeat(131072);
+  await submit();
+  assert.equal(requests[0].body.get("files").size, 256 * 1024);
+});
+
+test("paste failures retain editable text and expose the server error", async () => {
+  const { elements, destinations, run, submit } = setupScanner({ ok: false });
+  run("changeMode('paste')");
+  elements["skill-content"].value = "Review this skill";
+  await submit();
+  assert.equal(elements.error.hidden, false);
+  assert.equal(elements.error.textContent, "Scanner unavailable");
+  assert.equal(elements["skill-content"].disabled, false);
+  assert.equal(elements["skill-content"].value, "Review this skill");
+  assert.equal(destinations.length, 0);
+});
+
+test("three source tabs support directional wrapping, Home, End and preserved drafts", () => {
+  const { elements, tabs, run } = setupScanner();
+  elements["skill-content"].value = "My draft";
+  const key = (key) => tabs.events.keydown({ key, preventDefault() {} });
+  key("ArrowLeft");
+  assert.equal(run("mode"), "paste");
+  assert.equal(elements["paste-panel"].hidden, false);
+  assert.equal(elements["paste-tab"].attributes["aria-selected"], "true");
+  assert.equal(elements["repository"].disabled, true);
+  key("Home");
+  assert.equal(run("mode"), "upload");
+  key("ArrowRight");
+  assert.equal(run("mode"), "repo");
+  assert.equal(elements["repository"].disabled, false);
+  assert.equal(elements["skill-content"].disabled, true);
+  key("End");
+  assert.equal(run("mode"), "paste");
+  assert.equal(elements["skill-content"].value, "My draft");
+});
 
 const artifact = {
   kind: "agent_file", root: "AGENTS.md", content_id: "a".repeat(64), evaluation_id: "b".repeat(64),

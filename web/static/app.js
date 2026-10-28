@@ -1,6 +1,7 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 let mode = "upload";
+const scanModes = ["upload", "repo", "paste"];
 let selected = [];
 let report = null;
 let busy = false;
@@ -24,7 +25,8 @@ function syncToken() {
 function changeMode(next) {
   if (busy) return;
   mode = next;
-  for (const [name, id] of [["upload", "upload-tab"], ["repo", "repo-tab"]]) {
+  for (const name of scanModes) {
+    const id = `${name}-tab`;
     const active = name === next;
     $(id).classList.toggle("active", active);
     $(id).setAttribute("aria-selected", String(active));
@@ -33,6 +35,7 @@ function changeMode(next) {
   }
   $("repository").disabled = next !== "repo";
   $("private-repo").disabled = next !== "repo";
+  $("skill-content").disabled = next !== "paste";
   syncToken();
   $("error").hidden = true;
 }
@@ -54,16 +57,19 @@ if ($("methodology-version")) {
 }
 if (scannerPage) $("private-repo").addEventListener("change", syncToken);
 if (scannerPage) {
-  $("upload-tab").addEventListener("click", () => changeMode("upload"));
-  $("repo-tab").addEventListener("click", () => changeMode("repo"));
+  for (const name of scanModes) $(`${name}-tab`).addEventListener("click", () => changeMode(name));
   document.querySelector(".tabs").addEventListener("keydown", (event) => {
     if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       event.preventDefault();
-      changeMode(mode === "upload" ? "repo" : "upload");
-      $(mode === "upload" ? "upload-tab" : "repo-tab").focus();
+      const index = scanModes.indexOf(mode);
+      const next = event.key === "Home" ? 0 : event.key === "End" ? scanModes.length - 1
+        : (index + (event.key === "ArrowRight" ? 1 : -1) + scanModes.length) % scanModes.length;
+      changeMode(scanModes[next]);
+      $(`${mode}-tab`).focus();
     }
   });
-  if (new URLSearchParams(location.search).get("mode") === "repo") changeMode("repo");
+  const requestedMode = new URLSearchParams(location.search).get("mode");
+  if (scanModes.includes(requestedMode)) changeMode(requestedMode);
 }
 
 function setScanning(on) {
@@ -809,6 +815,15 @@ if (scannerPage) {
       body.append("include_workflows", String(workflows));
       body.append("discover", String(discover));
       for (const file of selected) body.append("files", file, file.webkitRelativePath || file.name);
+    } else if (mode === "paste") {
+      const content = $("skill-content").value;
+      if (!content.trim()) return showError("Paste skill content to inspect.");
+      const file = new Blob([content], { type: "text/markdown;charset=utf-8" });
+      if (file.size > 256 * 1024) return showError("Pasted content must be at most 256 KiB of UTF-8 text.");
+      body = new FormData();
+      body.append("include_workflows", "false");
+      body.append("discover", "false");
+      body.append("files", file, "SKILL.md");
     } else {
       const url = $("repository").value.trim();
       if (!url) return showError("Enter a repository URL.");
@@ -821,10 +836,10 @@ if (scannerPage) {
     $("scan-button").disabled = true;
     $("scan-button").textContent = "Inspecting…";
     $("progress").hidden = false;
-    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows"]) $(id).disabled = true;
+    for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows", "skill-content"]) $(id).disabled = true;
     renderFiles();
     try {
-      const response = await fetch(`/api/scan/${mode === "upload" ? "files" : "repository"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(120000) });
+      const response = await fetch(`/api/scan/${mode === "repo" ? "repository" : "files"}`, { method: "POST", body, headers, signal: AbortSignal.timeout(120000) });
       if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("The scan service returned an unexpected response. Try again later.");
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "The request was rejected. Check your selected files.");
@@ -847,6 +862,7 @@ if (scannerPage) {
       for (const id of ["files", "folder", "repository", "private-repo", "repo-token", "workflows"]) $(id).disabled = false;
       $("repository").disabled = mode !== "repo";
       $("private-repo").disabled = mode !== "repo";
+      $("skill-content").disabled = mode !== "paste";
       syncToken();
       renderFiles();
     }

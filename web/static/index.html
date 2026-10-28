@@ -96,7 +96,7 @@
       <header class="section-head">
         <p class="label">Scanner</p>
         <h2 id="scanner-title">Inspect before your agent obeys</h2>
-        <p>Drop agent files or point at a repository. Results appear in seconds.</p>
+        <p>Upload agent files, paste a skill, or point at a repository. Results appear in seconds.</p>
       </header>
 
       <div class="scanner-grid">
@@ -109,6 +109,9 @@
                 </button>
                 <button id="repo-tab" role="tab" aria-selected="false" aria-controls="repo-panel" class="tab" type="button" tabindex="-1">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8.5v7M18 10.5c0 4-6 3-11.5 6"/></svg>Repository
+                </button>
+                <button id="paste-tab" role="tab" aria-selected="false" aria-controls="paste-panel" class="tab" type="button" tabindex="-1">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-5 3 2-16"/></svg>Paste content
                 </button>
               </div>
               <span class="console-state" id="console-state">Ready</span>
@@ -165,7 +168,13 @@
                 </label>
               </div>
 
-              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including private repositories and uploads, publish fingerprints, self-declared frontmatter names, redacted finding excerpts and assessment summaries indefinitely. Names and excerpts can disclose private code or identifiers; detected-secret redaction is not a guarantee of confidentiality. Source paths, repository URLs and full originals are not separate public fields. High-risk originals are retained privately for 30 days. Access tokens are never retained. Only submit material you can publish.</p>
+              <div id="paste-panel" role="tabpanel" aria-labelledby="paste-tab" hidden>
+                <label class="field-label" for="skill-content">Skill content</label>
+                <textarea id="skill-content" class="skill-content" rows="12" placeholder="Paste your SKILL.md content here, including any frontmatter..." aria-describedby="paste-help" spellcheck="false" autocomplete="off" disabled></textarea>
+                <p id="paste-help" class="field-hint">Inspected as <code>SKILL.md</code>, up to 256 KiB of UTF-8 text. Include frontmatter to identify the skill by name. This is a single-file snapshot; referenced files are not fetched. Content is never executed.</p>
+              </div>
+
+              <p class="field-hint"><strong>Automatic fingerprint tracking and retention.</strong> All scans, including pasted content, private repositories and uploads, publish fingerprints, self-declared frontmatter names, redacted finding excerpts and assessment summaries indefinitely. Names and excerpts can disclose private code or identifiers; detected-secret redaction is not a guarantee of confidentiality. Source paths, repository URLs and full originals are not separate public fields. High-risk originals are retained privately for 30 days. Access tokens are never retained. Only submit material you can publish.</p>
               <div class="scan-actions">
                 <div id="progress" class="progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><span>Inspecting… repository scans can take up to a minute.</span></div>
                 <button id="scan-button" class="btn btn-primary btn-scan" type="submit">Run inspection <span aria-hidden="true">→</span></button>
@@ -205,7 +214,7 @@
         <li>
           <span class="step-num">01</span>
           <h3>Collect</h3>
-          <p>Upload files or name a GitHub, GitLab or Azure DevOps repository. AgentLens lists the commit's file tree and inspects only files an agent would load.</p>
+          <p>Upload files, paste skill content, or name a GitHub, GitLab or Azure DevOps repository. For repositories, AgentLens lists the commit's file tree and inspects only files an agent would load.</p>
         </li>
         <li>
           <span class="step-num">02</span>

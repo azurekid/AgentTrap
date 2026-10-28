@@ -46,6 +46,11 @@ below; they must not be presented as a count of distinct skills.
 
 ### Supported files
 
+- **Paste content** accepts skill Markdown directly in the scanner, inspected as
+  `SKILL.md` through the same pipeline as uploads (256 KiB UTF-8 maximum).
+  Frontmatter names, fingerprints, findings and retention behave the same as uploads.
+  Referenced files are not fetched; pasted skills remain single-file snapshots,
+  not complete supported packages.
 - AGENTS.md, AGENT.md, CLAUDE.md, GEMINI.md, SKILL.md, Copilot instructions,
   `*.instructions.md`, `*.agent.md`, `*.prompt.md`, `*.chatmode.md`, and editor rules.
 - Claude settings/hooks, Codex TOML, Gemini settings, Cursor MCP/rules, MCP JSON,
