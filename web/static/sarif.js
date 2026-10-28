@@ -56,7 +56,7 @@ function buildSarif(report) {
     version: "2.1.0",
     runs: [{
       tool: { driver: {
-        name: "SkillVenom", informationUri: "https://github.com/azurekid/AgentTrap",
+        name: "AgentLens", informationUri: "https://github.com/azurekid/AgentTrap",
         rules: [...rules.values()].sort((a, b) => a.id.localeCompare(b.id)),
       } },
       invocations: [invocation], results,

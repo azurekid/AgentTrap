@@ -1,4 +1,4 @@
-"""Report MITRE ATLAS changes that SkillVenom has not reviewed yet.
+"""Report MITRE ATLAS changes that AgentLens has not reviewed yet.
 
 Usage:
   python tools/check_atlas_updates.py                 # compare with the latest atlas-data release
@@ -23,7 +23,7 @@ MAX_BYTES = 50 * 1024 * 1024
 
 
 def fetch(url, accept="application/octet-stream"):
-    headers = {"Accept": accept, "User-Agent": "SkillVenom-atlas-check"}
+    headers = {"Accept": accept, "User-Agent": "AgentLens-atlas-check"}
     if os.environ.get("GITHUB_TOKEN") and url.startswith("https://api.github.com/"):
         headers["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
     with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=60) as response:
@@ -68,7 +68,7 @@ def review(bundle, tag, pinned):
 
     sections = []
     if tag != pinned:
-        sections.append(f"ATLAS release **{tag}** is available; SkillVenom is pinned to **{pinned}**.")
+        sections.append(f"ATLAS release **{tag}** is available; AgentLens is pinned to **{pinned}**.")
     if new_studies:
         rows = "\n".join(
             f"- [{cid}: {studies[cid].get('name', '')}](https://atlas.mitre.org/studies/{cid})" for cid in new_studies
@@ -95,7 +95,7 @@ def main():
         print(f"ATLAS update check failed: {error}", file=sys.stderr)
         return 2
     if not sections:
-        print(f"SkillVenom is current with MITRE ATLAS {tag}.")
+        print(f"AgentLens is current with MITRE ATLAS {tag}.")
         return 0
     print("## MITRE ATLAS changes to review\n\n" + "\n\n".join(sections))
     print("\nFollow the update process in README.md (Keeping detection current).")

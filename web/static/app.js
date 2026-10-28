@@ -265,7 +265,7 @@ function renderAtlas(atlas) {
     }
     if (tech.guidance) {
       const guidance = node("p", "guidance");
-      guidance.append(node("b", "", "SkillVenom guidance: "), tech.guidance);
+      guidance.append(node("b", "", "AgentLens guidance: "), tech.guidance);
       block.append(guidance);
     }
     card.append(block);
@@ -671,7 +671,7 @@ if (reportPage) {
         const url = URL.createObjectURL(blob);
         const link = node("a");
         link.href = url;
-        link.download = `skillvenom-${report.id}.${format}`;
+        link.download = `agentlens-${report.id}.${format}`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch (error) {

@@ -35,7 +35,7 @@ jobs:
         if: steps.check.outputs.code == '1'
         env:
           GH_TOKEN: ${{ github.token }}
-          TITLE: "Review MITRE ATLAS changes for SkillVenom"
+          TITLE: "Review MITRE ATLAS changes for AgentLens"
         run: |
           number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$TITLE\" in:title" --json number --jq '.[0].number')
           if [ -n "$number" ]; then

@@ -1,9 +1,13 @@
 # Azure deployment
 
-SkillVenom is deployed with **Bicep** and the **Azure CLI**, and updated by a
+AgentLens is deployed with **Bicep** and the **Azure CLI**, and updated by a
 **GitHub Actions** workflow that signs in to Azure through OpenID Connect (OIDC).
 No Azure Developer CLI (`azd`), connection strings, storage keys, publishing
 passwords or client secrets are used.
+
+The platform is now named AgentLens. Existing `skillvenom` resource names,
+`application=SkillVenom` discovery tags, archive container names and ZIP paths
+below are intentionally unchanged so existing deployments continue to work.
 
 | File | Purpose |
 | --- | --- |

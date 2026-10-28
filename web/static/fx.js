@@ -77,7 +77,7 @@
     if (!document.hidden) refreshStatistics();
   }, 60000);
 
-  // Hero simulation: instruction sources stream into an agent; SkillVenom's ring intercepts hostile payloads.
+  // Hero simulation: instruction sources stream into an agent; AgentLens's ring intercepts hostile payloads.
   const canvas = document.getElementById("flow-canvas");
   const log = document.getElementById("flow-log");
   if (!canvas || !log) return;

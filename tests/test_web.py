@@ -146,6 +146,9 @@ def test_static_page_and_policy(client):
     assert response.status_code == 200
     assert "Allow investigation retention" in response.text
     assert 'id="scan-form"' in response.text and "/assets/app.js" in response.text
+    assert 'Agent<b>Lens</b>' in response.text
+    assert 'https://github.com/azurekid/SkillVenom' in response.text
+    assert app.title == "AgentLens"
     assert "script-src 'self'" in response.headers["content-security-policy"]
     assert client.get("/api/policy").json()["retention_days"] == 30
     assert client.get("/api/policy").json()["detectors"] == len(json.loads((ROOT / "web" / "atlas.json").read_text())["rules"])
@@ -293,9 +296,9 @@ def test_risky_upload_archived_original_redacted_report(client):
 
 
 @pytest.mark.parametrize("path,title", [
-    ("/", "SkillVenom | AI agent security inspection"),
-    ("/coverage", "Detection coverage | SkillVenom"), ("/samples", "Use-case catalogue | SkillVenom"),
-    ("/sources", "Research sources | SkillVenom"), ("/report", "Inspection report | SkillVenom"),
+    ("/", "AgentLens | AI agent security inspection"),
+    ("/coverage", "Detection coverage | AgentLens"), ("/samples", "Use-case catalogue | AgentLens"),
+    ("/sources", "Research sources | AgentLens"), ("/report", "Inspection report | AgentLens"),
 ])
 def test_pages_share_navigation_and_credit(client, path, title):
     page = client.get(path)

@@ -288,7 +288,7 @@ def fetch_repository(url: str, workflows: bool, token: str | None = None) -> tup
     who, auth = PROVIDERS[ref.provider], auth_headers(ref.provider, token)
     # Environment proxies and redirects are disabled; outbound hosts are fixed or operator-configured.
     with httpx.Client(timeout=httpx.Timeout(10, connect=5), follow_redirects=False,
-                      trust_env=False, headers={"User-Agent": "SkillVenom/1.0"}) as client:
+                      trust_env=False, headers={"User-Agent": "AgentLens/1.0"}) as client:
         def get_page(url: str, limit: int, too_large: str = "The repository host response exceeds the size limit.",
                      headers: dict[str, str] | None = None):
             return fetch_response(client, url, limit, deadline, too_large, {**(headers or {}), **auth}, who, bool(token))

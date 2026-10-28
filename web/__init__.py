@@ -1,1 +1,1 @@
-"""SkillVenom web application."""
+"""AgentLens web application."""

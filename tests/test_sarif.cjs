@@ -17,7 +17,7 @@ test("SARIF uses real locations, URI encoding, distinct rules, fingerprints and 
     finding({ rule: "UNLISTED-DOMAIN", severity: "LOW" }), finding({ severity: "MEDIUM" })]));
   assert.equal(sarif.version, "2.1.0");
   const run = sarif.runs[0];
-  assert.equal(run.tool.driver.name, "SkillVenom");
+  assert.equal(run.tool.driver.name, "AgentLens");
   assert.equal(run.tool.driver.rules.length, 2);
   assert.equal(run.tool.driver.rules[0].properties.severity, "CRITICAL");
   assert.equal(run.results.length, 4);

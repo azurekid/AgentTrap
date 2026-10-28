@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
         app.state.archive.close()
 
 
-app = FastAPI(title="SkillVenom", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+app = FastAPI(title="AgentLens", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 
 
 def client_key(scope: Scope, hops: int) -> str:

@@ -4,7 +4,7 @@ Usage: python tools/build_atlas_mapping.py path/to/stix-atlas.json
 Download: https://github.com/mitre-atlas/atlas-data/releases (asset stix-atlas.json)
 
 Technique, tactic, and mitigation names and the technique-to-mitigation links come
-from ATLAS. The rule-to-technique mapping below is SkillVenom's own analyst judgement.
+from ATLAS. The rule-to-technique mapping below is AgentLens's own analyst judgement.
 """
 import json
 import sys
@@ -91,7 +91,7 @@ RULES = {
     "TOOL-SHADOWING": [("AML.T0110", PERSIST), ("AML.T0053", EXEC)],
 }
 
-# OWASP Top 10 for Agentic Applications 2026 (SOURCES.md #68). Rule -> ASI ids is SkillVenom's own judgement.
+# OWASP Top 10 for Agentic Applications 2026 (SOURCES.md #68). Rule -> ASI ids is AgentLens's own judgement.
 OWASP_URL = "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/"
 ASI = {
     "ASI01": "Agent Goal Hijack",
@@ -140,7 +140,7 @@ PREFERENCE = ["AML.M0033", "AML.M0030", "AML.M0029", "AML.M0026", "AML.M0027", "
               "AML.M0020", "AML.M0021", "AML.M0011", "AML.M0014", "AML.M0013", "AML.M0023", "AML.M0016",
               "AML.M0018", "AML.M0005", "AML.M0031", "AML.M0024", "AML.M0022", "AML.M0035"]
 
-# Shown when ATLAS publishes no mitigation for a technique; labelled as SkillVenom guidance in the UI.
+# Shown when ATLAS publishes no mitigation for a technique; labelled as AgentLens guidance in the UI.
 GUIDANCE = {
     "AML.T0110": "Pin skills and MCP servers to reviewed versions, review tool descriptions for instructions aimed at the agent, and alert when a tool or skill changes after approval.",
     "AML.T0073": "Treat claims of prior approval, trusted authorship or look-alike domains in instructions as untrusted; verify out of band and keep human approval for sensitive actions.",

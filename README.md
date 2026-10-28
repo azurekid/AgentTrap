@@ -1,14 +1,20 @@
-# SkillVenom
+# AgentLens
 
 A cybersecurity dashboard and static scanner for the files that guide AI agents.
 Inspect uploaded files or a public GitHub repository for prompt injection, hidden
 instructions, unsafe commands, agent permission changes, credential theft patterns,
 and potentially embedded secrets.
 
-SkillVenom was previously named AgentTrap; the GitHub repository is still
-`azurekid/AgentTrap`. The separate
+AgentLens is the defensive inspection platform, previously branded SkillVenom
+and originally AgentTrap. The GitHub repository remains `azurekid/AgentTrap`.
+The separate
 [SkillVenom research repository](https://github.com/azurekid/SkillVenom) holds the
-original malicious-skill use cases this scanner detects.
+red-team research and malicious-skill use cases used to test this scanner.
+AgentLens inspects the evidence; SkillVenom supplies research and samples.
+
+Existing Azure resource names, tags, storage container names, browser session keys
+and SARIF fingerprint keys retain their legacy identifiers for compatibility.
+The rebrand does not rename deployed resources, move stored data or change scan rules.
 
 ## Run locally
 
@@ -82,7 +88,7 @@ rule maps to, and every report includes an `atlas` summary: findings per tactic
 (the 11 tactics observable in static agent files, in ATLAS matrix order) and each
 hit technique with its ATLAS mitigations. The results page draws this as a radar
 ("spiderweb") chart with technique and mitigation cards. Where ATLAS lists no
-mitigation for a technique, the card shows clearly labelled **SkillVenom guidance**.
+mitigation for a technique, the card shows clearly labelled **AgentLens guidance**.
 
 The rule-to-technique mapping in [web/atlas.json](web/atlas.json) is analyst
 judgement; names, tactics, URLs, and mitigations come from the official ATLAS STIX
