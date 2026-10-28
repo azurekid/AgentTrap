@@ -346,6 +346,18 @@ test("file-text search shows all containing snapshots instead of choosing one", 
   assert.match(elements["lookup-status"].textContent, /2 recorded snapshot/);
 });
 
+test("exact-file search identifies identical bytes across packages and discloses retention scope", async () => {
+  const { elements } = await lookupResponse({
+    match_type: "file_content", matches: ["b", "c"].map((char) => ({
+      content_id: char.repeat(64), report: { name: `${char} package` },
+    })),
+  });
+  assert.match(elements["lookup-status"].textContent, /Exact file fingerprint found in 2/);
+  assert.match(elements["lookup-status"].textContent, /identical bytes/);
+  assert.match(elements["lookup-status"].textContent, /Only files with HIGH\/CRITICAL/);
+  assert.equal(descendants(elements["lookup-result"]).filter((item) => item.tag === "a").length, 2);
+});
+
 test("missing hash explains older indexing limitations without implying safety", async () => {
   const { elements } = await lookupResponse(null, 404);
   assert.equal(elements["lookup-result"].hidden, true);

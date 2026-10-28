@@ -770,8 +770,18 @@ if (reportPage) {
         const context = $("file-context");
         context.hidden = false;
         context.append(node("p", "", path));
+        if (file.content_sha256) {
+          context.append(node("p", "meta", "File fingerprint (SHA256 of exact file bytes)"),
+            node("code", "fingerprint-value", file.content_sha256));
+          const reuse = node("a", "btn btn-ghost btn-small", "Find this file in other packages");
+          reuse.href = `/fingerprints?hash=${file.content_sha256}`;
+          context.append(reuse, node("p", "meta", "Only recorded files with HIGH/CRITICAL findings are searchable. Results describe containing snapshots, not a file-only verdict."));
+        } else {
+          context.append(node("p", "meta", "Exact file fingerprint not recorded. Rescan to enable exact-file reuse search."));
+        }
         for (const artifact of report.artifacts || []) {
           if (artifact.name) context.append(node("p", "", `${artifact.name} (self-declared frontmatter name)`));
+          context.append(node("p", "meta", artifact.kind === "skill_snapshot" ? "Containing package fingerprint" : "Containing snapshot fingerprint"));
           context.append(contentFingerprint(artifact));
         }
         const fingerprint = stored.provenance?.files.find((item) => item.path === path);

@@ -37,7 +37,7 @@
       const response = await fetch(`/api/fingerprints/${hash}`, { signal: controller.signal, cache: "no-store" });
       if (controller.signal.aborted) return;
       if (response.status === 404) {
-        status.textContent = "No matching snapshot or indexed file-text hash found. Only HIGH/CRITICAL snapshots are registered. Older scans need a rescan to index file-text hashes. This is not evidence that the content is safe.";
+        status.textContent = "No matching snapshot or indexed file hash found. Only HIGH/CRITICAL snapshots and files with HIGH/CRITICAL findings are indexed. Older scans need a rescan to index file fingerprints. This is not evidence that the content is safe.";
         return;
       }
       if (response.status === 429) throw new Error("Fingerprint lookup limit reached. Wait a minute before searching again.");
@@ -45,8 +45,9 @@
       let data = await response.json();
       if (controller.signal.aborted) return;
       status.textContent = "Fingerprint found in the central registry.";
-      if (data.match_type === "inspected_text") {
-        status.textContent = `File-text hash found in ${data.matches.length} recorded snapshot(s). Assessments cover the containing snapshots, not this file alone.`;
+      if (["inspected_text", "file_content"].includes(data.match_type)) {
+        const exact = data.match_type === "file_content";
+        status.textContent = `${exact ? "Exact file fingerprint" : "Decoded file-text hash"} found in ${data.matches.length} recorded snapshot(s). ${exact ? "Matching files have identical bytes, even if their paths differ." : "Decoded-text matches do not establish identical original bytes."} Only files with HIGH/CRITICAL findings are indexed; this is not a complete usage history. Assessments cover the containing snapshots, not this file alone.`;
         if (data.matches.length > 1) {
           result.append(element("h2", "Matching snapshots"));
           for (const match of data.matches) {

@@ -57,7 +57,7 @@ class Registry:
             raise RegistryError("Uniqueness storage shard exceeds its supported capacity.")
         data = json.loads(payload)
         if (not isinstance(data, dict) or not {"since", "sets"} <= set(data)
-                or set(data) - {"since", "sets", "reports", "text_hashes"}
+                or set(data) - {"since", "sets", "reports", "text_hashes", "file_hashes"}
                 or not isinstance(data["since"], str) or not isinstance(data["sets"], dict)
                 or set(data["sets"]) != set(METRICS)):
             raise RegistryError("Invalid uniqueness record.")
@@ -131,13 +131,14 @@ class Registry:
                         raise RegistryError("Invalid stored finding excerpt.")
             datetime.fromisoformat(summary["first_seen"])
             datetime.fromisoformat(summary["last_seen"])
-        aliases = data.get("text_hashes", {})
-        if (not isinstance(aliases, dict) or any(
-                not DIGEST.fullmatch(key) or not isinstance(values, list)
-                or not 1 <= len(values) <= MAX_HASH_MATCHES
-                or any(not isinstance(value, str) or not DIGEST.fullmatch(value) for value in values)
-                or len(values) != len(set(values)) for key, values in aliases.items())):
-            raise RegistryError("Invalid inspected-text hash index.")
+        for index in ("text_hashes", "file_hashes"):
+            aliases = data.get(index, {})
+            if (not isinstance(aliases, dict) or any(
+                    not DIGEST.fullmatch(key) or not isinstance(values, list)
+                    or not 1 <= len(values) <= MAX_HASH_MATCHES
+                    or any(not isinstance(value, str) or not DIGEST.fullmatch(value) for value in values)
+                    or len(values) != len(set(values)) for key, values in aliases.items())):
+                raise RegistryError("Invalid file hash index.")
         return data
 
     def _load(self, shard: str) -> tuple[dict, str | None]:
@@ -158,34 +159,38 @@ class Registry:
 
     def _merge(self, shard: str, additions: dict[str, set[str]],
                summaries: dict[str, dict] | None = None,
-               text_hashes: dict[str, set[str]] | None = None, *, prune: bool = False) -> dict[str, set[str]]:
+               text_hashes: dict[str, set[str]] | None = None, *,
+               file_hashes: dict[str, set[str]] | None = None, prune: bool = False) -> dict[str, set[str]]:
         for _ in range(8):
             record, etag = self._load(shard)
             existing = {key: set(record["sets"][key]) & values for key, values in additions.items()}
             changed = False
-            if prune and (any(record["sets"].values()) or record.get("reports") or record.get("text_hashes")):
+            if prune and (any(record["sets"].values()) or record.get("reports") or record.get("text_hashes") or record.get("file_hashes")):
                 before = json.dumps(record, sort_keys=True)
                 reports = {digest: summary for digest, summary in record.get("reports", {}).items()
                            if self._qualifies(summary)}
                 record["reports"] = reports
                 for metric in ("skill_snapshots", "complete_skill_versions", "mcp_snapshots", "agent_files"):
                     record["sets"][metric] = [digest for digest in record["sets"][metric] if digest in reports]
-                aliases = record.get("text_hashes", {})
-                targets = {digest[0] for values in aliases.values() for digest in values}
+                targets = {digest[0] for index in ("text_hashes", "file_hashes")
+                           for values in record.get(index, {}).values() for digest in values}
                 target_records = {key: self._load(key)[0] for key in targets - {shard}}
                 target_records[shard] = record
                 retained = {digest for target in target_records.values()
                             for digest, summary in target.get("reports", {}).items() if self._qualifies(summary)}
-                record["text_hashes"] = {digest: [value for value in values if value in retained]
-                                         for digest, values in aliases.items() if any(value in retained for value in values)}
+                for index in ("text_hashes", "file_hashes"):
+                    record[index] = {digest: [value for value in values if value in retained]
+                                     for digest, values in record.get(index, {}).items()
+                                     if any(value in retained for value in values)}
                 changed = before != json.dumps(record, sort_keys=True)
-            for digest, values in (text_hashes or {}).items():
-                aliases = record.setdefault("text_hashes", {})
-                merged = sorted(set(aliases.get(digest, [])) | values)
-                if len(merged) > MAX_HASH_MATCHES:
-                    raise RegistryError("Inspected-text hash match capacity reached. No matches were silently dropped.")
-                changed |= aliases.get(digest) != merged
-                aliases[digest] = merged
+            for index, entries in (("text_hashes", text_hashes), ("file_hashes", file_hashes)):
+                for digest, values in (entries or {}).items():
+                    aliases = record.setdefault(index, {})
+                    merged = sorted(set(aliases.get(digest, [])) | values)
+                    if len(merged) > MAX_HASH_MATCHES:
+                        raise RegistryError("File hash match capacity reached. No matches were silently dropped.")
+                    changed |= aliases.get(digest) != merged
+                    aliases[digest] = merged
             for digest, summary in (summaries or {}).items():
                 reports = record.setdefault("reports", {})
                 previous = reports.get(digest)
@@ -227,6 +232,7 @@ class Registry:
         additions: dict[str, dict[str, set[str]]] = {}
         summaries: dict[str, dict[str, dict]] = {}
         text_hashes: dict[str, dict[str, set[str]]] = {}
+        file_hashes: dict[str, dict[str, set[str]]] = {}
         provenance = {file["path"]: file["sha256"] for file in report.get("provenance", {}).get("files", [])}
 
         def add(key: str, digest: str) -> None:
@@ -295,6 +301,11 @@ class Registry:
             for file in files:
                 if not any(hit["severity"] in ("HIGH", "CRITICAL") for hit in file["findings"]):
                     continue
+                raw_digest = file.get("content_sha256")
+                if raw_digest is not None:
+                    if not DIGEST.fullmatch(raw_digest):
+                        raise RegistryError("Invalid raw file hash.")
+                    file_hashes.setdefault(raw_digest[0], {}).setdefault(raw_digest, set()).add(artifact["content_id"])
                 digest = provenance.get(file["path"])
                 if digest is not None:
                     if not DIGEST.fullmatch(digest):
@@ -304,14 +315,16 @@ class Registry:
             with self.lock:
                 self.cached = None
                 if self.container is None:
-                    results = [self._merge(shard, values, summaries.get(shard), text_hashes.get(shard))
+                    results = [self._merge(shard, values, summaries.get(shard), text_hashes.get(shard),
+                                           file_hashes=file_hashes.get(shard))
                                for shard, values in additions.items()]
                 else:
                     with ThreadPoolExecutor(max_workers=4) as pool:
                         results = list(pool.map(lambda item: self._merge(item[0], item[1], summaries.get(item[0]),
-                                                                        text_hashes.get(item[0])), additions.items()))
-                for shard in text_hashes.keys() - additions.keys():
-                    self._merge(shard, {}, text_hashes=text_hashes[shard])
+                                                                        text_hashes.get(item[0]),
+                                                                        file_hashes=file_hashes.get(item[0])), additions.items()))
+                for shard in (text_hashes.keys() | file_hashes.keys()) - additions.keys():
+                    self._merge(shard, {}, text_hashes=text_hashes.get(shard), file_hashes=file_hashes.get(shard))
                 known = set()
                 for result in results:
                     for metric in ("skill_snapshots", "mcp_snapshots", "agent_files"):
@@ -331,14 +344,17 @@ class Registry:
                 kind = next((metric for metric in ("skill_snapshots", "mcp_snapshots", "agent_files")
                              if digest in record["sets"][metric]), None)
                 if kind is None:
-                    content_ids = record.get("text_hashes", {}).get(digest, [])
+                    content_ids = record.get("file_hashes", {}).get(digest, [])
+                    match_type = "file_content" if content_ids else "inspected_text"
+                    if not content_ids:
+                        content_ids = record.get("text_hashes", {}).get(digest, [])
                     if not content_ids:
                         return None
                     records = {digest[0]: record}
                     for shard in {content_id[0] for content_id in content_ids} - records.keys():
                         records[shard], _ = self._load(shard)
                     matches = [self._content_result(content_id, records[content_id[0]]) for content_id in content_ids]
-                    return {"queried_hash": digest, "match_type": "inspected_text", "matches": matches}
+                    return {"queried_hash": digest, "match_type": match_type, "matches": matches}
                 return self._content_result(digest, record)
         except (OSError, AzureError, ValueError, TypeError) as exc:
             raise RegistryError("Fingerprint lookup unavailable.") from exc

@@ -205,6 +205,7 @@ def test_registry_azure_conflicts_are_idempotent():
     registry = Registry(SimpleNamespace(container=container, directory=Path("/unused")))
     report = report_for()
     report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+    report["files"][0]["content_sha256"] = "b" * 64
     registry.add(report)
     registry.add(report)
     assert registry.read()["counts"]["skill_snapshots"] == 1
@@ -212,6 +213,7 @@ def test_registry_azure_conflicts_are_idempotent():
     content = report_for()["artifacts"][0]["content_id"]
     assert Registry(SimpleNamespace(container=container, directory=Path("/unused"))).lookup(content)["report"]["findings"] == 2
     assert registry.lookup("a" * 64)["matches"][0]["content_id"] == content
+    assert registry.lookup("b" * 64)["match_type"] == "file_content"
     for blob in blobs.values():
         if blob.payload is None:
             continue
@@ -223,6 +225,7 @@ def test_registry_azure_conflicts_are_idempotent():
     cleaned = Registry(SimpleNamespace(container=container, directory=Path("/unused")))
     assert cleaned.lookup(content) is None
     assert cleaned.lookup("a" * 64) is None
+    assert cleaned.lookup("b" * 64) is None
     assert cleaned.read()["counts"]["findings"] == 2
     assert cleaned.read()["counts"]["evaluations"] == 1
 
@@ -304,6 +307,7 @@ def test_historical_cleanup_removes_low_risk_reports_aliases_and_preserves_count
     report = report_for()
     content = report["artifacts"][0]["content_id"]
     report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+    report["files"][0]["content_sha256"] = "b" * 64
     registry.add(report)
     counts = registry.read()["counts"]
     shard = registry.directory / f"{content[0]}.json"
@@ -314,6 +318,7 @@ def test_historical_cleanup_removes_low_risk_reports_aliases_and_preserves_count
     registry = Registry(archive)
     assert registry.lookup(content) is None
     assert registry.lookup("a" * 64) is None
+    assert registry.lookup("b" * 64) is None
     assert registry.read()["counts"]["skill_snapshots"] == 0
     assert registry.read()["counts"]["findings"] == counts["findings"]
     assert registry.read()["counts"]["evaluations"] == counts["evaluations"]
@@ -379,20 +384,24 @@ def test_text_hash_can_match_multiple_snapshots_and_survives_restart(tmp_path):
     assert all(item["report"]["findings"] == 2 for item in result["matches"])
 
 
-def test_text_hash_index_capacity_and_corruption_are_explicit(tmp_path, monkeypatch):
+@pytest.mark.parametrize("index", ["text_hashes", "file_hashes"])
+def test_text_hash_index_capacity_and_corruption_are_explicit(tmp_path, monkeypatch, index):
     import web.registry as module
     registry = Registry(SimpleNamespace(container=None, directory=tmp_path))
     monkeypatch.setattr(module, "MAX_HASH_MATCHES", 1)
     for changed in (False, True):
         report = report_for(changed=changed)
-        report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+        if index == "text_hashes":
+            report["provenance"] = {"files": [{"path": report["files"][0]["path"], "sha256": "a" * 64}]}
+        else:
+            report["files"][0]["content_sha256"] = "a" * 64
         if changed:
             with pytest.raises(RegistryError, match="match capacity"):
                 registry.add(report)
         else:
             registry.add(report)
     record = registry._empty()
-    record["text_hashes"] = {"a" * 64: ["invalid"]}
+    record[index] = {"a" * 64: ["invalid"]}
     (registry.directory / "a.json").write_text(json.dumps(record))
     with pytest.raises(RegistryError, match="hash index"):
         registry.lookup("a" * 64)

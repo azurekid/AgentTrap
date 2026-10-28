@@ -340,6 +340,15 @@ The full security findings page omits the separate publisher/signature panel.
 File reports show signature/publisher results for their containing package and
 coverage outcomes recorded by the full inspection, explicitly labelled with that
 scope. Verification also remains available in exports and central fingerprint reports.
+File reports also expose an exact-byte SHA256 file fingerprint and a **Find this
+file in other packages** action. The registry indexes this separately from package
+identity and decoded-text hashes, linking identical file bytes across differently
+named files and package versions. Only files with HIGH/CRITICAL findings are indexed,
+including private uploads under the existing public-fingerprint policy. Results
+describe containing snapshots, not file-only verdicts or a complete usage history.
+Older scans need rescanning to populate exact-byte indexes; decoded-text matches are
+explicitly distinguished and do not prove identical original bytes.
+Exact-byte matches take precedence when a hash also matches a decoded-text index.
 Exports and false-positive reporting still include the full scan. Bars
 compare signal occurrences, not probabilities. Partial scans are not scored.
 

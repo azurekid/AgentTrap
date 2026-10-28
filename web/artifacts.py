@@ -114,6 +114,7 @@ def identify(files: list[dict], documents: list[dict[str, str]], detector: str, 
         for path in paths:
             file = file_results[path]
             file["artifact_id"] = content_id
+            file["content_sha256"] = docs[path].get("raw_sha256")
             occurrences = {}
             for hit in file["findings"]:
                 location = (hit["rule"], hit["line"], hit.get("json_pointer"), hit.get("evidence_source", "raw"),

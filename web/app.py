@@ -52,7 +52,7 @@ POLICY = {
     "private_scans_retained": True,
     "fingerprints": "Only snapshots with HIGH or CRITICAL findings are recorded centrally indefinitely. "
                     "New finding digests include only HIGH/CRITICAL findings. Report-local identities still cover all files. "
-                    "Qualifying content fingerprints and indexed inspected-text hashes, including private scans, "
+                    "Qualifying content fingerprints and indexed exact-byte file and inspected-text hashes, including private scans, "
                     "are publicly searchable with sanitized snapshot reports. "
                     "Lookup retrieves stored metadata and redacted excerpts only, never full files or repository contents, and never starts a scan. "
                     "Self-declared frontmatter names and up to 24 redacted finding excerpts are published for qualifying snapshots, including private repositories and uploads. "
