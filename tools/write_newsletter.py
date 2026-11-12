@@ -1,9 +1,9 @@
-"""Turn a research-watch triage report into a narrative weekly newsletter using GitHub Models.
+"""Turn a research-watch triage report into a narrative weekly newsletter using Azure OpenAI.
 
 Usage:
   python tools/write_newsletter.py --report report.md [--previous last.md] [--title-out title.txt]
 
-Needs GITHUB_TOKEN with the `models: read` permission. The editorial instructions live in
+Needs AZURE_OPENAI_RESOURCE, AZURE_OPENAI_API_KEY and NEWSLETTER_MODEL. The editorial instructions live in
 .github/skills/security-newsletter/SKILL.md. Report text is untrusted: the model gets no tools,
 cites items only by id ([S3]), and its output is sanitised so the only links are report URLs.
 """
@@ -18,8 +18,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / ".github" / "skills" / "security-newsletter" / "SKILL.md"
-ENDPOINT = "https://models.github.ai/inference/chat/completions"
-DEFAULT_MODEL = "openai/gpt-4.1"
 MAX_ITEMS = 40
 MAX_PREVIOUS = 6000
 MAX_OUTPUT = 20000
@@ -67,11 +65,13 @@ def build_messages(items, previous, today):
     return [{"role": "system", "content": skill_prompt()}, {"role": "user", "content": "\n".join(user)}]
 
 
-def call_model(messages, model, token, opener=urllib.request.urlopen):
+def call_model(messages, model, resource, api_key, opener=urllib.request.urlopen):
+    if not re.fullmatch(r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?", resource):
+        raise ValueError("AZURE_OPENAI_RESOURCE must be an Azure OpenAI resource name")
+    endpoint = f"https://{resource}.openai.azure.com/openai/v1/chat/completions"
     body = json.dumps({"model": model, "messages": messages, "temperature": 0.6, "max_tokens": 2500}).encode()
-    request = urllib.request.Request(ENDPOINT, data=body, method="POST", headers={
-        "Authorization": f"Bearer {token}", "Content-Type": "application/json",
-        "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28",
+    request = urllib.request.Request(endpoint, data=body, method="POST", headers={
+        "api-key": api_key, "Content-Type": "application/json", "Accept": "application/json",
     })
     with opener(request, timeout=120) as response:
         data = json.loads(response.read())
@@ -123,18 +123,19 @@ def main():
     parser.add_argument("--previous", type=Path, help="previous newsletter body, for continuity")
     parser.add_argument("--issue", type=int, help="source triage issue number, for the footer")
     parser.add_argument("--title-out", type=Path, help="write the headline to this file")
-    parser.add_argument("--model", default=os.environ.get("NEWSLETTER_MODEL") or DEFAULT_MODEL)
+    parser.add_argument("--model", default=os.environ.get("NEWSLETTER_MODEL"), help="Azure OpenAI deployment name")
     args = parser.parse_args()
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        parser.error("GITHUB_TOKEN is required (models: read)")
+    resource = os.environ.get("AZURE_OPENAI_RESOURCE")
+    api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+    if not resource or not api_key or not args.model:
+        parser.error("AZURE_OPENAI_RESOURCE, AZURE_OPENAI_API_KEY and NEWSLETTER_MODEL (or --model) are required")
     items = parse_report(args.report.read_text(encoding="utf-8"))
     if not items:
         print("No research items found in the report; nothing to write.", file=sys.stderr)
         return 1
     previous = args.previous.read_text(encoding="utf-8") if args.previous and args.previous.exists() else ""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    narrative = sanitise(call_model(build_messages(items, previous, today), args.model, token), items)
+    narrative = sanitise(call_model(build_messages(items, previous, today), args.model, resource, api_key), items)
     if args.title_out:
         args.title_out.write_text(headline(narrative), encoding="utf-8")
     print(compose(narrative, items, args.issue))

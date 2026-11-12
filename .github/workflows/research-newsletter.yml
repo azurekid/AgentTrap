@@ -19,7 +19,6 @@ on:
 permissions:
   contents: read
   issues: write
-  models: read
 
 concurrency:
   group: research-newsletter
@@ -68,7 +67,8 @@ jobs:
       - name: Write the newsletter
         if: steps.source.outputs.number
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          AZURE_OPENAI_RESOURCE: ${{ vars.AZURE_OPENAI_RESOURCE }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           NEWSLETTER_MODEL: ${{ vars.NEWSLETTER_MODEL }}
           SOURCE: ${{ steps.source.outputs.number }}
         run: |
