@@ -70,8 +70,8 @@ Do not add a reading list or sources section — it is appended automatically.
 
 ## Running it
 
-The `.github/workflows/research-newsletter.yml` workflow loads this file as the system prompt
+The `.github/workflows/research-newsletter.yml` workflow includes this file in the prompt
 via `tools/write_newsletter.py` after each research-watch run. To draft by hand, run
-`python tools/write_newsletter.py --report report.md` with `GITHUB_TOKEN` set (needs the
-`models: read` permission), or give an agent this skill and the triage issue body — without
-tool access, because the input is untrusted.
+`python tools/write_newsletter.py --report report.md` with Copilot CLI installed and authenticated
+with Copilot access, or give an agent this skill and the triage issue body — without tool access,
+because the input is untrusted.

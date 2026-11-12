@@ -1373,16 +1373,9 @@ def test_newsletter_cites_only_report_links_and_defuses_model_output():
     assert "untrusted" in messages[0]["content"] and not messages[0]["content"].startswith("---")
     assert "https://" not in messages[1]["content"] and "last week" in messages[1]["content"]
 
-    class Response(io.BytesIO):
-        def __enter__(self): return self
-        def __exit__(self, *a): pass
     raw = ("```markdown\n# Poisoned [S1] tools\nSee [S1][S2], [S9], [x](https://evil.test) "
            "https://evil.test/p <img src=x> ![i](https://evil.test/i) @octocat #12\n```")
-    reply = json.dumps({"choices": [{"message": {"content": raw}}]}).encode()
-    seen = {}
-    opener = lambda request, timeout: seen.setdefault("req", request) and Response(reply)
-    text = writer.sanitise(writer.call_model(messages, "m", "resource", "test-key", opener=opener), items)
-    assert seen["req"].get_header("Api-key") == "test-key"
+    text = writer.sanitise(raw, items)
     assert "[S1](https://a.test/1)[S2](https://b.test/2)" in text
     assert "evil" not in text and "<img" not in text and "S9" not in text
     assert "@\u200boctocat" in text and "#\u200b12" in text and not text.startswith("```")

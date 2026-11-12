@@ -1,9 +1,9 @@
-"""Turn a research-watch triage report into a narrative weekly newsletter using Azure OpenAI.
+"""Turn a research-watch triage report into a narrative weekly newsletter using Copilot CLI.
 
 Usage:
   python tools/write_newsletter.py --report report.md [--previous last.md] [--title-out title.txt]
 
-Needs AZURE_OPENAI_RESOURCE, AZURE_OPENAI_API_KEY and NEWSLETTER_MODEL. The editorial instructions live in
+Needs Copilot CLI and a GitHub token with Copilot access. The editorial instructions live in
 .github/skills/security-newsletter/SKILL.md. Report text is untrusted: the model gets no tools,
 cites items only by id ([S3]), and its output is sanitised so the only links are report URLs.
 """
@@ -11,8 +11,9 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
-import urllib.request
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -65,17 +66,18 @@ def build_messages(items, previous, today):
     return [{"role": "system", "content": skill_prompt()}, {"role": "user", "content": "\n".join(user)}]
 
 
-def call_model(messages, model, resource, api_key, opener=urllib.request.urlopen):
-    if not re.fullmatch(r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?", resource):
-        raise ValueError("AZURE_OPENAI_RESOURCE must be an Azure OpenAI resource name")
-    endpoint = f"https://{resource}.openai.azure.com/openai/v1/chat/completions"
-    body = json.dumps({"model": model, "messages": messages, "temperature": 0.6, "max_tokens": 2500}).encode()
-    request = urllib.request.Request(endpoint, data=body, method="POST", headers={
-        "api-key": api_key, "Content-Type": "application/json", "Accept": "application/json",
-    })
-    with opener(request, timeout=120) as response:
-        data = json.loads(response.read())
-    return data["choices"][0]["message"]["content"]
+def call_model(messages):
+    prompt = "\n\n".join(message["content"] for message in messages)
+    with tempfile.TemporaryDirectory() as workdir:
+        env = {**os.environ, "COPILOT_HOME": workdir}
+        result = subprocess.run(
+            ["copilot", "--no-auto-update", "--no-custom-instructions", "--disable-builtin-mcps",
+             "--available-tools=__none__", "--no-ask-user", "--silent", "--prompt", prompt],
+            cwd=workdir, env=env, stdout=subprocess.PIPE, text=True, check=True, timeout=300,
+        )
+    if not result.stdout.strip():
+        raise ValueError("Copilot returned an empty newsletter")
+    return result.stdout
 
 
 def sanitise(text, items):
@@ -123,19 +125,17 @@ def main():
     parser.add_argument("--previous", type=Path, help="previous newsletter body, for continuity")
     parser.add_argument("--issue", type=int, help="source triage issue number, for the footer")
     parser.add_argument("--title-out", type=Path, help="write the headline to this file")
-    parser.add_argument("--model", default=os.environ.get("NEWSLETTER_MODEL"), help="Azure OpenAI deployment name")
     args = parser.parse_args()
-    resource = os.environ.get("AZURE_OPENAI_RESOURCE")
-    api_key = os.environ.get("AZURE_OPENAI_API_KEY")
-    if not resource or not api_key or not args.model:
-        parser.error("AZURE_OPENAI_RESOURCE, AZURE_OPENAI_API_KEY and NEWSLETTER_MODEL (or --model) are required")
     items = parse_report(args.report.read_text(encoding="utf-8"))
     if not items:
         print("No research items found in the report; nothing to write.", file=sys.stderr)
         return 1
     previous = args.previous.read_text(encoding="utf-8") if args.previous and args.previous.exists() else ""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    narrative = sanitise(call_model(build_messages(items, previous, today), args.model, resource, api_key), items)
+    narrative = sanitise(call_model(build_messages(items, previous, today)), items)
+    if not narrative:
+        print("Copilot returned no usable newsletter text.", file=sys.stderr)
+        return 1
     if args.title_out:
         args.title_out.write_text(headline(narrative), encoding="utf-8")
     print(compose(narrative, items, args.issue))
