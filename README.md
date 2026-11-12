@@ -547,9 +547,10 @@ threat-level ratings, an expert take on threats and trends, a defender checklist
 ideas, published as an issue labelled `newsletter` and linked from the triage issue. The
 editorial voice and structure live in the
 [security-newsletter skill](.github/skills/security-newsletter/SKILL.md), which
-[tools/write_newsletter.py](tools/write_newsletter.py) sends to GitHub Models (`models: read`,
-no extra secrets; override the model with the `NEWSLETTER_MODEL` repository variable). The
-previous newsletter is passed in so each issue tracks what continued, escalated or faded. The
+[tools/write_newsletter.py](tools/write_newsletter.py) sends to Copilot CLI, using the
+built-in Actions token with `copilot-requests: write`; no Azure OpenAI key is required.
+Copilot access is required and usage is billed to the repository owner's Copilot seat.
+The previous newsletter is passed in so each issue tracks what continued, escalated or faded. The
 model has no tools, cites items only by id, and its output is sanitised so the only links are
 those in the report. Re-run by hand from the Actions tab with an issue number.
 

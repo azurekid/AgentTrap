@@ -19,7 +19,7 @@ on:
 permissions:
   contents: read
   issues: write
-  models: read
+  copilot-requests: write
 
 concurrency:
   group: research-newsletter
@@ -62,14 +62,16 @@ jobs:
             echo "Newsletter already written for #$number; skipping."; exit 0
           fi
           gh issue view "$number" --repo "$REPO" --json body --jq .body > report.md
-          gh issue list --repo "$REPO" --label newsletter --state all --limit 1 \
+          gh issue list --repo "$REPO" --search "label:newsletter sort:created-desc" --state all --limit 1 \
             --json body --jq '.[0].body // ""' > previous.md
           echo "number=$number" >> "$GITHUB_OUTPUT"
+      - name: Install Copilot CLI
+        if: steps.source.outputs.number
+        run: npm install --global --ignore-scripts @github/copilot@1.0.109
       - name: Write the newsletter
         if: steps.source.outputs.number
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          NEWSLETTER_MODEL: ${{ vars.NEWSLETTER_MODEL }}
           SOURCE: ${{ steps.source.outputs.number }}
         run: |
           python tools/write_newsletter.py --report report.md --previous previous.md \
