@@ -6,7 +6,7 @@ Usage:
 
 Exit code 0 means nothing new, 1 means a Markdown shortlist was printed, 2 means every feed failed.
 Feed text is untrusted: titles are reduced to plain text and links are limited to http(s) URLs, so the
-report is safe to post as a GitHub issue. Do not hand the report to an agent that has tool access.
+report is safe to post as a GitHub issue. Do not hand the report to an agent that has tool access (tools/write_newsletter.py uses a tool-less model).
 """
 import argparse
 import gzip
