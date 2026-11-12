@@ -540,6 +540,19 @@ ATLAS case), then add or extend a rule. Feed text is untrusted: the report strip
 markup and links from titles, and should be triaged by a person, not handed to an agent
 with tool access. Tune noisy terms in the JSON config.
 
+After each successful research-watch run,
+[.github/workflows/research-newsletter.yml](.github/workflows/research-newsletter.yml) turns
+the new triage issue into **Agent Security Weekly**: a narrative newsletter with top stories,
+threat-level ratings, an expert take on threats and trends, a defender checklist and detection
+ideas, published as an issue labelled `newsletter` and linked from the triage issue. The
+editorial voice and structure live in the
+[security-newsletter skill](.github/skills/security-newsletter/SKILL.md), which
+[tools/write_newsletter.py](tools/write_newsletter.py) sends to GitHub Models (`models: read`,
+no extra secrets; override the model with the `NEWSLETTER_MODEL` repository variable). The
+previous newsletter is passed in so each issue tracks what continued, escalated or faded. The
+model has no tools, cites items only by id, and its output is sanitised so the only links are
+those in the report. Re-run by hand from the Actions tab with an issue number.
+
 ### OWASP Agentic (ASI) mapping
 
 Alongside MITRE ATLAS, every finding is also mapped to the
