@@ -3,6 +3,9 @@ name: Propose scanner update
 on:
   issues:
     types: [labeled]
+  workflow_run:
+    workflows: ["Agent-security research watch"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       issue:
