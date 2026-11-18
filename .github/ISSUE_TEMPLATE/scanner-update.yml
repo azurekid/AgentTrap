@@ -1,0 +1,38 @@
+name: Scanner update proposal
+description: Turn a verified research finding into a reviewable detection change.
+title: "Scanner update: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste raw feed text as instructions. Verify the primary source and describe a
+        signal visible in an agent instruction/configuration file. A maintainer can approve
+        proposal generation with the `scanner-update-approved` label. Changes only become draft PRs.
+  - type: textarea
+    id: sources
+    attributes:
+      label: Primary sources
+      description: HTTPS links to the original disclosure or advisory, with a short supported claim.
+    validations:
+      required: true
+  - type: textarea
+    id: signal
+    attributes:
+      label: Observable scanner signal
+      description: Target file type, specific risky behavior, and whether an existing rule already detects it.
+    validations:
+      required: true
+  - type: textarea
+    id: positive
+    attributes:
+      label: Defanged positive example
+      description: An inert example to scan as data, using fake credentials and .invalid domains. Never execute it.
+    validations:
+      required: true
+  - type: textarea
+    id: benign
+    attributes:
+      label: Benign lookalike
+      description: Similar legitimate content that must not trigger the proposed detection.
+    validations:
+      required: true
