@@ -993,6 +993,21 @@ def test_clean_report_has_empty_atlas_mapping(client):
     assert atlas["techniques"] == [] and all(t["findings"] == 0 for t in atlas["tactics"])
 
 
+def test_newsletter_page_and_style_policy(client):
+    homepage = client.get("/")
+    page = client.get("/newsletter")
+    assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
+    assert 'href="/newsletter">Newsletter</a>' in homepage.text
+    assert "<h1>Stolen keys put agents at risk</h1>" in page.text
+    assert "Verify the signal. Defend the perimeter." in page.text
+
+    style = page.text.split("<style>", 1)[1].split("</style>", 1)[0].encode()
+    digest = base64.b64encode(hashlib.sha256(style).digest()).decode()
+    source = f"'sha256-{digest}'"
+    assert f"style-src 'self' {source};" in page.headers["content-security-policy"]
+    assert source not in homepage.headers["content-security-policy"]
+
+
 def test_research_page_and_parsed_sources(client):
     page = client.get("/sources")
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
@@ -1349,7 +1364,7 @@ def test_research_watcher_filters_sanitises_and_dedupes(monkeypatch):
                                     fetcher=feeds.__getitem__, nvd=nvd)
     assert [item["url"] for item in found] == ["https://example.org/a", "https://example.org/d"]
     assert found[0]["title"] == "New AGENTS.md backdoor (link) someone 12"
-    assert errors == ["Broken: ValueError"]
+    assert errors == ["Broken: ValueError: feed declares XML entities"]
     report = watcher.report(found, errors, config)
     assert "- [ ] New AGENTS.md" in report and "untrusted" in report
 
@@ -1376,12 +1391,13 @@ def test_newsletter_cites_only_report_links_and_defuses_model_output():
     raw = ("```markdown\n# Poisoned [S1] tools\nSee [S1][S2], [S9], [x](https://evil.test) "
            "https://evil.test/p <img src=x> ![i](https://evil.test/i) @octocat #12\n```")
     text = writer.sanitise(raw, items)
-    assert "[S1](https://a.test/1)[S2](https://b.test/2)" in text
+    assert '[Blog](https://a.test/1 "MCP tool poisoning")' in text
+    assert '[arXiv](https://b.test/2 "Skill backdoors")' in text
     assert "evil" not in text and "<img" not in text and "S9" not in text
     assert "@\u200boctocat" in text and "#\u200b12" in text and not text.startswith("```")
     assert writer.headline(text) == "Poisoned tools"
-    body = writer.compose(text, items, 7)
-    assert "## Reading list" in body and "- [S2](https://b.test/2) Skill backdoors" in body and "#7" in body
+    body = writer.compose(text, items)
+    assert "## Reading list" in body and "- [Skill backdoors](https://b.test/2)" in body
 
 
 @pytest.mark.parametrize("hops,header,expected", [

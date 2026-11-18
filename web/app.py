@@ -205,10 +205,14 @@ class PublicGuard:
             self.active += 1
         async def secured_send(message: Message) -> None:
             if message["type"] == "http.response.start":
+                style_src = b"style-src 'self'"
+                if path == "/newsletter":
+                    # Authorize only the embedded CSS in the reviewed edition.
+                    style_src += b" 'sha256-nho1YIUUtQiilQhCSMPLArkTu/zOxaYEHF0LQQAjIoo='"
                 message["headers"] += [
                     (b"x-content-type-options", b"nosniff"), (b"x-frame-options", b"DENY"),
                     (b"referrer-policy", b"no-referrer"), (b"cache-control", b"no-store"),
-                    (b"content-security-policy", b"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"),
+                    (b"content-security-policy", b"default-src 'self'; script-src 'self'; " + style_src + b"; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"),
                     (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
                 ]
             await send(message)
@@ -255,6 +259,11 @@ async def validation_error(request: Request, exc: RequestValidationError):
 @app.get("/")
 def index():
     return FileResponse(ROOT / "static" / "index.html")
+
+
+@app.get("/newsletter")
+def newsletter_page():
+    return FileResponse(ROOT / "static" / "newsletter-issue-20.html")
 
 
 @app.get("/scan")

@@ -611,9 +611,14 @@ values are never published.
 | `/coverage` | Threat classes, ecosystems and file types inspected |
 | `/samples` | Use-case catalogue |
 | `/sources` | Research sources |
+| `/newsletter` | Reviewed Agent Security Weekly HTML edition, linked from the landing page |
 
-Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. Every page shares the navigation and the footer credit to
+Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to
 [azurekid](https://github.com/azurekid).
+
+The newsletter page serves a reviewed static HTML snapshot. Publishing a new edition
+requires updating the snapshot, its inline CSS hash in the web app, and the route test.
+The newsletter workflow's GitHub issue and downloads do not publish drafts to the site.
 
 ### Research sources
 

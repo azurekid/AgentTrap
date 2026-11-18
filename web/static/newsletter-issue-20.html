@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stolen keys put agents at risk | Agent Security Weekly</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05070c; --panel: #0a0f18; --line: #223046;
+      --text: #eef3fb; --muted: #aab7ca; --dim: #8292a8;
+      --cyan: #2ee6d6; --magenta: #ff4fc3; --link: #86dcff;
+      --critical: #ff5c7a; --high: #ff9d4d; --medium: #ffd166; --low: #6ee7a0;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: clamp(.75rem, 4vw, 3rem); background: var(--bg); color: var(--muted);
+      font: 1.02rem/1.7 system-ui, -apple-system, "Segoe UI", sans-serif; overflow-wrap: anywhere;
+    }
+    main { max-width: 50rem; margin: auto; background: var(--panel); }
+    header, article, footer { padding-inline: clamp(1.25rem, 5vw, 3rem); }
+    .label { margin: 0; color: var(--dim); font: 600 .72rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    .critical { --level: var(--critical); }
+    .high { --level: var(--high); }
+    .medium { --level: var(--medium); }
+    .low { --level: var(--low); }
+
+    header {
+      position: relative; isolation: isolate; overflow: hidden;
+      padding-block-end: clamp(1.5rem, 4vw, 2.25rem); border-block-end: 1px solid var(--line);
+      background: radial-gradient(ellipse at 100% 30%, #2b1539, transparent 65%),
+        linear-gradient(110deg, #0b1821, var(--panel) 62%);
+    }
+    header::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--magenta)); }
+    .topbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: .4rem 1.5rem; padding-block: 1.25rem 1rem; border-block-end: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; color: var(--text); font-size: 1.1rem; font-weight: 700; }
+    .brand b { color: var(--cyan); }
+    .logo { width: 1.9rem; fill: none; stroke: var(--cyan); stroke-width: 1.8; stroke-linejoin: round; }
+    .logo-core { fill: var(--cyan); stroke: none; }
+    .kicker { margin-block-start: 2rem; color: var(--cyan); }
+    .headline-row { display: grid; grid-template-columns: minmax(0, 1fr) clamp(7rem, 38%, 17rem); align-items: center; }
+    h1 {
+      margin: .5rem 0; max-width: 22ch; color: var(--text); font-size: clamp(1.75rem, 5vw, 3.2rem);
+      line-height: 1.08; letter-spacing: -.035em; text-wrap: balance;
+      text-shadow: 0 0 .45rem #2ee6d647, 0 0 1.35rem #ff4fc34d;
+    }
+    .radar { display: block; width: 100%; color: var(--cyan); overflow: visible; }
+    .radar-sweep { transform-origin: 150px 77px; }
+    .radar-target { color: var(--magenta); filter: drop-shadow(0 0 4px var(--magenta)); }
+    .radar-blip { fill: currentColor; stroke: none; }
+    @media screen and (prefers-reduced-motion: no-preference) {
+      .radar-sweep { animation: sweep 4.8s linear; }
+      .radar-blip { animation: pulse 4.8s ease-in-out; }
+    }
+    @keyframes sweep { from { transform: rotate(-360deg); } to { transform: rotate(0deg); } }
+    @keyframes pulse {
+      18%, 50%, 82% { opacity: .25; }
+      0%, 34%, 66%, 100% { opacity: 1; }
+    }
+
+    article { padding-block: clamp(1.5rem, 5vw, 2.75rem); }
+    h2, h3, strong { color: var(--text); }
+    article > h2 {
+      position: relative; margin: 2.75rem 0 1rem; padding: .3rem 0 .7rem 2rem;
+      font: 800 clamp(1.05rem, 3.4vw, 1.55rem)/1.3 var(--mono);
+      letter-spacing: .045em; text-transform: uppercase;
+      text-shadow: 1px 1px #ff4fc355, 0 0 .55rem #2ee6d660, 0 0 1.2rem #ff4fc34d;
+    }
+    article > h2::before {
+      content: ""; position: absolute; inset: .46rem auto auto .26rem;
+      width: .28rem; height: 1em; background: var(--cyan);
+      box-shadow: .48rem 0 var(--magenta), 0 0 .55rem #2ee6d680;
+      transform: skewX(-23deg);
+    }
+    article > h2::after {
+      content: ""; position: absolute; inset: auto 0 0; height: 1px;
+      background: linear-gradient(90deg, var(--cyan) 1.1rem, var(--magenta) 1.1rem 2.8rem, var(--line) 2.8rem, transparent);
+    }
+    article > h2:first-child {
+      margin-block-start: 0; color: var(--cyan);
+    }
+    article > h2:first-child + ul { color: var(--text); }
+    article > h3 {
+      margin: 1.8rem 0 .65rem; padding-inline-start: .6rem; border-inline-start: 2px solid var(--magenta);
+      color: var(--magenta); font: 700 .82rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .12em;
+      text-shadow: 0 0 .5rem #ff4fc359;
+    }
+    article > h4 { margin: 1.4rem 0 .5rem; color: var(--text); font-size: 1.18rem; line-height: 1.35; }
+    article > h3 + h4 { margin-block-start: 0; }
+    article > h4 + p { margin-block-start: .5rem; }
+    .threat { margin-block: .6rem 1.1rem; font-size: .93rem; }
+    .threat strong {
+      margin-inline-end: .3rem; color: var(--level, var(--text));
+      font: 700 .74rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .1em;
+    }
+
+    a { color: var(--link); text-decoration-color: #86dcff73; text-underline-offset: .2em; }
+    a:hover { text-decoration-color: currentColor; }
+    a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .cites a {
+      color: var(--cyan); font-size: .8em; vertical-align: .06em; white-space: nowrap;
+    }
+
+    ul { padding-inline-start: 1.3rem; }
+    li + li { margin-block-start: .5rem; }
+    li::marker { color: var(--cyan); }
+    .contains-task-list { padding: 0; list-style: none; }
+    .task-list-item { position: relative; padding-inline-start: 1.5rem; }
+    .task-list-item-checkbox {
+      position: absolute; top: .42rem; left: 0; width: .85rem; height: .85rem; margin: 0;
+      border: 1px solid var(--cyan); appearance: none;
+    }
+    .task-list-item-checkbox:checked { background: var(--cyan); }
+    p:has(+ ul) > strong:only-child { color: var(--magenta); font: 700 .72rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    hr { margin: 2.5rem 0 1rem; border: 0; border-block-start: 1px dashed var(--line); }
+    hr + p { color: var(--dim); font-size: .85rem; }
+    footer {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem 1.5rem;
+      padding-block: .9rem; border-block-start: 1px solid var(--line); background: var(--bg);
+    }
+
+    @media (max-width: 30rem) {
+      .headline-row { grid-template-columns: minmax(0, 1fr) 6.5rem; }
+    }
+    @media print {
+      :root {
+        color-scheme: light; --bg: #fff; --panel: #fff; --line: #9aa8b8;
+        --text: #000; --muted: #1f2933; --dim: #4a5565; --cyan: #08695b; --magenta: #8a1f6a; --link: #135a85;
+        --critical: #a3001f; --high: #8f4300; --medium: #6b5200; --low: #17603a;
+      }
+      body { padding: 0; }
+      header { background: #fff; }
+      .headline-row { display: block; }
+      .radar { display: none; }
+      h1, article > h2, article > h3 { text-shadow: none; }
+      article > h2 { border-block-end: 1px solid var(--line); padding-inline-start: 0; }
+      article > h2::before, article > h2::after { display: none; }
+      h2, h3, h4 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 32 36" aria-hidden="true">
+          <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
+          <circle cx="16" cy="17" r="5.5"/>
+          <circle class="logo-core" cx="16" cy="17" r="2"/>
+        </svg>
+        <span>Agent<b>Lens</b></span>
+      </div>
+      <p class="label">Agent Security Weekly</p>
+    </div>
+    <p class="label kicker">Weekly threat briefing <span aria-hidden="true">//</span> <time datetime="2026-11-18">2026-11-18</time></p>
+    <div class="headline-row">
+      <h1>Stolen keys put agents at risk</h1>
+      <svg class="radar" viewBox="0 0 228 154" aria-hidden="true">
+        <defs>
+          <linearGradient id="radar-trail" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop stop-color="#2ee6d6" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#2ee6d6" stop-opacity=".02"/>
+          </linearGradient>
+        </defs>
+        <g fill="none" stroke="currentColor">
+          <circle cx="150" cy="77" r="73" opacity=".85"/>
+          <circle cx="150" cy="77" r="55" opacity=".6"/>
+          <circle cx="150" cy="77" r="36" opacity=".6"/>
+          <circle cx="150" cy="77" r="18" opacity=".6"/>
+          <path d="M77 77h146M150 4v146" stroke-dasharray="2 4" opacity=".6"/>
+          <path d="M150 1v7m0 138v7M74 77h7m138 0h7M96 23l5 5m98 98 5 5m0-108-5 5m-98 98-5 5"/>
+        </g>
+        <g class="radar-sweep">
+          <path d="M150 77 103 21A73 73 0 0 1 147 4Z" fill="url(#radar-trail)"/>
+          <path d="M150 77 103 21" stroke="currentColor" stroke-width="1.5"/>
+        </g>
+        <circle cx="150" cy="77" r="3" fill="currentColor"/>
+        <circle cx="185" cy="105" r="2" fill="currentColor" opacity=".65"/>
+        <g class="radar-target" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path class="radar-arrow" d="M11 77h45l28-28M16 72l-5 5 5 5"/>
+          <path class="radar-tether" d="M84 49L117 49"/>
+          <g class="radar-lock">
+            <path d="M121 40h-4v4m14-4h4v4m0 10v4h-4m-10 0h-4v-4M117 47v4"/>
+            <circle class="radar-blip" cx="126" cy="49" r="3.5"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </header>
+  <article>
+<h2>TL;DR</h2>
+<ul>
+<li>Cursor says a compromised key at AI provider Fireworks led to malicious Claude Code extensions, and the breach is still the clearest supply-chain case this month <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>.</li>
+<li>Google describes attackers running autonomous multi-agent tools, but the Java and &quot;first fully autonomous attack&quot; headlines are weak leads <span class="cites"><a href="https://thehackernews.com/2026/11/google-finds-hackers-using-ai-agents-to.html" title="Google Finds Hackers Using AI Agents to Build and Run Exploits From Software Patches">The Hacker News</a> <a href="https://news.google.com/rss/articles/CBMilgFBVV95cUxPcXVxejFTLTVrb1RGX0NvVENLNkdUTmREUGpuWGN3RklFRXhQRjlaandoTVItVjE2V3FSeVhlQVlQOF9HUHlwd2lYZ2VfeGpuMzBkQVNNSnkyZVU0WU53ZWEzUU1HcG9KRjJBWHlBa3hBUmg4alNHZmNySXJYamZqcXo3TVY2VEhXSUlYMGNrX2JJbnBUVFE?oc=5" title="OpenAI's AI model found a critical vulnerability in Java that threatens 90% of top companies - dev.ua">dev.ua</a> <a href="https://news.google.com/rss/articles/CBMilAFBVV95cUxON21CNEx0SnNUc1U0elU4UmMybFU1MlU2emRqM1RDNGJDSnY3N1d0cG9XN2VuZFRsa19QTlVRa1dPQkZWZ1FOMHhBMDVELXZaUHhPeUxLOWIzUHBNM1BtNTVmY3Q4a2trZVVleGhGV21nRmpjZXRpanhfMFU0cE0yZkRadDBiXzJ2dWVmMzBOcWRlZzhU?oc=5" title="Google Spots Fully Autonomous AI Attacks For the First Time - Cyber Magazine">Cyber Magazine</a></span>.</li>
+<li>Supergateway and vLLM both have new CVEs where an unauthenticated or hostile client can reach the agent or model backend <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121" title="CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...">CVE-2026-132121</a> <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130686" title="CVE-2026-130686: vLLM from 0.6.0 before 0.33.0 lacks a request-wide media budget, allowing remote inference clients to exhaust frontend resources by submitting many remote image URLs in one request. A...">CVE-2026-130686</a> <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130685" title="CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that allows unauthenticated attackers to crash the shared EngineCore by sending out-of-range prompt ...">CVE-2026-130685</a></span>.</li>
+</ul>
+<h2>The week in agent security</h2>
+<p>This week the risk sits at the edges of the agent, not inside the model. A stolen vendor key reached Cursor data and credentials <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>. A researcher group took over a popular model account on Hugging Face because the platform does not verify ownership <span class="cites"><a href="https://www.bleepingcomputer.com/news/security/researchers-hijack-hugging-face-account-for-popular-kokoro-ai-model/" title="Researchers hijack Hugging Face account for popular Kokoro AI model">BleepingComputer</a></span>. In both cases, trust in a third party was the weak point.</p>
+<p>The same pattern shows up in serving software. Supergateway lets a web page talk to a local MCP process <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121" title="CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...">CVE-2026-132121</a></span>. Two vLLM bugs let remote clients exhaust resources or crash the engine <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130686" title="CVE-2026-130686: vLLM from 0.6.0 before 0.33.0 lacks a request-wide media budget, allowing remote inference clients to exhaust frontend resources by submitting many remote image URLs in one request. A...">CVE-2026-130686</a> <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130685" title="CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that allows unauthenticated attackers to crash the shared EngineCore by sending out-of-range prompt ...">CVE-2026-130685</a></span>. These are classic web bugs in new places. In our view, many AI tools were built for a trusted laptop, then exposed to networks and browsers.</p>
+<p>On the attacker side, Google says threat actors now use autonomous frameworks such as ARTEX, CAIRN, CyberStrikeAI and PentAGI to build and run exploits from patches <span class="cites"><a href="https://thehackernews.com/2026/11/google-finds-hackers-using-ai-agents-to.html" title="Google Finds Hackers Using AI Agents to Build and Run Exploits From Software Patches">The Hacker News</a></span>. Reports on ransomware and a phishing kit add that AI mostly gives scale and better lures <span class="cites"><a href="https://www.darkreading.com/perimeter/themailer-phishing-kit-ai-drivers-seat" title="'TheMailer' Phishing Kit Puts AI in the Driver's Seat">Dark Reading</a> <a href="https://www.darkreading.com/threat-intelligence/ransomware-attacks-increase-ai-payments-decline" title="Ransomware Attacks Increase Behind AI, but Payments Decline">Dark Reading</a></span>. The defence answer is the same as always: limit what a stolen key or a steered agent can reach. Simon Willison's work on external sandboxes follows that idea <span class="cites"><a href="https://simonwillison.net/2026/Nov/17/external-sandboxes-for-coding-agents/" title="External sandboxes for coding agents">Simon Willison</a></span>.</p>
+<h2>Top stories</h2>
+<h3>Supply chain</h3>
+<h4>Fireworks key leads to malicious Claude Code extensions</h4>
+<p>Cursor traced malicious Claude Code extensions to a compromised key issued to Fireworks. Threat actors used it to reach Cursor data and credentials <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>. The excerpt does not say what the extensions did or how many people installed them. Anyone who installed them should treat local credentials as exposed.</p>
+<p class="threat high"><strong>Threat level:</strong> High. Real compromise with a confirmed path, but payload details are missing.</p>
+<h3>Tool security</h3>
+<h4>Supergateway cross-site WebSocket hijacking</h4>
+<p>CVE-2026-132121 affects Supergateway 2.4.0 through 4.2.2 in stdio-to-WebSocket mode. It does not check the Origin header, so a malicious page can open the /message WebSocket from the victim's browser <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121" title="CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...">CVE-2026-132121</a></span>. In our view, that could let a web page drive a local MCP server and its tools.</p>
+<p class="threat high"><strong>Threat level:</strong> High. Public details on a real MCP bridge; upgrade or restrict access.</p>
+<h3>Model security</h3>
+<h4>Hugging Face account takeover of Kokoro</h4>
+<p>Researchers took control of the account for Kokoro, a text-to-speech model used in projects from Google, NVIDIA, AMD, Intel and Amazon Web Services. The cause was missing ownership verification <span class="cites"><a href="https://www.bleepingcomputer.com/news/security/researchers-hijack-hugging-face-account-for-popular-kokoro-ai-model/" title="Researchers hijack Hugging Face account for popular Kokoro AI model">BleepingComputer</a></span>. Anyone who pulls models by name could be served changed files.</p>
+<p class="threat medium"><strong>Threat level:</strong> Medium. Done by researchers, but the weakness is real and the reach is wide.</p>
+<h4>vLLM resource exhaustion and engine crash</h4>
+<p>CVE-2026-130686 lets remote clients exhaust frontend resources with many image URLs in one request <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130686" title="CVE-2026-130686: vLLM from 0.6.0 before 0.33.0 lacks a request-wide media budget, allowing remote inference clients to exhaust frontend resources by submitting many remote image URLs in one request. A...">CVE-2026-130686</a></span>. CVE-2026-130685 lets unauthenticated attackers crash EngineCore with out-of-range token ids when <code>--skip-tokenizer-init</code> is used <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130685" title="CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that allows unauthenticated attackers to crash the shared EngineCore by sending out-of-range prompt ...">CVE-2026-130685</a></span>. Both are fixed in 0.33.0 per the excerpts.</p>
+<p class="threat medium"><strong>Threat level:</strong> Medium. Denial of service only, but it affects shared inference hosts.</p>
+<h2>Expert take: threats and trends</h2>
+<p>Compared with last week, the Fireworks breach continued, and its main facts are unchanged <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>. Supergateway continued as a story, now as a known CVE rather than a new find <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121" title="CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...">CVE-2026-132121</a></span>. Google's autonomous agent report continued, and no new frameworks were named <span class="cites"><a href="https://thehackernews.com/2026/11/google-finds-hackers-using-ai-agents-to.html" title="Google Finds Hackers Using AI Agents to Build and Run Exploits From Software Patches">The Hacker News</a></span>. Uber's victim count did not appear this week.</p>
+<p>New this week: model-hosting trust (Hugging Face) and inference server bugs (vLLM). Attackers are going after the supply chain around agents, because it is easier than attacking the model.</p>
+<p>Over-hyped: the &quot;AI found a critical Java flaw threatening 90% of top companies&quot; headlines. These are search leads with no detail, so we do not rate them <span class="cites"><a href="https://news.google.com/rss/articles/CBMilgFBVV95cUxPcXVxejFTLTVrb1RGX0NvVENLNkdUTmREUGpuWGN3RklFRXhQRjlaandoTVItVjE2V3FSeVhlQVlQOF9HUHlwd2lYZ2VfeGpuMzBkQVNNSnkyZVU0WU53ZWEzUU1HcG9KRjJBWHlBa3hBUmg4alNHZmNySXJYamZqcXo3TVY2VEhXSUlYMGNrX2JJbnBUVFE?oc=5" title="OpenAI's AI model found a critical vulnerability in Java that threatens 90% of top companies - dev.ua">dev.ua</a> <a href="https://news.google.com/rss/articles/CBMitwFBVV95cUxOeGdVcXd5YkVBU2RMN2lOUnQxd0w1aVNPQUo5ZjZJMXVxUXBxY2JaUlMxZ2FweWp0dGo1cDRsZTQ0dHZrVVRVdmlxQTZ1T1NCaFRKTC1odkdjcmJIaHN3N044a0MwVk9ESUdjR242Z2doVjNQb0swYzBhRGZIbnpKV1JoV051WTJlZG55cmp4Q3A1T3RNR0U1d05UdkFnYTNQWHNoS2RMVUpScXJWUHFzcmVScXFQNTg?oc=5" title="AI model uncovers critical security vulnerability in Java: Report - Anadolu Ajansı">Anadolu Ajansı</a></span>. Same for &quot;first fully autonomous AI attacks&quot; <span class="cites"><a href="https://news.google.com/rss/articles/CBMilAFBVV95cUxON21CNEx0SnNUc1U0elU4UmMybFU1MlU2emRqM1RDNGJDSnY3N1d0cG9XN2VuZFRsa19QTlVRa1dPQkZWZ1FOMHhBMDVELXZaUHhPeUxLOWIzUHBNM1BtNTVmY3Q4a2trZVVleGhGV21nRmpjZXRpanhfMFU0cE0yZkRadDBiXzJ2dWVmMzBOcWRlZzhU?oc=5" title="Google Spots Fully Autonomous AI Attacks For the First Time - Cyber Magazine">Cyber Magazine</a></span> and the vendor pentest pieces, which are marketing-adjacent <span class="cites"><a href="https://thehackernews.com/2026/11/ai-pentesting-checklist-for-web-apps-15.html" title="AI Pentesting Checklist for Web Apps: 15 Questions to Ask Before Choosing a Vendor">The Hacker News</a> <a href="https://thehackernews.com/2026/11/quality-isnt-main-worry-about-ai.html" title="Quality Isn’t The Main Worry About AI Pentesting - Data Privacy and Production Safety Are">The Hacker News</a></span>. The prompt injection explainer is background only <span class="cites"><a href="https://news.google.com/rss/articles/CBMiZkFVX3lxTE5zbG5Wd2J4NDA3QXlWYVdlT1ZqaFEtV3oxenJJcDg2OHRXbi1hOHduUWpMQjhOV256TmFicXNfeWZONE9kbVlMTEVJRzVwbk8xNFFUR1k1d2JYVzFjMzg2RmNyekc1dw?oc=5" title="Prompt injection attacks explained: how hackers hijack AI - qz.com">qz.com</a></span>. We skip the currency items as noise <span class="cites"><a href="https://news.google.com/rss/articles/CBMiwAFBVV95cUxNblZMcmNvUGJSX1pLTFQybkVKeHNHYXJSZkJOajVhOVZnb2dma0FNVmw0dFMzZFdWX0pwREk5SzZNc2lFTGVESXRsbm1CS0dKcXVDbjAzTEhITndnSXRvLUd2ZnJFNWpaQ3R2alhNNjRQSDQ4ajRCWGxSREI5N3lVbUtBSV9tczRzVjlOQmlqYnREeWtyMWlQSkZWNHoxbFUyWHJUR0NJbHhDVVN4QlNCLTBnVWp5U2RNU2xrUHY2OEE?oc=5" title="How do AI vulnerability and RBA limits affect the Australian Dollar? – MUFG - link">link</a> <a href="https://news.google.com/rss/articles/CBMivAFBVV95cUxPNE1qcFVFVjV2N0RxSnhubE5jaER4NERKcG9pTHl0cGc4eTB3V2FHZzJhbi1JdnlUMVdWd0lCdnJDQU1rYW9JMnhNN05yN2NPOGhkNnFUcGtfWm03OW5YeWdTZVlDamdUM3Jtc2tIclVVWGlnRW1pNVhOY0VYQ2xwMXhSQl9xbGxoTW5tT1VPOTc1RkpNWFNrTEtndGxJSVBBbS0tOWtDQnpQLXNOS3Nxc2xhdnRLVDZvUzZLNg?oc=5" title="Australian Dollar: AI vulnerability and RBA limits – MUFG - link">link</a></span>.</p>
+<p><strong>Watch next week:</strong> Details of what the malicious extensions did, and any exploit code for the Supergateway and vLLM CVEs.</p>
+<h2>Defender checklist</h2>
+<ul class="contains-task-list">
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Rotate keys shared with AI vendors, limit their scope, and set short expiry <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>.</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Find and remove the malicious Claude Code extensions, and treat credentials on those machines as exposed <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>.</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Upgrade or firewall Supergateway, and check for Origin validation on any local MCP bridge <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121" title="CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...">CVE-2026-132121</a></span>.</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Upgrade vLLM to 0.33.0 or later, and put authentication and request limits in front of it <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130686" title="CVE-2026-130686: vLLM from 0.6.0 before 0.33.0 lacks a request-wide media budget, allowing remote inference clients to exhaust frontend resources by submitting many remote image URLs in one request. A...">CVE-2026-130686</a> <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130685" title="CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that allows unauthenticated attackers to crash the shared EngineCore by sending out-of-range prompt ...">CVE-2026-130685</a></span>.</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Pin Hugging Face models by commit hash and mirror trusted copies <span class="cites"><a href="https://www.bleepingcomputer.com/news/security/researchers-hijack-hugging-face-account-for-popular-kokoro-ai-model/" title="Researchers hijack Hugging Face account for popular Kokoro AI model">BleepingComputer</a></span>.</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Run coding agents in an external sandbox without long-lived credentials <span class="cites"><a href="https://simonwillison.net/2026/Nov/17/external-sandboxes-for-coding-agents/" title="External sandboxes for coding agents">Simon Willison</a></span>.</li>
+</ul>
+<h2>Detection ideas</h2>
+<ul>
+<li>Add a scanner rule for MCP bridge configs that bind to all interfaces or lack Origin checks, with a Supergateway sample <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121" title="CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...">CVE-2026-132121</a></span>.</li>
+<li>Flag model references that use a mutable name instead of a pinned revision, mapped to supply chain risks in OWASP LLM Top 10 <span class="cites"><a href="https://www.bleepingcomputer.com/news/security/researchers-hijack-hugging-face-account-for-popular-kokoro-ai-model/" title="Researchers hijack Hugging Face account for popular Kokoro AI model">BleepingComputer</a></span>.</li>
+<li>Add a rule for extension or skill manifests that read credential stores, based on the Fireworks case <span class="cites"><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach" title="Cursor Traces Malicious Claude Code Extensions to Third-Party Breach">Dark Reading</a></span>.</li>
+<li>Flag vLLM launch commands using <code>--skip-tokenizer-init</code> on exposed ports <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130685" title="CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that allows unauthenticated attackers to crash the shared EngineCore by sending out-of-range prompt ...">CVE-2026-130685</a></span>.</li>
+</ul>
+<h2>Reading list</h2>
+<p>This week's full list of leads. Check the original sources before you act.</p>
+<p><strong>Independent</strong></p>
+<ul>
+<li><a href="https://simonwillison.net/2026/Nov/17/external-sandboxes-for-coding-agents/">External sandboxes for coding agents</a> (2026-11-17, Simon Willison)</li>
+<li><a href="https://simonwillison.net/2026/Nov/14/datasette-llm/">datasette-llm 0.1a11</a> (2026-11-14, Simon Willison)</li>
+<li><a href="https://www.schneier.com/blog/archives/2026/11/ai-doesnt-have-to-go-rogue-to-break-the-world.html">AI Doesn’t Have to Go Rogue to Break the World</a> (2026-11-13, Bruce Schneier)</li>
+</ul>
+<p><strong>Advisory</strong></p>
+<ul>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132121">CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in...</a> (2026-11-18, NVD CVEs)</li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130686">CVE-2026-130686: vLLM from 0.6.0 before 0.33.0 lacks a request-wide media budget, allowing remote inference...</a> (2026-11-18, NVD CVEs)</li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-130685">CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that...</a> (2026-11-18, NVD CVEs)</li>
+</ul>
+<p><strong>News</strong></p>
+<ul>
+<li><a href="https://thehackernews.com/2026/11/ai-pentesting-checklist-for-web-apps-15.html">AI Pentesting Checklist for Web Apps: 15 Questions to Ask Before Choosing a Vendor</a> (2026-11-18, The Hacker News)</li>
+<li><a href="https://thehackernews.com/2026/11/quality-isnt-main-worry-about-ai.html">Quality Isn’t The Main Worry About AI Pentesting - Data Privacy and Production Safety Are</a> (2026-11-18, The Hacker News)</li>
+<li><a href="https://www.darkreading.com/perimeter/themailer-phishing-kit-ai-drivers-seat">'TheMailer' Phishing Kit Puts AI in the Driver's Seat</a> (2026-11-17, Dark Reading)</li>
+<li><a href="https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach">Cursor Traces Malicious Claude Code Extensions to Third-Party Breach</a> (2026-11-17, Dark Reading)</li>
+<li><a href="https://www.bleepingcomputer.com/news/security/researchers-hijack-hugging-face-account-for-popular-kokoro-ai-model/">Researchers hijack Hugging Face account for popular Kokoro AI model</a> (2026-11-17, BleepingComputer)</li>
+<li><a href="https://www.darkreading.com/threat-intelligence/ransomware-attacks-increase-ai-payments-decline">Ransomware Attacks Increase Behind AI, but Payments Decline</a> (2026-11-16, Dark Reading)</li>
+<li><a href="https://thehackernews.com/2026/11/google-finds-hackers-using-ai-agents-to.html">Google Finds Hackers Using AI Agents to Build and Run Exploits From Software Patches</a> (2026-11-16, The Hacker News)</li>
+</ul>
+<p><strong>Discovery</strong></p>
+<ul>
+<li><a href="https://news.google.com/rss/articles/CBMilgFBVV95cUxPcXVxejFTLTVrb1RGX0NvVENLNkdUTmREUGpuWGN3RklFRXhQRjlaandoTVItVjE2V3FSeVhlQVlQOF9HUHlwd2lYZ2VfeGpuMzBkQVNNSnkyZVU0WU53ZWEzUU1HcG9KRjJBWHlBa3hBUmg4alNHZmNySXJYamZqcXo3TVY2VEhXSUlYMGNrX2JJbnBUVFE?oc=5">OpenAI's AI model found a critical vulnerability in Java that threatens 90% of top companies</a> (2026-11-18, dev.ua)</li>
+<li><a href="https://news.google.com/rss/articles/CBMitwFBVV95cUxOeGdVcXd5YkVBU2RMN2lOUnQxd0w1aVNPQUo5ZjZJMXVxUXBxY2JaUlMxZ2FweWp0dGo1cDRsZTQ0dHZrVVRVdmlxQTZ1T1NCaFRKTC1odkdjcmJIaHN3N044a0MwVk9ESUdjR242Z2doVjNQb0swYzBhRGZIbnpKV1JoV051WTJlZG55cmp4Q3A1T3RNR0U1d05UdkFnYTNQWHNoS2RMVUpScXJWUHFzcmVScXFQNTg?oc=5">AI model uncovers critical security vulnerability in Java: Report</a> (2026-11-18, Anadolu Ajansı)</li>
+<li><a href="https://news.google.com/rss/articles/CBMiZkFVX3lxTE5zbG5Wd2J4NDA3QXlWYVdlT1ZqaFEtV3oxenJJcDg2OHRXbi1hOHduUWpMQjhOV256TmFicXNfeWZONE9kbVlMTEVJRzVwbk8xNFFUR1k1d2JYVzFjMzg2RmNyekc1dw?oc=5">Prompt injection attacks explained: how hackers hijack AI</a> (2026-11-17, qz.com)</li>
+<li><a href="https://news.google.com/rss/articles/CBMilAFBVV95cUxON21CNEx0SnNUc1U0elU4UmMybFU1MlU2emRqM1RDNGJDSnY3N1d0cG9XN2VuZFRsa19QTlVRa1dPQkZWZ1FOMHhBMDVELXZaUHhPeUxLOWIzUHBNM1BtNTVmY3Q4a2trZVVleGhGV21nRmpjZXRpanhfMFU0cE0yZkRadDBiXzJ2dWVmMzBOcWRlZzhU?oc=5">Google Spots Fully Autonomous AI Attacks For the First Time</a> (2026-11-17, Cyber Magazine)</li>
+<li><a href="https://news.google.com/rss/articles/CBMiwAFBVV95cUxNblZMcmNvUGJSX1pLTFQybkVKeHNHYXJSZkJOajVhOVZnb2dma0FNVmw0dFMzZFdWX0pwREk5SzZNc2lFTGVESXRsbm1CS0dKcXVDbjAzTEhITndnSXRvLUd2ZnJFNWpaQ3R2alhNNjRQSDQ4ajRCWGxSREI5N3lVbUtBSV9tczRzVjlOQmlqYnREeWtyMWlQSkZWNHoxbFUyWHJUR0NJbHhDVVN4QlNCLTBnVWp5U2RNU2xrUHY2OEE?oc=5">How do AI vulnerability and RBA limits affect the Australian Dollar? – MUFG</a> (2026-11-14, link)</li>
+<li><a href="https://news.google.com/rss/articles/CBMivAFBVV95cUxPNE1qcFVFVjV2N0RxSnhubE5jaER4NERKcG9pTHl0cGc4eTB3V2FHZzJhbi1JdnlUMVdWd0lCdnJDQU1rYW9JMnhNN05yN2NPOGhkNnFUcGtfWm03OW5YeWdTZVlDamdUM3Jtc2tIclVVWGlnRW1pNVhOY0VYQ2xwMXhSQl9xbGxoTW5tT1VPOTc1RkpNWFNrTEtndGxJSVBBbS0tOWtDQnpQLXNOS3Nxc2xhdnRLVDZvUzZLNg?oc=5">Australian Dollar: AI vulnerability and RBA limits – MUFG</a> (2026-11-14, link)</li>
+</ul>
+<hr />
+<p><strong>END OF TRANSMISSION //</strong> Verify the signal. Defend the perimeter.</p>
+  </article>
+  <footer>
+    <p class="label">AgentLens</p>
+    <p class="label">Agent Security Weekly <span aria-hidden="true">//</span> 2026-11-18</p>
+  </footer>
+</main>
+</body>
+</html>
