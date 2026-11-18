@@ -27,9 +27,14 @@ HTML_TEMPLATE = ROOT / "tools" / "newsletter.html"
 MAX_ITEMS = 40
 MAX_PREVIOUS = 6000
 MAX_OUTPUT = 20000
+MAX_HEADLINE = 52
 
 ITEM = re.compile(r"^- \[[ x]\] (?P<title>.+) \((?P<date>\d{4}-\d{2}-\d{2})\) - (?P<source>.+)$")
-CITATION = re.compile(r"!?\[(S\d+)\]")
+HEADLINE = re.compile(r"^# +(.+)$", re.M)
+CITATION = r"!?\[\s*S\d+(?:\s*[,;]\s*S\d+)*\s*\]"
+THREAT = re.compile(r"\*\*Threat level:\*\*\s*(critical|high|medium|low)\b", re.I)
+CITE_LINK = r'<a href="[^"]*" title="[^"]*">[^<]*</a>'
+CITE_GROUP = re.compile(rf"\(({CITE_LINK}(?:, {CITE_LINK})*)\)")
 
 
 def is_source_url(url):
@@ -101,17 +106,39 @@ def plain_label(text):
     return re.sub(r"[!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]", r"\\\g<0>", text)
 
 
-def source_link(label, url):
-    destination = url.replace("&", "&amp;")
+def source_link(label, url, title=""):
+    destination = url.replace("\u2014", "%E2%80%94").replace("&", "&amp;")
     if "(" in destination or ")" in destination:
         destination = f"<{destination}>"
+    if title:
+        destination += f' "{plain_label(title)}"'
     return f"[{plain_label(label)}]({destination})"
+
+
+def publisher(item):
+    """Search leads carry the real publisher as a ' - Name' title suffix; other items name their feed."""
+    if item["kind"] == "discovery" and " - " in item["title"]:
+        return item["title"].rsplit(" - ", 1)[1]
+    return item["source"]
+
+
+def cite_label(item):
+    """Short label for an inline citation: the CVE id when there is one, else the publisher."""
+    cve = re.match(r"CVE-\d{4}-\d+", item["title"])
+    return cve[0] if cve else publisher(item).split(" (")[0][:40]
+
+
+def short_title(item, limit=110):
+    title = " ".join(item["title"].split())
+    if item["kind"] == "discovery":
+        title = title.rsplit(" - ", 1)[0]
+    return title if len(title) <= limit else title[:limit].rsplit(" ", 1)[0].rstrip(" .,;:-") + "..."
 
 
 def sanitise(text, items):
     """Keep model prose but allow only links to report items, and defuse mentions, refs and HTML."""
     sources = {i["id"]: i for i in items}
-    text = unescape(text).replace("\u2014", " - ").strip()
+    text = re.sub(r"[ \t]*\u2014[ \t]*", " - ", unescape(text)).strip()
     text = re.sub(r"\A```(?:markdown|md)?\n(.*)\n```\Z", r"\1", text, flags=re.S)
     text = text[:MAX_OUTPUT]
     text = re.sub(r"<!--.*?-->|<[^>]{0,500}>", "", text, flags=re.S)
@@ -121,42 +148,51 @@ def sanitise(text, items):
     text = re.sub(r"\b[a-z][\w+.-]*://\S+|\bwww\.\S+", "", text, flags=re.I)
     text = re.sub(r"(?<![\w`])@(?=[\w-])", "@\u200b", text)
     text = re.sub(r"(?<![\w&#/])#(?=\d)", "#\u200b", text)
-    text = re.sub(r"(?m)^#{1,6} +[^\n]+", lambda m: CITATION.sub("", m[0]), text)
+    text = re.sub(r"(?m)^#{1,6} +[^\n]+", lambda m: re.sub(CITATION, "", m[0]), text)
 
     def replace_markup(match):
         if match[1]:
             return match[1]
         if match[2]:
-            return "; ".join(source_link(sources[key]["title"], sources[key]["url"])
-                             for key in CITATION.findall(match[2]) if key in sources)
+            cited = [sources[key] for key in dict.fromkeys(re.findall(r"S\d+", match[2])) if key in sources]
+            links = [source_link(cite_label(item), item["url"], item["title"]) for item in cited]
+            return f" ({', '.join(links)})" if links else ""
         return {"[": "&#91;", "]": "&#93;", "<": "&lt;", ">": "&gt;"}[match[0]]
 
-    return re.sub(r"(?m)^([ \t]*[-+*] \[[ xX]\] )|((?:!?\[S\d+\])+)|[\[\]<>]",
+    return re.sub(rf"(?m)^([ \t]*[-+*] \[[ xX]\] )|([ \t]*{CITATION}(?:[ \t]*{CITATION})*)|[\[\]<>]",
                   replace_markup, text).strip()
 
 
 def headline(text):
-    match = re.search(r"^# +(.+)$", text, flags=re.M)
+    match = HEADLINE.search(text)
     title = unescape(re.sub(r"[*_`]", "", match[1])) if match else ""
-    return " ".join(title.split())[:90] or "This week in agent security"
+    title = " ".join(title.replace("\u2014", " - ").split())
+    if len(title) > MAX_HEADLINE:
+        lead = title.partition(":")[0].strip()
+        if lead != title and 0 < len(lead) <= MAX_HEADLINE:
+            title = lead
+        else:
+            prefix = title[:MAX_HEADLINE]
+            if not title[MAX_HEADLINE].isspace() and not prefix[-1].isspace():
+                prefix = prefix.rpartition(" ")[0] or prefix
+            title = prefix.rstrip(" ,;:-")
+    return title or "This week in agent security"
 
 
 def reading_list(items):
     lines = ["## Reading list", "",
-             "Every item from this week's automated shortlist. Unverified leads: check the original source.", ""]
+             "This week's full list of leads. Check the original sources before you act.", ""]
     for kind in dict.fromkeys(i["kind"] for i in items):
         lines.append(f"**{plain_label(kind.capitalize())}**")
-        lines += [f"- {source_link(i['title'], i['url'])} ({i['date']}, {plain_label(i['source'])})"
+        lines += [f"- {source_link(short_title(i), i['url'])} ({i['date']}, {plain_label(publisher(i))})"
                   for i in items if i["kind"] == kind]
         lines.append("")
     return "\n".join(lines)
 
 
-def compose(narrative, items, source_issue=None):
-    footer = ["---", "_Drafted by AI from the automated research shortlist"
-              + (f" in #{source_issue}" if source_issue else "")
-              + " using the security-newsletter skill. Opinions are machine-generated; verify before acting._"]
-    return "\n\n".join([narrative, reading_list(items), "\n".join(footer)]) + "\n"
+def compose(narrative, items):
+    signoff = "---\n\n**END OF TRANSMISSION //** Verify the signal. Defend the perimeter."
+    return "\n\n".join([narrative, reading_list(items), signoff]) + "\n"
 
 
 def render_html(body, items, title, today):
@@ -168,15 +204,23 @@ def render_html(body, items, title, today):
     parser.validateLink = allowed.__contains__
     body = re.sub(r"^# +[^\n]+\n", "", body, count=1)
     body = re.sub(r"(?m)^\*\*TL;DR\*\*[ \t]*$", "## TL;DR", body, count=1)
+
+    tokens = parser.parse(body)
+    for opening, content in zip(tokens, tokens[1:]):
+        if opening.type == "paragraph_open" and content.type == "inline" and (match := THREAT.match(content.content)):
+            opening.attrSet("class", f"threat {match[1].lower()}")
+    article = parser.renderer.render(tokens, parser.options, {})
+    # Citations are the only links with a title, so "(link, link)" groups can safely become chips.
+    article = CITE_GROUP.sub(
+        lambda m: f'<span class="cites">{m[1].replace("</a>, <a", "</a> <a")}</span>', article)
     template = Template(HTML_TEMPLATE.read_text(encoding="utf-8"))
-    return template.substitute(title=escape(title), date=escape(today), body=parser.render(body))
+    return template.substitute(title=escape(title), date=escape(today), body=article)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--report", required=True, type=Path, help="triage issue body (Markdown)")
     parser.add_argument("--previous", type=Path, help="previous newsletter body, for continuity")
-    parser.add_argument("--issue", type=int, help="source triage issue number, for the footer")
     parser.add_argument("--title-out", type=Path, help="write the headline to this file")
     parser.add_argument("--html-out", type=Path, help="write a standalone branded HTML edition")
     args = parser.parse_args()
@@ -191,7 +235,8 @@ def main():
         print("Copilot returned no usable newsletter text.", file=sys.stderr)
         return 1
     title = headline(narrative)
-    body = compose(narrative, items, args.issue)
+    narrative = f"# {plain_label(title)}\n\n{HEADLINE.sub('', narrative, count=1).lstrip()}"
+    body = compose(narrative, items)
     if args.title_out:
         args.title_out.write_text(title, encoding="utf-8")
     if args.html_out:

@@ -75,10 +75,9 @@ jobs:
         if: steps.source.outputs.number
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          SOURCE: ${{ steps.source.outputs.number }}
         run: |
           python tools/write_newsletter.py --report report.md --previous previous.md \
-            --issue "$SOURCE" --title-out title.txt --html-out newsletter.html > newsletter.md
+            --title-out title.txt --html-out newsletter.html > newsletter.md
       - name: Upload Markdown edition
         id: markdown
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

@@ -5,72 +5,200 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>$title | Agent Security Weekly</title>
   <style>
-    :root { color-scheme: dark; --bg: #05080d; --panel: #0c131d; --line: #263649; --text: #e6edf5; --muted: #b4c2d3; --accent: #2dd4bf; --link: #7dd3fc; }
+    :root {
+      color-scheme: dark;
+      --bg: #05070c; --panel: #0a0f18; --line: #223046;
+      --text: #eef3fb; --muted: #aab7ca; --dim: #8292a8;
+      --cyan: #2ee6d6; --magenta: #ff4fc3; --link: #86dcff;
+      --critical: #ff5c7a; --high: #ff9d4d; --medium: #ffd166; --low: #6ee7a0;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: clamp(1rem, 4vw, 3rem); background: var(--bg); color: var(--muted); font: 1.05rem/1.65 system-ui, sans-serif; overflow-wrap: anywhere; }
-    main { max-width: 57rem; margin: auto; }
-    header, article { padding: clamp(1.25rem, 5vw, 3rem); border: 1px solid var(--line); }
-    header { position: relative; isolation: isolate; overflow: hidden; border-top: 3px solid var(--accent); border-radius: 1rem 1rem 0 0; background: linear-gradient(90deg, #0b1420 45%, transparent), repeating-linear-gradient(90deg, #2dd4bf19 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, #2dd4bf19 0 1px, transparent 1px 24px), #0c1a28; }
-    .brand { display: flex; align-items: center; gap: .65rem; color: var(--text); font-weight: 700; }
-    .brand b { color: var(--accent); }
-    .logo { width: 1.75rem; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round; }
-    .logo-core { fill: var(--accent); stroke: none; }
-    .radar { position: absolute; z-index: -1; width: min(45%, 22rem); right: 0; top: 50%; transform: translateY(-50%); }
-    .kicker { margin: 1.5rem 0 .45rem; color: var(--accent); font: .8rem/1.5 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; }
-    h1, h2, h3, strong { color: var(--text); }
-    h1 { margin: 0; max-width: 17ch; font-size: clamp(2rem, 6vw, 3.75rem); line-height: 1.08; letter-spacing: -.025em; }
-    .edition { margin: .85rem 0 0; }
-    article { border-top: 0; border-radius: 0 0 1rem 1rem; background: var(--panel); }
-    h2 { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 1.35rem; }
-    h3 { margin-top: 1.5rem; line-height: 1.3; }
-    article > h2:first-child { margin: 0; padding: 1rem 1.2rem 0; border: 0; border-inline-start: 3px solid var(--accent); color: var(--accent); background: var(--bg); }
-    article > h2:first-child + ul { margin-top: 0; padding: .5rem 1.2rem 1rem 2.5rem; border-inline-start: 3px solid var(--accent); background: var(--bg); }
-    ul { padding-inline-start: 1.35rem; }
-    li + li { margin-top: .5rem; }
-    a { color: var(--link); text-underline-offset: .2em; }
-    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-    p:has(> strong:first-child) > strong { color: #facc71; }
-    .contains-task-list { list-style: none; padding-inline-start: 0; }
-    .task-list-item-checkbox { margin-inline-end: .55rem; }
-    @media (max-width: 36rem) { .radar { opacity: .35; } }
+    body {
+      margin: 0; padding: clamp(.75rem, 4vw, 3rem); background: var(--bg); color: var(--muted);
+      font: 1.02rem/1.7 system-ui, -apple-system, "Segoe UI", sans-serif; overflow-wrap: anywhere;
+    }
+    main { max-width: 50rem; margin: auto; background: var(--panel); }
+    header, article, footer { padding-inline: clamp(1.25rem, 5vw, 3rem); }
+    .label { margin: 0; color: var(--dim); font: 600 .72rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    .critical { --level: var(--critical); }
+    .high { --level: var(--high); }
+    .medium { --level: var(--medium); }
+    .low { --level: var(--low); }
+
+    header {
+      position: relative; isolation: isolate; overflow: hidden;
+      padding-block-end: clamp(1.5rem, 4vw, 2.25rem); border-block-end: 1px solid var(--line);
+      background: radial-gradient(ellipse at 100% 30%, #2b1539, transparent 65%),
+        linear-gradient(110deg, #0b1821, var(--panel) 62%);
+    }
+    header::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--magenta)); }
+    .topbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: .4rem 1.5rem; padding-block: 1.25rem 1rem; border-block-end: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; color: var(--text); font-size: 1.1rem; font-weight: 700; }
+    .brand b { color: var(--cyan); }
+    .logo { width: 1.9rem; fill: none; stroke: var(--cyan); stroke-width: 1.8; stroke-linejoin: round; }
+    .logo-core { fill: var(--cyan); stroke: none; }
+    .kicker { margin-block-start: 2rem; color: var(--cyan); }
+    .headline-row { display: grid; grid-template-columns: minmax(0, 1fr) clamp(7rem, 38%, 17rem); align-items: center; }
+    h1 {
+      margin: .5rem 0; max-width: 22ch; color: var(--text); font-size: clamp(1.75rem, 5vw, 3.2rem);
+      line-height: 1.08; letter-spacing: -.035em; text-wrap: balance;
+      text-shadow: 0 0 .45rem #2ee6d647, 0 0 1.35rem #ff4fc34d;
+    }
+    .radar { display: block; width: 100%; color: var(--cyan); overflow: visible; }
+    .radar-sweep { transform-origin: 150px 77px; }
+    .radar-target { color: var(--magenta); filter: drop-shadow(0 0 4px var(--magenta)); }
+    .radar-blip { fill: currentColor; stroke: none; }
+    @media screen and (prefers-reduced-motion: no-preference) {
+      .radar-sweep { animation: sweep 4.8s linear; }
+      .radar-blip { animation: pulse 4.8s ease-in-out; }
+    }
+    @keyframes sweep { from { transform: rotate(-360deg); } to { transform: rotate(0deg); } }
+    @keyframes pulse {
+      18%, 50%, 82% { opacity: .25; }
+      0%, 34%, 66%, 100% { opacity: 1; }
+    }
+
+    article { padding-block: clamp(1.5rem, 5vw, 2.75rem); }
+    h2, h3, strong { color: var(--text); }
+    article > h2 {
+      position: relative; margin: 2.75rem 0 1rem; padding: .3rem 0 .7rem 2rem;
+      font: 800 clamp(1.05rem, 3.4vw, 1.55rem)/1.3 var(--mono);
+      letter-spacing: .045em; text-transform: uppercase;
+      text-shadow: 1px 1px #ff4fc355, 0 0 .55rem #2ee6d660, 0 0 1.2rem #ff4fc34d;
+    }
+    article > h2::before {
+      content: ""; position: absolute; inset: .46rem auto auto .26rem;
+      width: .28rem; height: 1em; background: var(--cyan);
+      box-shadow: .48rem 0 var(--magenta), 0 0 .55rem #2ee6d680;
+      transform: skewX(-23deg);
+    }
+    article > h2::after {
+      content: ""; position: absolute; inset: auto 0 0; height: 1px;
+      background: linear-gradient(90deg, var(--cyan) 1.1rem, var(--magenta) 1.1rem 2.8rem, var(--line) 2.8rem, transparent);
+    }
+    article > h2:first-child {
+      margin-block-start: 0; color: var(--cyan);
+    }
+    article > h2:first-child + ul { color: var(--text); }
+    article > h3 {
+      margin: 1.8rem 0 .65rem; padding-inline-start: .6rem; border-inline-start: 2px solid var(--magenta);
+      color: var(--magenta); font: 700 .82rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .12em;
+      text-shadow: 0 0 .5rem #ff4fc359;
+    }
+    article > h4 { margin: 1.4rem 0 .5rem; color: var(--text); font-size: 1.18rem; line-height: 1.35; }
+    article > h3 + h4 { margin-block-start: 0; }
+    article > h4 + p { margin-block-start: .5rem; }
+    .threat { margin-block: .6rem 1.1rem; font-size: .93rem; }
+    .threat strong {
+      margin-inline-end: .3rem; color: var(--level, var(--text));
+      font: 700 .74rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .1em;
+    }
+
+    a { color: var(--link); text-decoration-color: #86dcff73; text-underline-offset: .2em; }
+    a:hover { text-decoration-color: currentColor; }
+    a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .cites a {
+      color: var(--cyan); font-size: .8em; vertical-align: .06em; white-space: nowrap;
+    }
+
+    ul { padding-inline-start: 1.3rem; }
+    li + li { margin-block-start: .5rem; }
+    li::marker { color: var(--cyan); }
+    .contains-task-list { padding: 0; list-style: none; }
+    .task-list-item { position: relative; padding-inline-start: 1.5rem; }
+    .task-list-item-checkbox {
+      position: absolute; top: .42rem; left: 0; width: .85rem; height: .85rem; margin: 0;
+      border: 1px solid var(--cyan); appearance: none;
+    }
+    .task-list-item-checkbox:checked { background: var(--cyan); }
+    p:has(+ ul) > strong:only-child { color: var(--magenta); font: 700 .72rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    hr { margin: 2.5rem 0 1rem; border: 0; border-block-start: 1px dashed var(--line); }
+    hr + p { color: var(--dim); font-size: .85rem; }
+    footer {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem 1.5rem;
+      padding-block: .9rem; border-block-start: 1px solid var(--line); background: var(--bg);
+    }
+
+    @media (max-width: 30rem) {
+      .headline-row { grid-template-columns: minmax(0, 1fr) 6.5rem; }
+    }
     @media print {
-      :root { color-scheme: light; --bg: white; --panel: white; --text: black; --muted: #222; --accent: #08695b; --link: #135a85; }
+      :root {
+        color-scheme: light; --bg: #fff; --panel: #fff; --line: #9aa8b8;
+        --text: #000; --muted: #1f2933; --dim: #4a5565; --cyan: #08695b; --magenta: #8a1f6a; --link: #135a85;
+        --critical: #a3001f; --high: #8f4300; --medium: #6b5200; --low: #17603a;
+      }
       body { padding: 0; }
-      header { background: white; }
+      header { background: #fff; }
+      .headline-row { display: block; }
       .radar { display: none; }
-      p:has(> strong:first-child) > strong { color: black; }
-      h2, h3 { break-after: avoid; }
+      h1, article > h2, article > h3 { text-shadow: none; }
+      article > h2 { border-block-end: 1px solid var(--line); padding-inline-start: 0; }
+      article > h2::before, article > h2::after { display: none; }
+      h2, h3, h4 { break-after: avoid; }
     }
   </style>
 </head>
 <body>
 <main>
   <header>
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 32 36" aria-hidden="true">
-        <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
-        <circle cx="16" cy="17" r="5.5"/>
-        <circle class="logo-core" cx="16" cy="17" r="2"/>
-      </svg>
-      <span>Agent<b>Lens</b></span>
+    <div class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 32 36" aria-hidden="true">
+          <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
+          <circle cx="16" cy="17" r="5.5"/>
+          <circle class="logo-core" cx="16" cy="17" r="2"/>
+        </svg>
+        <span>Agent<b>Lens</b></span>
+      </div>
+      <p class="label">Agent Security Weekly</p>
     </div>
-    <p class="kicker">Agent Security Weekly</p>
-    <h1>$title</h1>
-    <p class="edition"><time datetime="$date">$date</time></p>
-    <svg class="radar" viewBox="0 0 320 250" aria-hidden="true">
-      <g fill="none" stroke="#38bdf8" opacity=".37">
-        <circle cx="203" cy="125" r="108"/><circle cx="203" cy="125" r="81"/>
-        <circle cx="203" cy="125" r="54"/><circle cx="203" cy="125" r="27"/>
-        <path d="M95 125h216M203 17v216M126 48l154 154M126 202 280 48" stroke-dasharray="3 5"/>
-      </g>
-      <path d="m203 125 46-98a108 108 0 0 1 50 49Z" fill="#2dd4bf" opacity=".25"/>
-      <path d="M40 190h48l28-28h41m46-37 96-49" fill="none" stroke="#2dd4bf" opacity=".65"/>
-      <circle cx="203" cy="125" r="4" fill="#2dd4bf"/>
-    </svg>
+    <p class="label kicker">Weekly threat briefing <span aria-hidden="true">//</span> <time datetime="$date">$date</time></p>
+    <div class="headline-row">
+      <h1>$title</h1>
+      <svg class="radar" viewBox="0 0 228 154" aria-hidden="true">
+        <defs>
+          <linearGradient id="radar-trail" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop stop-color="#2ee6d6" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#2ee6d6" stop-opacity=".02"/>
+          </linearGradient>
+        </defs>
+        <g fill="none" stroke="currentColor">
+          <circle cx="150" cy="77" r="73" opacity=".85"/>
+          <circle cx="150" cy="77" r="55" opacity=".6"/>
+          <circle cx="150" cy="77" r="36" opacity=".6"/>
+          <circle cx="150" cy="77" r="18" opacity=".6"/>
+          <path d="M77 77h146M150 4v146" stroke-dasharray="2 4" opacity=".6"/>
+          <path d="M150 1v7m0 138v7M74 77h7m138 0h7M96 23l5 5m98 98 5 5m0-108-5 5m-98 98-5 5"/>
+        </g>
+        <g class="radar-sweep">
+          <path d="M150 77 103 21A73 73 0 0 1 147 4Z" fill="url(#radar-trail)"/>
+          <path d="M150 77 103 21" stroke="currentColor" stroke-width="1.5"/>
+        </g>
+        <circle cx="150" cy="77" r="3" fill="currentColor"/>
+        <circle cx="185" cy="105" r="2" fill="currentColor" opacity=".65"/>
+        <g class="radar-target" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path class="radar-arrow" d="M11 77h45l28-28M16 72l-5 5 5 5"/>
+          <path class="radar-tether" d="M84 49L117 49"/>
+          <g class="radar-lock">
+            <path d="M121 40h-4v4m14-4h4v4m0 10v4h-4m-10 0h-4v-4M117 47v4"/>
+            <circle class="radar-blip" cx="126" cy="49" r="3.5"/>
+          </g>
+        </g>
+      </svg>
+    </div>
   </header>
   <article>
 $body
   </article>
+  <footer>
+    <p class="label">AgentLens</p>
+    <p class="label">Agent Security Weekly <span aria-hidden="true">//</span> $date</p>
+  </footer>
 </main>
 </body>
 </html>

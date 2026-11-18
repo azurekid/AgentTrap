@@ -545,8 +545,13 @@ After each successful research-watch run,
 the new triage issue into **Agent Security Weekly**: a narrative newsletter with top stories,
 threat-level ratings, an expert take on threats and trends, a defender checklist and detection
 ideas, published as an issue labelled `newsletter` and linked from the triage issue. The
-newsletter issue links to both Actions downloads: `newsletter.md` and the standalone styled
-`newsletter.html`, each packaged as a ZIP. Downloads require signing in to GitHub and are
+newsletter issue links to both Actions downloads: `newsletter.md` and the standalone
+`newsletter.html`, each packaged as a ZIP. The HTML edition has terminal-style headings,
+the AgentLens logo, colour-coded threat levels, and a short CSS radar sweep with a fixed,
+pulsing target. The radar stays still when reduced motion is enabled.
+Both editions use a short headline centered on one
+takeaway, group top stories by security topic, use plain English and omit
+em dashes. Downloads require signing in to GitHub and are
 available until the artifacts expire. The
 editorial voice and structure live in the
 [security-newsletter skill](.github/skills/security-newsletter/SKILL.md), which
@@ -554,8 +559,8 @@ editorial voice and structure live in the
 built-in Actions token with `copilot-requests: write`; no Azure OpenAI key is required.
 Copilot access is required and usage is billed to the repository owner's Copilot seat.
 The previous newsletter is passed in so each issue tracks what continued, escalated or faded. The
-model has no tools and cites items by internal ID; readers see article titles linked to the
-original sources instead. Re-run by hand from the Actions tab with a triage issue number;
+model has no tools and cites items by internal ID; readers see a short source label instead,
+such as the publisher name or the CVE number, linked to the original article. Re-run by hand from the Actions tab with a triage issue number;
 select `force` to publish a new issue if that triage issue already has a newsletter.
 
 ### OWASP Agentic (ASI) mapping
