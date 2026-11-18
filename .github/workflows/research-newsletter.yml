@@ -68,9 +68,6 @@ jobs:
       - name: Install Copilot CLI
         if: steps.source.outputs.number
         run: npm install --global --ignore-scripts @github/copilot@1.0.109
-      - name: Install newsletter renderer
-        if: steps.source.outputs.number
-        run: python -m pip install -r tools/requirements-newsletter.txt
       - name: Write the newsletter
         if: steps.source.outputs.number
         env:
@@ -78,16 +75,8 @@ jobs:
           SOURCE: ${{ steps.source.outputs.number }}
         run: |
           python tools/write_newsletter.py --report report.md --previous previous.md \
-            --issue "$SOURCE" --title-out title.txt --html-out newsletter.html > newsletter.md
+            --issue "$SOURCE" --title-out title.txt > newsletter.md
           cat newsletter.md
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: steps.source.outputs.number
-        with:
-          name: newsletter
-          path: |
-            newsletter.md
-            newsletter.html
-          if-no-files-found: error
       - name: Publish
         if: steps.source.outputs.number
         env:
@@ -99,3 +88,8 @@ jobs:
           url=$(gh issue create --repo "$REPO" --label newsletter --title "$title" --body-file newsletter.md)
           printf '%s\n\n<!-- newsletter-for-triage -->\n' "Weekly newsletter drafted from this triage: $url" \
             | gh issue comment "$SOURCE" --repo "$REPO" --body-file -
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.source.outputs.number
+        with:
+          name: newsletter
+          path: newsletter.md

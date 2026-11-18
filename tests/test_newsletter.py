@@ -15,18 +15,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class NewsletterModelTests(unittest.TestCase):
-    def test_em_dashes_are_removed_from_prose_and_source_labels(self):
-        items = write_newsletter.parse_report(
-            "### Research\n- [ ] Article \u2014 example (2026-11-12) - Source &#8212; label\n"
-            "  https://example.test/article\n")
-        narrative = write_newsletter.sanitise(
-            "# Plain English\nText \u2014 simple &#8212; words &mdash; here. [S1]", items)
-        body = write_newsletter.compose(narrative, items)
-        html = write_newsletter.render_html(body, items, "Plain English", "2026-11-18")
-        self.assertNotIn("\u2014", body + html)
-        self.assertIn("Article - example", html)
-        self.assertIn("Text  -  simple  -  words  -  here.", body)
-
     def test_copilot_request_and_response(self):
         messages = [{"role": "user", "content": "Hello"}]
         with patch.object(write_newsletter.subprocess, "run",
@@ -64,66 +52,26 @@ class NewsletterModelTests(unittest.TestCase):
                 self.assertEqual(write_newsletter.main(), 0)
             self.assertEqual(len(model.call_args.args[0]), 2)
             self.assertEqual(title.read_text(encoding="utf-8"), "Headline")
-            self.assertIn("See [Example](https://example.test/article).", output.getvalue())
-            self.assertIn("- [Example](https://example.test/article) (2026-11-12, Source)", output.getvalue())
-            self.assertNotIn("[S1]", output.getvalue())
+            self.assertIn("[S1](https://example.test/article)", output.getvalue())
             self.assertIn("in #7", output.getvalue())
 
     def test_writer_executes_copilot_and_creates_output_files(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            report, title, html, cli = (path / name for name in ("report.md", "title.txt", "newsletter.html", "copilot"))
+            report, title, cli = path / "report.md", path / "title.txt", path / "copilot"
             report.write_text("### Research\n- [ ] Example (2026-11-12) - Source\n"
-                              "  https://example.test/article(a)?b=1&c=2\n", encoding="utf-8")
-            cli.write_text("#!/bin/sh\nprintf '# Headline\\nSee [S1].\\n\\n"
-                           "## Defender checklist\\n- [ ] Review the report [S1].\\n'\n", encoding="utf-8")
+                              "  https://example.test/article\n", encoding="utf-8")
+            cli.write_text("#!/bin/sh\nprintf '# Headline\\nSee [S1].\\n'\n", encoding="utf-8")
             cli.chmod(0o755)
             env = {**os.environ, "PATH": f"{path}{os.pathsep}{os.environ['PATH']}"}
             result = subprocess.run(
                 [sys.executable, str(ROOT / "tools/write_newsletter.py"), "--report", str(report),
-                 "--title-out", str(title), "--issue", "7", "--html-out", str(html)],
-                env=env, capture_output=True, text=True,
+                 "--title-out", str(title), "--issue", "7"], env=env, capture_output=True, text=True,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(title.read_text(encoding="utf-8"), "Headline")
-            self.assertIn("[Example](<https://example.test/article(a)?b=1&amp;c=2>)", result.stdout)
+            self.assertIn("[S1](https://example.test/article)", result.stdout)
             self.assertIn("in #7", result.stdout)
-            html_text = html.read_text(encoding="utf-8")
-            self.assertIn('<svg class="logo-mark"', html_text)
-            self.assertIn('<svg class="radar"', html_text)
-            self.assertIn("<h1>Headline</h1>", html_text)
-            self.assertIn('<a href="https://example.test/article(a)?b=1&amp;c=2">Example</a>', html_text)
-            self.assertIn('type="checkbox"', html_text)
-            self.assertIn("in #7", html_text)
-            self.assertNotIn("[S1]", html_text)
-
-    def test_only_approved_links_and_escaped_report_metadata_in_html(self):
-        items = write_newsletter.parse_report(
-            "### Research\n- [ ] Invalid (2026-11-12) - Source\n  javascript:example\n"
-            "  https://user@example.test/hidden\n"
-            "- [ ] Example [lab] *study* <em> (2026-11-12) - <img src=x>\n"
-            "  https://example.test/article\n"
-        )
-        self.assertEqual(len(items), 1)
-        narrative = write_newsletter.sanitise(
-            "# Headline [S2]\n\nSee [S2][S999].\n\n"
-            "[label][ref]\n\n[ref]: https://other.test\n\n![S2]\n",
-            items,
-        )
-        body = write_newsletter.compose(narrative, items)
-        html = write_newsletter.render_html(
-            body + "\n[unexpected](/local) <script>example</script>\n",
-            items, "<Headline>", "2026-11-12",
-        )
-        self.assertEqual(write_newsletter.headline(narrative), "Headline")
-        self.assertEqual(html.count('<a href="https://example.test/article">Example [lab] *study* &lt;em&gt;</a>'), 3)
-        self.assertIn("<title>&lt;Headline&gt; | Agent Security Weekly</title>", html)
-        self.assertIn("&lt;img src=x&gt;", html)
-        self.assertNotIn('href="/local"', html)
-        self.assertNotIn("other.test", html)
-        self.assertNotIn("<script>", html)
-        self.assertNotIn("<img", html)
-        self.assertNotIn("[S999]", html)
 
 
 if __name__ == "__main__":

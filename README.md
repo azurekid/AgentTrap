@@ -540,36 +540,6 @@ ATLAS case), then add or extend a rule. Feed text is untrusted: the report strip
 markup and links from titles, and should be triaged by a person, not handed to an agent
 with tool access. Tune noisy terms in the JSON config.
 
-**Scanner update boundary.** Keep publishing separate from scanner maintenance.
-The newsletter's detection ideas are leads, not deployable rules. For a separate scanner
-pipeline, use maintainer-approved triage items as input, record the primary source and what the
-scanner can observe, and propose changes in a draft PR. Require a defanged positive fixture,
-a benign regression check, and Python/PowerShell parity where applicable. Merge through normal
-review and CI; don't grant newsletter jobs scanner write access or auto-merge changes from feeds.
-Incidents with no observable signal in a scanned file belong in guidance rather than a new rule.
-
-The separate [.github/workflows/scanner-proposal.yml](.github/workflows/scanner-proposal.yml)
-implements this proposal flow. Open a **Scanner update proposal** using the issue template.
-Provide primary HTTPS sources, the observable signal, a defanged positive example, and a
-benign lookalike. Create the `scanner-update-approved` label once, then have a repository writer
-or maintainer apply it to the task. This starts the workflow; it can also be rerun manually
-with the approved issue number. Raw research shortlist and newsletter issues do not have the
-required task fields and are not accepted as scanner tasks.
-
-Copilot CLI proposes a patch without tools or access to the working tree. A second job, without
-publishing credentials, applies only allowed scanner/test/source changes, regenerates derived
-tables, and runs Python tests, PowerShell tests, and use-case validation. A third job rechecks
-the approved task and base commit and opens a **draft PR** without executing the proposed code.
-Failures stop publication. Already-covered or unsupported findings produce a `no_change`
-artifact instead. Existing proposal branches are never overwritten.
-
-Enable **Allow GitHub Actions to create and approve pull requests** in repository Actions
-settings before using this flow. Copilot access and billing are the same as for the newsletter.
-The workflow must be merged into the default branch before label events can start it.
-Review the draft and run any additional PR checks manually if GitHub does not trigger them
-for an Actions-created PR. Delete the proposal branch after review to allow a fresh proposal
-for the same issue. There is no auto-merge or automatic scanner deployment.
-
 After each successful research-watch run,
 [.github/workflows/research-newsletter.yml](.github/workflows/research-newsletter.yml) turns
 the new triage issue into **Agent Security Weekly**: a narrative newsletter with top stories,
@@ -581,18 +551,8 @@ editorial voice and structure live in the
 built-in Actions token with `copilot-requests: write`; no Azure OpenAI key is required.
 Copilot access is required and usage is billed to the repository owner's Copilot seat.
 The previous newsletter is passed in so each issue tracks what continued, escalated or faded. The
-model has no tools and cites items by internal ID; the published links use the original article
-titles and report URLs. Download the `newsletter` artifact from the Actions run for
-`newsletter.md` and the standalone, AgentLens-branded `newsletter.html`. The GitHub issue
-continues to use the Markdown edition. Re-run by hand from the Actions tab with an issue number.
-The newsletter uses simple English, readable source labels, and no em dashes.
-
-To generate both editions locally with an authenticated Copilot CLI:
-
-```bash
-python -m pip install -r tools/requirements-newsletter.txt
-python tools/write_newsletter.py --report report.md --html-out newsletter.html > newsletter.md
-```
+model has no tools, cites items only by id, and its output is sanitised so the only links are
+those in the report. Re-run by hand from the Actions tab with an issue number.
 
 ### OWASP Agentic (ASI) mapping
 

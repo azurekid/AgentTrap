@@ -1376,12 +1376,12 @@ def test_newsletter_cites_only_report_links_and_defuses_model_output():
     raw = ("```markdown\n# Poisoned [S1] tools\nSee [S1][S2], [S9], [x](https://evil.test) "
            "https://evil.test/p <img src=x> ![i](https://evil.test/i) @octocat #12\n```")
     text = writer.sanitise(raw, items)
-    assert "[MCP tool poisoning](https://a.test/1); [Skill backdoors](https://b.test/2)" in text
+    assert "[S1](https://a.test/1)[S2](https://b.test/2)" in text
     assert "evil" not in text and "<img" not in text and "S9" not in text
     assert "@\u200boctocat" in text and "#\u200b12" in text and not text.startswith("```")
     assert writer.headline(text) == "Poisoned tools"
     body = writer.compose(text, items, 7)
-    assert "## Reading list" in body and "- [Skill backdoors](https://b.test/2)" in body and "#7" in body
+    assert "## Reading list" in body and "- [S2](https://b.test/2) Skill backdoors" in body and "#7" in body
 
 
 @pytest.mark.parametrize("hops,header,expected", [
