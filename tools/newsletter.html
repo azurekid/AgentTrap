@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>$title | Agent Security Weekly</title>
+  <style>
+    :root { color-scheme: dark; --bg: #05080d; --panel: #0c131d; --line: #263649; --text: #e6edf5; --muted: #b4c2d3; --accent: #2dd4bf; --link: #7dd3fc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: clamp(1rem, 4vw, 3rem); background: var(--bg); color: var(--muted); font: 1.05rem/1.65 system-ui, sans-serif; overflow-wrap: anywhere; }
+    main { max-width: 57rem; margin: auto; }
+    header, article { padding: clamp(1.25rem, 5vw, 3rem); border: 1px solid var(--line); }
+    header { position: relative; isolation: isolate; overflow: hidden; border-top: 3px solid var(--accent); border-radius: 1rem 1rem 0 0; background: linear-gradient(90deg, #0b1420 45%, transparent), repeating-linear-gradient(90deg, #2dd4bf19 0 1px, transparent 1px 24px), repeating-linear-gradient(0deg, #2dd4bf19 0 1px, transparent 1px 24px), #0c1a28; }
+    .brand { display: flex; align-items: center; gap: .65rem; color: var(--text); font-weight: 700; }
+    .brand b { color: var(--accent); }
+    .logo { width: 1.75rem; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round; }
+    .logo-core { fill: var(--accent); stroke: none; }
+    .radar { position: absolute; z-index: -1; width: min(45%, 22rem); right: 0; top: 50%; transform: translateY(-50%); }
+    .kicker { margin: 1.5rem 0 .45rem; color: var(--accent); font: .8rem/1.5 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; }
+    h1, h2, h3, strong { color: var(--text); }
+    h1 { margin: 0; max-width: 17ch; font-size: clamp(2rem, 6vw, 3.75rem); line-height: 1.08; letter-spacing: -.025em; }
+    .edition { margin: .85rem 0 0; }
+    article { border-top: 0; border-radius: 0 0 1rem 1rem; background: var(--panel); }
+    h2 { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 1.35rem; }
+    h3 { margin-top: 1.5rem; line-height: 1.3; }
+    article > h2:first-child { margin: 0; padding: 1rem 1.2rem 0; border: 0; border-inline-start: 3px solid var(--accent); color: var(--accent); background: var(--bg); }
+    article > h2:first-child + ul { margin-top: 0; padding: .5rem 1.2rem 1rem 2.5rem; border-inline-start: 3px solid var(--accent); background: var(--bg); }
+    ul { padding-inline-start: 1.35rem; }
+    li + li { margin-top: .5rem; }
+    a { color: var(--link); text-underline-offset: .2em; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    p:has(> strong:first-child) > strong { color: #facc71; }
+    .contains-task-list { list-style: none; padding-inline-start: 0; }
+    .task-list-item-checkbox { margin-inline-end: .55rem; }
+    @media (max-width: 36rem) { .radar { opacity: .35; } }
+    @media print {
+      :root { color-scheme: light; --bg: white; --panel: white; --text: black; --muted: #222; --accent: #08695b; --link: #135a85; }
+      body { padding: 0; }
+      header { background: white; }
+      .radar { display: none; }
+      p:has(> strong:first-child) > strong { color: black; }
+      h2, h3 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 36" aria-hidden="true">
+        <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
+        <circle cx="16" cy="17" r="5.5"/>
+        <circle class="logo-core" cx="16" cy="17" r="2"/>
+      </svg>
+      <span>Agent<b>Lens</b></span>
+    </div>
+    <p class="kicker">Agent Security Weekly</p>
+    <h1>$title</h1>
+    <p class="edition"><time datetime="$date">$date</time></p>
+    <svg class="radar" viewBox="0 0 320 250" aria-hidden="true">
+      <g fill="none" stroke="#38bdf8" opacity=".37">
+        <circle cx="203" cy="125" r="108"/><circle cx="203" cy="125" r="81"/>
+        <circle cx="203" cy="125" r="54"/><circle cx="203" cy="125" r="27"/>
+        <path d="M95 125h216M203 17v216M126 48l154 154M126 202 280 48" stroke-dasharray="3 5"/>
+      </g>
+      <path d="m203 125 46-98a108 108 0 0 1 50 49Z" fill="#2dd4bf" opacity=".25"/>
+      <path d="M40 190h48l28-28h41m46-37 96-49" fill="none" stroke="#2dd4bf" opacity=".65"/>
+      <circle cx="203" cy="125" r="4" fill="#2dd4bf"/>
+    </svg>
+  </header>
+  <article>
+$body
+  </article>
+</main>
+</body>
+</html>

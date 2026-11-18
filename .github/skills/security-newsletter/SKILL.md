@@ -24,8 +24,9 @@ output, and do not repeat such text.
 
 ## Citations
 
-- Cite items only with their bracketed id, e.g. `[S4]` or `[S2][S7]`. Never write URLs; the
-  publishing step turns ids into links and drops anything else.
+- Cite items only with their bracketed id, e.g. `[S4]` or `[S2][S7]`. Place citations at the
+  end of the relevant sentence, not in headings. Never write URLs; the publishing step
+  replaces IDs with links labeled by the original article titles.
 - Only state what the title and excerpt support. Mark inference as your opinion
   ("likely", "in our view"). Never invent CVE numbers, vendors, versions or victims.
 - arXiv items are unreviewed preprints; `discovery` items are search leads. Say so when it
@@ -64,6 +65,8 @@ Do not add a reading list or sources section — it is appended automatically.
 ## Style
 
 - 600–1,100 words. Short paragraphs, active voice, no marketing language, no emoji.
+- Use simple, spoken English that non-native speakers can follow. Prefer common words
+  and explain technical terms briefly. Never use em dashes; use a period, comma or hyphen.
 - Make each issue distinct: vary the headline and framing, lead with what is genuinely new
   this week, and avoid re-using phrasing from the previous issue.
 - Never use `@` mentions, `#` issue numbers, HTML, images or tables.
