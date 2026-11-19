@@ -1,1 +1,682 @@
-[]
+[
+  {
+    "id": "research-5634964726578c7644b03ae2138a43eb675f8231fe698745883eab75dfb9749b",
+    "title": "CVE-2026-77283: obsidian-sync-mcp is an MCP server that gives AI agents access to Obsidian vaults. Prior to 0.5.7, deployments running without MCP AUTH TOKEN install no serverOptions.authenticate chec...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-77283",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-7a8066aad48e8a7a2921d877d10c49d4cbe7cd6cc1fc6dee468ba3fae77c2841",
+    "title": "CVE-2026-75612: yt-mcp is a YouTrack MCP server for Claude Code. Prior to 1.18.1, add attachment in src/yt mcp/tools/attachments.py accepts a caller-controlled file path, checks only that the file exi...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-75612",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-ae689571834a9d32c1ee4a013f129013a5dffca13ff88d30b9c65ba6fc070532",
+    "title": "CVE-2026-75518: DOMShell is a Chrome automation project whose MCP server exposes Unix-style tools for AI agents. Prior to 2.0.8, the DOMShell MCP server classifies the domshell eval tool and eval comm...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-75518",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-f331c00fd13a71880c7cf6315792c25ddf57aef64e0e16ca4f880abdac791467",
+    "title": "CVE-2026-76807: Todoist MCP Server provides tools that allow AI agents to access and modify a Todoist account. Prior to 10.3.3, the optional todoist-mcp-http server accepts browser-origin requests to ...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-76807",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-0de61f23d6c3ff8d6f6cc73898948f3a912976dab48a4abb8f05d9b1e561eb05",
+    "title": "CVE-2026-63129: mssql-mcp-core is the shared library that powers MSSQL MCP servers. Prior to core and server 0.6.0 and reader and writer 0.5.0, multiple database tools interpolate caller-controlled id...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-63129",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-467a6391a88d55d4d59e7c4756ef17b954d49350647595f3cbabc3362892ed46",
+    "title": "CVE-2026-130768: Obot from 0.14.0 before 0.27.0 contains a server-side request forgery vulnerability that allows Power Users to bypass outbound protections by supplying unspecified addresses, IPv6 tra...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130768",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-f8e9bea4445adc3554675ff1033894efbd02ff073d929ab1a0c316524e03e38c",
+    "title": "CVE-2026-130767: Obot from 0.9.0 before 0.27.0 contains a command injection vulnerability that allows authenticated users to execute shell commands by embedding an EOF line in file-type MCP server con...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130767",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-db22573849f23903e305f293d9d414205746b2315ed0255228364fc06a32541a",
+    "title": "CVE-2026-130766: Obot from 0.26.0 before 0.27.0 fails to validate the resource identifier in remote MCP server protected resource metadata, allowing malicious MCP servers to steal access tokens. Attac...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130766",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-829899d15c41a1bc28a2bb84c87418651d178c4b57ed9a8f54f1d66f74da6059",
+    "title": "CVE-2026-130764: Obot from 0.8.0 before 0.27.0 contains a server-side request forgery vulnerability that allows Power User accounts to reach internal hosts by advertising a malicious OAuth token endpo...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130764",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-115e4f6cee2793880dac30ed57a8dba12b54426fb6680ba46919db623c70493b",
+    "title": "Jailbreak Detection on Large Language Models via Contrastive Prototype Structures",
+    "date": "2026-11-18",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.24936v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-8911e34a6079a7f3d95c2b5d4a5b444e652f6426cc0f9453a8679cd621225e81",
+    "title": "CVE-2026-130008: sqlite-mcp is a Model Context Protocol server for SQLite. Prior to 0.1.2, the default read-only mode can be bypassed through execute query, which accepts a leading SELECT while the SQ...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130008",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-0fb79e42adbfeb6c55cf1c13b64d333e6741d3ffd37fe93bc6e1e77a12a2c977",
+    "title": "CVE-2026-130007: k8s-mcp-server manages Kubernetes clusters through the Model Context Protocol. Prior to 1.1.0, SERVER MODE defaults to SSE, with the listener on 0.0.0.0:8080, but main.go creates the ...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130007",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-0bca7f6d1e64f2d364560787cdfe4df5a005ad0863b1c1b4a3b08b3af7159d01",
+    "title": "Java4Shell Flaw Threatens Global Enterprises, Java Application Ecosystem",
+    "date": "2026-11-18",
+    "source": "Dark Reading",
+    "url": "https://www.darkreading.com/vulnerabilities-threats/java4shell-flaw-threatens-global-java-application-ecosystem",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-ed3eb2654b19c5176b81e4d6ad3d03cc87d55a554e537361bf6bec1b30f2997b",
+    "title": "Quoting Daniel Stenberg",
+    "date": "2026-11-18",
+    "source": "Simon Willison",
+    "url": "https://simonwillison.net/2026/Nov/18/daniel-stenberg/",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-baa4d867c873d009bcfbcbf5082db291da90676b40025739f8d6067df16ad535",
+    "title": "CVE-2026-132121: Supergateway 2.4.0 through 4.2.2 contains a cross-site WebSocket hijacking vulnerability in stdio-to-WebSocket mode that allows malicious web pages to connect by bypassing missing Ori...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-132121",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-51d7e46f36838df7382bb62558144e19381721b5d674117bc1370924f635b492",
+    "title": "PIPETTE: Prompt Injection Purple-Teaming for Robust LLM Agents",
+    "date": "2026-11-18",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.24362v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-0f4d297c897be3806f05526a28eb3d76c4a9fb33d502b026273b2679723cba5c",
+    "title": "AutoPI: Taxonomy-Guided Adaptive Red Teaming for Prompt Injection in LLM Agents",
+    "date": "2026-11-18",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.24313v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-cf7e15f5fb6b7f7765e26b2bc15a047b100e8b1b82634bebdac61b617a07ed27",
+    "title": "CVE-2026-130686: vLLM from 0.6.0 before 0.33.0 lacks a request-wide media budget, allowing remote inference clients to exhaust frontend resources by submitting many remote image URLs in one request. A...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130686",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-16b3ca7345cd21ded5a504c091806b6f86a68f7bc0dcceea11b7aebb92589299",
+    "title": "CVE-2026-130685: vLLM from 0.28.0 before 0.33.0 contains an improper input validation vulnerability that allows unauthenticated attackers to crash the shared EngineCore by sending out-of-range prompt ...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130685",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-5425d3c9b843da7e29c7a345a91bb174183f40348a1f74a8b3c4e2c8823403af",
+    "title": "CVE-2026-130684: vLLM before 0.33.0 contains a path traversal vulnerability that allows malicious model publishers to redirect the served model and tokenizer by setting speculators config verifier.nam...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130684",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-e6a85b8cd0168363c2d16e14537f3af7080e122bbd430fa347bf0a5c17afc85e",
+    "title": "AI Pentesting Checklist for Web Apps: 15 Questions to Ask Before Choosing a Vendor",
+    "date": "2026-11-18",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/ai-pentesting-checklist-for-web-apps-15.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-636e7627f89b389c300abe0f107cfb33550e09b83f5186e39d3e58ce2436ceef",
+    "title": "What Survives the Shift from Text to Pixels? Conditional Protection against Prompt Injection in Image-Rendered Documents",
+    "date": "2026-11-18",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.24231v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-9dcfe7af499a81b277d5c9ee54ae58a8ad08996ba2af1d9b65cb2a8687503145",
+    "title": "Quality Isn’t The Main Worry About AI Pentesting  -  Data Privacy and Production Safety Are",
+    "date": "2026-11-18",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/quality-isnt-main-worry-about-ai.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-7578441e670b737b0d5ee95ecb97733b693af8bde20b0da28abb14196ed65627",
+    "title": "CVE-2026-130121: The AI Puffer - MCP Server for Claude & ChatGPT, with AI Chatbot plugin for WordPress is vulnerable to Stored Cross-Site Scripting via AI-generated comment replies in all versions up ...",
+    "date": "2026-11-18",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130121",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-43353a05a13994792ff8c80f1d2c503242c9745cc584d580d370a20ac95cae51",
+    "title": "'TheMailer' Phishing Kit Puts AI in the Driver's Seat",
+    "date": "2026-11-17",
+    "source": "Dark Reading",
+    "url": "https://www.darkreading.com/perimeter/themailer-phishing-kit-ai-drivers-seat",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-86d4da2ea7ffd12eec838f9ff792f9ea989afb37a891ec9eee780faf0f3ca4bc",
+    "title": "CVE-2026-130796: Flowise 3.1.3 through 3.1.4 contains an information disclosure vulnerability that allows unauthenticated attackers to read MCP server bearer tokens via the GET /api/v1/public-chatflow...",
+    "date": "2026-11-17",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-130796",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-efeb40d8cf4bcec6bbd87eb7d533b9518b62d0b595370b7fdaf258553989a958",
+    "title": "Cursor Traces Malicious Claude Code Extensions to Third-Party Breach",
+    "date": "2026-11-17",
+    "source": "Dark Reading",
+    "url": "https://www.darkreading.com/application-security/cursor-malicious-claude-code-extension-third-party-breach",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-9aba82bd2514875d2cd9829fd01f8c5f33b0c93a93e616c5244c638beff5fb06",
+    "title": "Network-Exposed Configuration Attacks on LLM-Controlled Social Robots",
+    "date": "2026-11-17",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.22761v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-434dd6ae27b73c8b55b73cce23a560a4561ea1b36f1c56fe267535597139a20f",
+    "title": "Securing and Auditing Long-Horizon LLM Agents: State-Transfer Auditing and Controls in the Agent Harness",
+    "date": "2026-11-17",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.23346v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-2a3abe1f8e3db3e1941b034137981ca168c189ac18d0929a304bfa1517fad80a",
+    "title": "Dressed in Authority: Practical Black-Box Jailbreaking of MLLMs via Visual Trust Bias",
+    "date": "2026-11-17",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.22292v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-219be50b0e744de6451e690dc97409ab0258f06b18eb8a6931b2fb5eb02d348a",
+    "title": "GapLeak: When Privacy-Preserving LLM-based Web Agents Become a Privacy Risk",
+    "date": "2026-11-17",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.22223v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-7c6ad572c9f72b22ca0a4057e815715092462b9cc7500c16351893940a9cc3a8",
+    "title": "EGS: A Complementary Safety Framework for Educational LLMs",
+    "date": "2026-11-17",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.22203v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-2de5c053a36f072a952540ebc04cdcbd9e0d938c0a48d0548d0f26a65d7e4ff2",
+    "title": "Eight in Ten LLMs Leak System-Prompt Secrets: Nevan, an Agentic Capture-the-Flag Study",
+    "date": "2026-11-16",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.21956v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-5148a24f87de100b7d18d33fb6ba851a009e8f7fac11000c8431e75b7f3e27b8",
+    "title": "CVE-2026-68934: code-review-mcp-server automates code review and can post comments directly on GitHub pull requests. Prior to 1.5.3, the getLocalGitDiff, codeReview, createPR, and getPRTemplate MCP to...",
+    "date": "2026-11-16",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-68934",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-6f4798acd0bd4d760fa3920680f0ec3799273a9fd78fe80057ebfd81eea59d73",
+    "title": "CVE-2026-126681: Improper restriction of intended endpoints in the connection configuration handling of the AWS Labs Timestream for InfluxDB MCP Server (awslabs.timestream-for-influxdb-mcp-server) bef...",
+    "date": "2026-11-16",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126681",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-e624e433c3ec0dd94e80fa8129d99b5a559ed0a0676e05d0181304d037b36d35",
+    "title": "CVE-2026-115563: The Model Context Protocol Python SDK is the official Python SDK for Model Context Protocol servers and clients. From 1.9.1 until 1.30.0 and 2.2.0, OAuth client support in mcp.client....",
+    "date": "2026-11-16",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-115563",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-a2c0444a0ca79891087d203d4d7c4adcc21e39f116a0ee1f517f1ec4d9cd9c10",
+    "title": "CVE-2026-126816: Improper limitation of a pathname to a restricted directory in the cost report generation tool in AWS Pricing MCP Server (aws-pricing-mcp-server) before 1.0.31 might allow an actor wh...",
+    "date": "2026-11-16",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126816",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-6ee8f2d18f90c36a3de1743af073addf9d7dd4c34725f06b7e0d7e499b2104b0",
+    "title": "Ransomware Attacks Increase Behind AI, but Payments Decline",
+    "date": "2026-11-16",
+    "source": "Dark Reading",
+    "url": "https://www.darkreading.com/threat-intelligence/ransomware-attacks-increase-ai-payments-decline",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-ecc843d146e16cecd24ca20fba6ff14611c83e7ffcb444ca12225d13ddbd0133",
+    "title": "Threat Landscape of Vibe Coding and the Road to Secure Autonomy",
+    "date": "2026-11-16",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.21822v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-3661fcba8e4792d75099ec9583dce310ebc395c49451f61cb8342c47e1292e69",
+    "title": "When Tool Names Are Not Identities: Measuring Provider Misbinding in MCP-Based AI Agents",
+    "date": "2026-11-16",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.21577v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-6920d7d307e05a5471a1fb2bb5bfef11f3dbbf1481275e9dc1af0e0949b8835b",
+    "title": "Replicating and Extending Weight-Space Programming: Frontier LLMs Compile Programs into Weights and Read Input Layers",
+    "date": "2026-11-16",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.21449v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-db220e41f0aa4f03913d1b59776dbb0d8ea2adc4f5b642db950d85cfee709442",
+    "title": "Google Finds Hackers Using AI Agents to Build and Run Exploits From Software Patches",
+    "date": "2026-11-16",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/google-finds-hackers-using-ai-agents-to.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-ea3bc0735dfb39237abe5777d35dd168d4c9c0b21ffbe95850772516eb2c32b4",
+    "title": "⚡ Weekly Recap: N-able 0-Days, Windows 0-Days, Chrome 0-Days, Fridge 0-Days, and More Bad Days",
+    "date": "2026-11-16",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/weekly-recap-n-able-0-days-windows-0.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-499f95774333e482d19002eb084979090c40d238ecbbe968f549c4b4beefd413",
+    "title": "Amazon Uncovers AI Agent Campaign Targeting LiteLLM, Dify, and Other Apps for API Keys",
+    "date": "2026-11-16",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/amazon-uncovers-ai-agent-campaign.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-086444cb3e0e00292217faec53b77cbb169d0f13315039b2c3a6fe62907ce083",
+    "title": "Type-Confusion Security",
+    "date": "2026-11-15",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.20298v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-b14049ad903adfd3b3178bb6a4ab830f9ac67748d356e69c01aa07cf4ccb226d",
+    "title": "Risk-certified prompt optimization for LLM-as-a-judge guardrails",
+    "date": "2026-11-15",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.20156v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-67880c56477ba8c09378cb5b5a6b4a800ba878dd3b6496ee5bd71b8f654e94d8",
+    "title": "CVE-2026-125771: Incorrect Privilege Assignment vulnerability in AtlasAiDev MCP Server for WordPress ai-workflow-automation-ai-agent-hub allows Privilege Escalation.This issue affects MCP Server for W...",
+    "date": "2026-11-15",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-125771",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-62e8705a23d628f6e2bc223e41ec3313035b48940d14cfdf70ef66a2f99ea78d",
+    "title": "Security of Deep Research Agents: Attack Surface, Defenses, Benchmarks, and Agenda Seeding against Research Planning",
+    "date": "2026-11-15",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.20045v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-fc4c651fcdb3bc9fe59ef6eb0f8b428a73067f909708d33f65d79d30de140484",
+    "title": "Cursor Says Stolen Fireworks AI Key Led to Trojanized Claude Code Extension Incident",
+    "date": "2026-11-15",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/stolen-fireworks-ai-key-led-to-cursor.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-533f56ab75c6935aa67c37722a1f14664b6ddb6e612e1d4366336332f668f5a5",
+    "title": "CVE-2026-129356: A vulnerability was found in vllm-project vllm 0.30.0/0.31.0. This vulnerability affects unknown code of the file single type kv cache manager.py of the component Common Prefix Handle...",
+    "date": "2026-11-15",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-129356",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-d49b68e6de5567cb4778259458995230c37365dd0aafbe1704e831ac12f5e898",
+    "title": "datasette-llm 0.1a11",
+    "date": "2026-11-14",
+    "source": "Simon Willison",
+    "url": "https://simonwillison.net/2026/Nov/14/datasette-llm/",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-e7a1e574a85d6ce51629862c9f4a58ebf81c5aa8dc171df1051705670f44d347",
+    "title": "Agent Authenticator: Passkey-Grade, Hardware-Bound Authentication for AI Agents",
+    "date": "2026-11-14",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.19536v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-8e6849485cce7f7e10aa7daed6d7102efee1312bf43d7b79c74b3ce8604845e5",
+    "title": "VAST: Compiling Grounded Vulnerability Scenarios into Verifiable, Multi-Step Environments for Evaluating LLM Red-Team Agents",
+    "date": "2026-11-14",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.19465v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-e41edc59c95f3a80e55c65ade7370e21b13839b4d12595ad43b5c3d547e4faf6",
+    "title": "Do Rule-Based Tools Help LLMs Translate Endangered Uralic Languages in the Prompt or over MCP?",
+    "date": "2026-11-14",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.19439v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-0b8cf12c12dd9af0fd6db0122ccf39b9a729e8228d7e53466e91cd96413a024b",
+    "title": "Hardening Agentic Web Populations Through Multi-Criterion Competitive Co-Evolution: Lessons from Wargame Strategy Optimization",
+    "date": "2026-11-14",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.19319v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-dc7feea9e742ac5b604bab55c62cf23b04c2d3f18d31d7cfd187e9da06acc15f",
+    "title": "Beyond Plain MCP: Do Decision Models and Code Mode Make Tool Use Cheaper and Faster?",
+    "date": "2026-11-14",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.19123v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-9e53898b746b28028478c20d2dbc5810d9748b66e1bc7c39bcc8b6219744b5e1",
+    "title": "When the Spec Sheet Lies: Injection Attacks on LLM-Generated Compliance Artifacts",
+    "date": "2026-11-14",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.19090v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-e4ecccbf078182c0577898a73de2edce10fe0f0a24a2864293a7baf2f9493406",
+    "title": "CVE-2026-110278: IBM ContextForge MCP Gateway 1.0.0 through 1.1.0 could allow an attacker to replay identity propagation claims signatures or expose sensitive user identity information to third-party ...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-110278",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-cc4eee3ffcfbd69449438d5ce8ee499c463b372dd581e4bc9ff1d4c025d0568a",
+    "title": "CVE-2026-110194: IBM ContextForge MCP Gateway 1.0.0 through 1.0.11 is vulnerable to server-side request forgery (SSRF). This may allow an authenticated attacker to send unauthorized requests from the ...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-110194",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-fd6f77ba284831aa98421895de041e0bec2f39e85dfd752f34b041191ba5fd7c",
+    "title": "ArcticRAT Cybercrime Gang Profiles Victim Finances With AI",
+    "date": "2026-11-13",
+    "source": "Dark Reading",
+    "url": "https://www.darkreading.com/mobile-security/arcticrat-cybercrime-gang-profiles-victim-finances-ai",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-d7638778a1d7882269c2750ef6d261274d54d008590ab636fbf3a1d3a50cd0f6",
+    "title": "CVE-2026-123965: A prompt injection vulnerability in all versions of Jet Admin Cloud Platform allows a remote attacker with a free account to expose sensitive .env configuration files and exfiltrate c...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-123965",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-235160252b379b3f47a534f6262522e2a2408a6c32eb4e60f278a79ad3f3aaa5",
+    "title": "AI Doesn’t Have to Go Rogue to Break the World",
+    "date": "2026-11-13",
+    "source": "Bruce Schneier",
+    "url": "https://www.schneier.com/blog/archives/2026/11/ai-doesnt-have-to-go-rogue-to-break-the-world.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-3fd7a5956b18c5ec5ce49b10252c412d07c34c8ddf5df773c467153fa5d3e4ed",
+    "title": "CVE-2026-126399: vLLM from 0.19.0 before 0.31.0 contains a resource exhaustion vulnerability that allows inference clients to bypass the server frame limit by setting media io kwargs.video.num frames ...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126399",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-b20e45e9b6bb4251078fc1dbbef841609a061be9a26b12bb985e5730d6464730",
+    "title": "CVE-2026-126398: vLLM from 0.28.0 before 0.30.0 contains a reachable assertion vulnerability in GPUModelRunner. init xdrope positions that allows remote attackers to crash the engine by submitting emb...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126398",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-f05df35f7d3002d5ca6624b1036a3ecaa0e75b07a17bcd7ebf7405eacb3268d2",
+    "title": "CVE-2026-126397: vLLM from 0.10.1 before 0.31.0 forwards a request-controlled mm processor kwargs.max patches value to the Hugging Face processor for Cohere2 Vision models without a server-side upper ...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126397",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-54aa724dc3db12afe258150ac9c58b47608f302b5cf5eb071797401092e710e0",
+    "title": "CVE-2026-126396: vLLM from 0.24.0 before 0.31.0 contains a resource exhaustion vulnerability in the MiniMax M3 VL video processor, which accepts request-level min pixels without range or min pixels = ...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126396",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-5d052e30b23b53ea818014d8f7cb6c4045d1b049f4a785b7d7121f13827d7b68",
+    "title": "CVE-2026-126395: vLLM from 0.14.0rc1 before 0.31.0 contains an information disclosure vulnerability in sanitize message() whose lowercase-only regex fails to scrub uppercase PIL image addresses. Unaut...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126395",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-a18ff2d2519a3c1affff901b5f20d5e9f99b93ad4cbabc980149fdd15b859708",
+    "title": "CVE-2026-126394: vLLM 0.30.0 before 0.31.0 contains a resource exhaustion vulnerability in OpenCVDynamicOpenPanguVideoBackend, which uses request-controlled num frames without an effective ceiling. Un...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126394",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-49bb826c1b14009f808cdc949e8df03beae0d250c5dfcf832b9efda80ba601e5",
+    "title": "CVE-2026-126393: SiYuan before 3.8.10 contains a server-side request forgery vulnerability in the skill-install download path because fetchBytes performs only a parse-time hostname check instead of us...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126393",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-fc2c32921a45443ebd5a812bc94baff2b8796164a44f5a72dab50270c189ddcb",
+    "title": "LLMs are Vulnerable to Malicious Requests with Indistinguishable Intent",
+    "date": "2026-11-13",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.17818v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-bccb8cae0319dc643e036b8bc162787de143c38ebc0d709b7b2eb1dc30812370",
+    "title": "CVE-2026-126360: OpenTelemetry Python provides the Python API and SDK for OpenTelemetry. Prior to 1.45.2, TraceContextTextMapPropagator.extract() in opentelemetry-api can perform quadratic-time regula...",
+    "date": "2026-11-13",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126360",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-417b27cb40926f3980cf249915e7352c94294cae7cc5c8ed23389b00dcb8c442",
+    "title": "Creating Steering Vectors via Input Optimisation",
+    "date": "2026-11-12",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.17481v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-6f3cdd4b02889a30dafe5ac9c2ee76b69b4724a802c20e49a71b4832df591adb",
+    "title": "CVE-2026-126199: pgEdge Postgres MCP Server enables SQL queries against PostgreSQL databases through Model Context Protocol compatible clients. Prior to 1.1.0, the bundled CLI and web clients classifi...",
+    "date": "2026-11-12",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126199",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-f106ebb5862df1987335c1c11fe0a1ae9b0f3dd431223c9b7e0abcef8624aecc",
+    "title": "CVE-2026-126198: pgEdge Postgres MCP Server enables SQL queries against PostgreSQL databases through Model Context Protocol compatible clients. Prior to 1.1.0, the bundled clients, including the CLI a...",
+    "date": "2026-11-12",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126198",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-04e2624a80c3ab18ea7be6837f8668153b50cc60feda1ef3b15a501a07780653",
+    "title": "CVE-2026-126197: pgEdge Postgres MCP Server enables SQL queries against PostgreSQL databases through Model Context Protocol compatible clients. Prior to 1.1.0, custom pl-do tools interpolated JSON arg...",
+    "date": "2026-11-12",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126197",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-e033c89847e7634ff2e97f745990b73e9d7c6dc09c35d27fb97738e51f60ac02",
+    "title": "CVE-2026-126196: pgEdge Postgres MCP Server enables SQL queries against PostgreSQL databases through Model Context Protocol compatible clients. Prior to 1.1.0, query database on a read only connection...",
+    "date": "2026-11-12",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126196",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-c7ca683d3d4b9f8281d273f4297414fc26f0bfa613d9943920da02f8f16befd3",
+    "title": "Webinar: See How Identity Blind Spots Put Your SOC at Risk and How to Close Them",
+    "date": "2026-11-12",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/your-soc-sees-alert-but-does-it-know.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-7494ca9873d6aa9c3c53c0dd8242492891f8059e3674f7a09c12966a9e737be2",
+    "title": "ThreatsDay: 59 Linux Kernel Bugs, Falcon Spyware, GSocket Backdoors + 17 More Stories",
+    "date": "2026-11-12",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/threatsday-59-linux-kernel-bugs-falcon.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-17a5d21a1dc5b2a244e8d93473b299a62efa40eb4f429e86216654b2d19aa666",
+    "title": "CapLite: Prompt-Injection Defense for Small Language Model Agents without Model-Written Security Artifacts",
+    "date": "2026-11-12",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.17115v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-1297b93a8742f3bb538f43b3415c5a4dceaec810f89ea22759b3544dff9684ef",
+    "title": "186 Fake AI Domains Redirect Users to ClickFix Lures, Browser Malware, and Search Hijackers",
+    "date": "2026-11-12",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/186-fake-ai-domains-redirect-users-to.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-10c43d089dc3ba53f554941e0a2f750b3bfb178bb60b7dbed27a17b668e74ce2",
+    "title": "Inside an AI Attack Against a US Retailer",
+    "date": "2026-11-12",
+    "source": "Dark Reading",
+    "url": "https://www.darkreading.com/cyberattacks-data-breaches/inside-ai-attack-us-retailer",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-6ee5a6d548674715e1ff64d1543318fdacbec547f3ed56ed30122057e205ccfe",
+    "title": "Intent-Aware Protection for AI Agents",
+    "date": "2026-11-12",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.16122v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-7406a4f24632b3d2c7a8dd8f577413efee6205a42dd2dd4182008aea94820292",
+    "title": "CVE-2026-65968: ideon is a self-hosted visual workspace. Prior to version 0.9.4, validateUrlForSSRF() / safeFetch() in lib/oauth/ssrf-protection.ts (and the parallel validateMcpUrl() in lib/security/v...",
+    "date": "2026-11-11",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-65968",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-c5661268f85f49f33c60e8c80b4630aeb89f7aa4e373ecd7d1b4b49a41c8c10f",
+    "title": "CVE-2026-126767: OpsTree REMS through 1.0.0 contains a prompt injection vulnerability that allows authenticated users to disclose the hidden system prompt by submitting crafted chat input to POST /api...",
+    "date": "2026-11-11",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-126767",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
+    "id": "research-551592eca7caa3defd09aaf7dc00d44c8cad27cd1302d34a8682ca04ab91348f",
+    "title": "ProdPilot: A Layered Model Context Protocol System for Automated Production Readiness and Deployment of Vibe-Coded Projects",
+    "date": "2026-11-11",
+    "source": "arXiv AI-security papers (unreviewed preprints)",
+    "url": "https://arxiv.org/abs/2611.17381v1",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  }
+]
