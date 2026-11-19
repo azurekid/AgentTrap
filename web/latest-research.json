@@ -1,5 +1,13 @@
 [
   {
+    "id": "research-c7e9b4e906a695b285b169166a9e7def15f87f678f07256e47d90876eae613f0",
+    "title": "CISA Warns of 4 Exploited Flaws Linked to Ransomware, Cryptomining, and LLMjacking Attacks",
+    "date": "2026-11-19",
+    "source": "The Hacker News",
+    "url": "https://thehackernews.com/2026/11/cisa-warns-of-4-exploited-flaws-linked.html",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
     "id": "research-5634964726578c7644b03ae2138a43eb675f8231fe698745883eab75dfb9749b",
     "title": "CVE-2026-77283: obsidian-sync-mcp is an MCP server that gives AI agents access to Obsidian vaults. Prior to 0.5.7, deployments running without MCP AUTH TOKEN install no serverOptions.authenticate chec...",
     "date": "2026-11-18",
