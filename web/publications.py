@@ -109,15 +109,17 @@ def render_list(entries: list[Edition | NewsLink], *, archive: bool) -> str:
     for item in entries:
         if isinstance(item, Edition):
             href, label = item.path, f"Newsletter · Issue {item.issue}"
+            link_id = f"publication-newsletter-{item.issue}"
         else:
             href = str(item.url)
             label = f"{item.source} · Automated" if item.id.startswith("research-") else item.source
+            link_id = f"publication-{item.id}"
         day = item.date.isoformat()
         rows.append(
             '<li class="publication-item">'
             f'<p class="publication-meta"><time datetime="{day}">{day}</time>'
             f' <span aria-hidden="true">//</span> {escape(label)}</p>'
-            f'<{heading}><a href="{escape(href)}">{escape(item.title)}</a></{heading}>'
+            f'<{heading}><a id="{escape(link_id)}" href="{escape(href)}">{escape(item.title)}</a></{heading}>'
             f'<p>{escape(item.summary)}</p></li>'
         )
     return f'<ul class="publication-list">{"".join(rows)}</ul>' if rows else "<p>No publications yet.</p>"

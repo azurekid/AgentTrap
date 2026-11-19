@@ -1068,6 +1068,9 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert 'href="#other">Other security news <span>(2)</span>' in news
     assert news.index("Research update") < news.index("News &amp; notes") < news.index("Second edition")
     assert news.index("Second edition") < news.index("First edition")
+    assert 'id="publication-research-test"' in news
+    assert 'id="publication-test-link"' in news
+    assert 'id="publication-newsletter-2"' in news
     assert 'href="#vulnerabilities"' not in news  # Don't show empty sections.
     assert "Research Lab · Automated" in news
     assert 'href="https://example.test/news?a=1&amp;b=2"' in news
