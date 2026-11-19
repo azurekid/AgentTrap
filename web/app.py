@@ -264,15 +264,23 @@ def index():
 
 @app.get("/newsletter", response_class=HTMLResponse)
 def newsletter_page():
+    editions = publications.newsletter_editions()
+    target = editions[0].path if editions else "/newsletter/archive"
+    return RedirectResponse(target, status_code=307, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/newsletter/archive", response_class=HTMLResponse)
+def newsletter_archive():
     return publications.render_page(archive=True)
 
 
 @app.get("/newsletter/{issue}", response_class=HTMLResponse)
 def newsletter_edition(issue: str):
-    snapshot = publications.SNAPSHOTS.get(f"/newsletter/{issue}")
+    path = f"/newsletter/{issue}"
+    snapshot = publications.SNAPSHOTS.get(path)
     if snapshot is None:
         raise HTTPException(404, "Newsletter edition not found")
-    return navigation.render_edition(snapshot[0])
+    return navigation.render_edition(snapshot[0], publications.edition_sidebar(path))
 
 
 @app.get("/news", response_class=HTMLResponse)

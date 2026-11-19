@@ -617,10 +617,11 @@ values are never published.
 | `/coverage` | Threat classes, ecosystems and file types inspected |
 | `/samples` | Use-case catalogue |
 | `/sources` | Research sources |
-| `/newsletter` | Archive of published Agent Security Weekly editions, newest first |
+| `/newsletter` | Opens the latest Agent Security Weekly edition, with previous issues in a sidebar |
+| `/newsletter/archive` | Full archive of published Agent Security Weekly editions |
 | `/newsletter/<issue>` | Permanent URL for a published edition, for example `/newsletter/20` |
-| `/news` | Latest News: Agent Security Weekly first, followed by links first indexed in the last hour, grouped by security topic. |
-| `/rss.xml` | RSS 2.0 feed with all retained research links, curated links, and newsletter editions, without the one-hour filter. |
+| `/news` | Latest News: Agent Security Weekly first, up to 10 items per topic, with a clickable `#ID` tag on each item and a New badge for links indexed in the past hour. |
+| `/rss.xml` | RSS 2.0 feed with all retained research links, curated links, and newsletter editions. |
 
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to
 [azurekid](https://github.com/azurekid).
@@ -640,10 +641,9 @@ Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. Th
    automated links, labels them separately, and updates the private
    `agentlens-news/latest-research.json` blob. `/news` and `/rss.xml` read the current blob
    on each request, so hourly content updates do not commit to Git or redeploy the site.
-   The one-hour window uses the time each link was first added to the index. Older
-   records without that timestamp remain in RSS. For the initial timestamp rollout,
-   deploy the updated web app before running the updated hourly workflow so the app
-   can read the new field. The workflow does not publish excerpts or open issues.
+   The New badge uses the time each link was first added to the index. Older records
+   without that timestamp are shown without the badge. The workflow does not publish
+   excerpts or open issues.
 
 ### Research sources
 

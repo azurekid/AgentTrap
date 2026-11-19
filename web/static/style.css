@@ -535,6 +535,15 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .publication-item { padding: 20px 0; border-bottom: 1px solid var(--line); }
 .publication-item .publication-meta { color: var(--muted); font: 12px var(--mono); }
 .publication-meta span { margin-inline: 5px; color: var(--violet); }
+.publication-meta .publication-new { color: var(--teal); font-weight: 700; }
+.publication-item a[id] { scroll-margin-top: 115px; }
+.publication-item a[id]:target { outline: 1px solid var(--teal); outline-offset: 3px; }
+.publication-meta .publication-permalink {
+  margin-inline-start: .4em; padding: 1px 4px; border: 1px solid var(--line-strong);
+  border-radius: 4px; color: var(--muted); overflow-wrap: anywhere;
+}
+.publication-meta .publication-permalink:hover,
+.publication-meta .publication-permalink:focus-visible { color: var(--teal); }
 .publications .publication-item :is(h2, h3) { display: block; margin: 8px 0 5px; font-size: clamp(18px, 2.5vw, 22px); overflow-wrap: anywhere; }
 .publication-item :is(h2, h3) a { color: var(--text); text-decoration-color: var(--teal); }
 .publication-item p { margin: 0; color: var(--body); }

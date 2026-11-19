@@ -18,8 +18,16 @@ def render_static_page(name: str, current: str = "") -> str:
     return page.replace("<!-- site-header -->", render_header(current), 1)
 
 
-def render_edition(snapshot: Path) -> str:
+def render_edition(snapshot: Path, sidebar: str) -> str:
     page = snapshot.read_text(encoding="utf-8")
     return page.replace(
         "</head>", '<link rel="stylesheet" href="/assets/site-nav.css">\n</head>', 1
-    ).replace("<body>", "<body>\n" + render_header("/newsletter"), 1)
+    ).replace(
+        "<body>", "<body>\n" + render_header("/newsletter") + '<div class="newsletter-layout">', 1
+    ).replace(
+        "<main>", '<a href="#newsletter-previous" class="newsletter-sidebar-jump">Previous editions</a>\n<main>', 1
+    ).replace(
+        "</body>", sidebar + "</div>\n</body>", 1
+    ).replace(
+        'href="/newsletter">Newsletter archive</a>', 'href="/newsletter/archive">Newsletter archive</a>', 1
+    )

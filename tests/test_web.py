@@ -314,7 +314,7 @@ def test_risky_upload_archived_original_redacted_report(client):
     ("/coverage", "Detection coverage | AgentLens"), ("/samples", "Use-case catalogue | AgentLens"),
     ("/sources", "Research sources | AgentLens"), ("/report", "Inspection report | AgentLens"),
     ("/fingerprints", "Fingerprint search | AgentLens"),
-    ("/news", "Latest News | AgentLens"), ("/newsletter", "Newsletter archive | AgentLens"),
+    ("/news", "Latest News | AgentLens"), ("/newsletter/archive", "Newsletter archive | AgentLens"),
 ])
 def test_pages_share_navigation_and_credit(client, path, title):
     page = client.get(path)
@@ -330,7 +330,8 @@ def test_pages_share_navigation_and_credit(client, path, title):
     if path != "/fingerprints":
         assert 'href="https://github.com/azurekid"' in page.text
     if path not in ("/", "/report"):
-        assert f'<a href="{path}" aria-current="page">' in page.text
+        current = "/newsletter" if path == "/newsletter/archive" else path
+        assert f'<a href="{current}" aria-current="page">' in page.text
 
 
 @pytest.mark.parametrize("path,target", [("/scan", "/#scanner"), ("/scan?mode=repo", "/?mode=repo#scanner")])
@@ -1010,11 +1011,14 @@ def test_clean_report_has_empty_atlas_mapping(client):
 
 
 def test_newsletter_page_and_style_policy(client):
-    archive = client.get("/newsletter")
+    latest = client.get("/newsletter", follow_redirects=False)
+    assert latest.status_code == 307 and latest.headers["location"] == "/newsletter/20"
+    archive = client.get("/newsletter/archive")
     page = client.get("/newsletter/20")
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
     assert 'href="/newsletter/20">Stolen keys put agents at risk</a>' in archive.text
-    assert 'href="/newsletter">Newsletter archive</a>' in page.text
+    assert 'href="/newsletter/archive">Newsletter archive</a>' in page.text
+    assert "No previous editions yet." in page.text
     assert '<nav class="site-nav" aria-label="Pages">' in page.text
     assert '<a href="/newsletter" aria-current="page">Newsletter</a>' in page.text
     assert client.get("/assets/site-nav.css").status_code == 200
@@ -1050,7 +1054,8 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     static.mkdir()
     for issue in (1, 2, 3):
         (static / f"newsletter-issue-{issue}.html").write_text(
-            f"<style>h1 {{order:{issue}}}</style><h1>Edition {issue}</h1>", encoding="utf-8")
+            f"<html><head><style>h1 {{order:{issue}}}</style></head>"
+            f"<body><main><h1>Edition {issue}</h1></main></body></html>", encoding="utf-8")
     (tmp_path / "publications.json").write_text(json.dumps({
         "editions": [
             {"issue": 1, "title": "First edition", "date": "2026-11-01", "summary": "First briefing"},
@@ -1071,18 +1076,27 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
                             summary="Read the original.", indexed_at=news_clock - timedelta(hours=1)),
     ])
 
-    archive = client.get("/newsletter").text
+    archive = client.get("/newsletter/archive").text
     assert archive.index('href="/newsletter/2"') < archive.index('href="/newsletter/1"')
     assert "News &amp; notes" not in archive
     assert "Research update" not in archive
-    assert client.get("/newsletter/1").text.endswith("<h1>Edition 1</h1>")
-    assert client.get("/newsletter/2").text.endswith("<h1>Edition 2</h1>")
+    latest = client.get("/newsletter")
+    assert latest.url.path == "/newsletter/2"
+    assert "<h1>Edition 2</h1>" in latest.text
+    sidebar = latest.text.split('<aside class="newsletter-sidebar"', 1)[1].split("</aside>", 1)[0]
+    assert 'href="/newsletter/1">Issue 1: First edition</a>' in sidebar
+    assert 'href="/newsletter/2"' not in sidebar
+    previous = client.get("/newsletter/1").text
+    assert "<h1>Edition 1</h1>" in previous
+    assert 'href="/newsletter/1" aria-current="page"' in previous
+    assert 'href="/newsletter">Latest edition</a>' in previous
     assert client.get("/newsletter/3").status_code == 404  # A file alone does not publish a draft.
     news = client.get("/news").text
-    assert 'href="#other">Other security news <span>(1)</span>' in news
+    assert 'href="#other">Other security news <span>(2)</span>' in news
     assert news.index("Second edition") < news.index("First edition") < news.index("Research update")
     assert 'id="publication-research-test"' in news
-    assert 'id="publication-test-link"' not in news  # Legacy date-only link stays in RSS.
+    assert 'id="publication-test-link"' in news
+    assert news.count('class="publication-new"') == 1
     assert 'id="publication-newsletter-2"' in news
     assert 'href="#vulnerabilities"' not in news  # Don't show empty sections.
     assert "Research Lab · Automated" in news
@@ -1139,8 +1153,8 @@ def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch,
     monkeypatch.setattr(client.app.state.archive, "service", service)
     before = client.get("/news")
     assert before.headers["cache-control"] == "no-store"
-    assert "Before refresh" not in before.text
-    assert "No news links indexed in the last hour" in before.text
+    assert "Before refresh" in before.text
+    assert 'class="publication-new"' not in before.text
     assert "Before refresh" in client.get("/rss.xml").text
 
     service.payload = json.dumps([{
@@ -1150,6 +1164,7 @@ def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch,
     }]).encode()
     after = client.get("/news")
     assert "After refresh" in after.text and "Before refresh" not in after.text
+    assert '<span class="publication-new">New</span>' in after.text
     feed = client.get("/rss.xml")
     assert feed.headers["cache-control"] == "no-store"
     assert "After refresh" in feed.text
@@ -1174,10 +1189,46 @@ def test_news_topic_sections_show_each_link_once(client, monkeypatch, news_clock
     news = client.get("/news").text
     for key, title, url in stories:
         section = news.split(f'id="{key}" aria-labelledby=', 1)[1].split("</section>", 1)[0]
-        assert f'<h3><a id="publication-{key}" href="{url}">{title}</a></h3>' in section
+        assert f'<h3><a id="publication-{key}" href="{url}">{title}</a>' in section
+        assert f'href="#publication-{key}"' in section
         assert news.count(f'href="{url}"') == 1
         assert f'href="#{key}"' in news
     assert 'href="#editions"' not in news
+
+
+def test_news_limits_each_category_without_limiting_rss(client, monkeypatch):
+    publishing = app_module.publications
+    monkeypatch.setattr(publishing, "CATALOG", publishing.Catalog(editions=[], news=[]))
+    monkeypatch.setattr(publishing, "LATEST_RESEARCH", [
+        publishing.NewsLink(id=f"{topic}-{day}", title=f"{title} {day}", date=f"2026-11-{day:02d}",
+                            source="Example", url=f"https://example.test/{topic}/{day}", summary="Read more.")
+        for topic, title in (("other", "Industry update"), ("defenses", "Hardening guide"))
+        for day in range(1, 13)
+    ])
+    news = client.get("/news").text
+    for topic in ("other", "defenses"):
+        ids = re.findall(rf'id="publication-{topic}-(\d+)"', news)
+        assert ids == [str(day) for day in range(12, 2, -1)]
+    feed = ET.fromstring(client.get("/rss.xml").content)
+    assert len(feed.findall("./channel/item")) == 24
+
+
+def test_news_permalink_ids_are_unique_and_badges_exclude_future_items(client, monkeypatch, news_clock):
+    publishing = app_module.publications
+    link = publishing.NewsLink(id="newsletter-1", title="News item", date="2026-11-18",
+                               source="Example", url="https://example.test/news", summary="Read more.",
+                               indexed_at=news_clock + timedelta(seconds=1))
+    edition = publishing.Edition(issue=1, title="Weekly edition", date="2026-11-18", summary="Briefing.")
+    monkeypatch.setattr(publishing, "CATALOG", publishing.Catalog(editions=[edition], news=[link]))
+    monkeypatch.setattr(publishing, "LATEST_RESEARCH", [link])
+    news = client.get("/news").text
+    tags = re.findall(r'class="publication-permalink" href="#([^"]+)"[^>]*>(#[^<]+)</a>', news)
+    assert tags == [
+        ("publication-newsletter-1", "#newsletter-1"),
+        ("publication--newsletter-1", "#-newsletter-1"),
+    ]
+    assert all(news.count(f'id="{fragment}"') == 1 for fragment, _ in tags)
+    assert 'class="publication-new"' not in news
 
 
 def test_research_page_and_parsed_sources(client):

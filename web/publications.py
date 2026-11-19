@@ -117,20 +117,26 @@ def load_latest_research(storage_service: BlobServiceClient | None = None) -> li
     return items
 
 
+def newsletter_editions() -> list[Edition]:
+    return sorted(CATALOG.editions, key=lambda item: (item.date, item.issue), reverse=True)
+
+
 def ordered(
     archive: bool = False, *, storage_service: BlobServiceClient | None = None
 ) -> list[Edition | NewsLink]:
-    entries: list[Edition | NewsLink] = [*CATALOG.editions]
+    entries: list[Edition | NewsLink] = list(CATALOG.editions) if not archive else list(newsletter_editions())
     if not archive:
         entries.extend(CATALOG.news)
         entries.extend(load_latest_research(storage_service))
     return sorted(entries, key=lambda item: item.date, reverse=True)
 
 
-def render_list(entries: list[Edition | NewsLink], *, archive: bool) -> str:
+def render_list(entries: list[Edition | NewsLink], *, archive: bool, now: datetime | None = None) -> str:
     heading = "h2" if archive else "h3"
+    cutoff = now - timedelta(hours=1) if now is not None else None
     rows = []
     for item in entries:
+        badge = ""
         if isinstance(item, Edition):
             href, label = item.path, f"Newsletter · Issue {item.issue}"
             link_id = f"publication-newsletter-{item.issue}"
@@ -138,12 +144,20 @@ def render_list(entries: list[Edition | NewsLink], *, archive: bool) -> str:
             href = str(item.url)
             label = f"{item.source} · Automated" if item.id.startswith("research-") else item.source
             link_id = f"publication-{item.id}"
+            # A double hyphen cannot occur in a catalog ID; reserve it for this collision.
+            if re.fullmatch(r"newsletter-\d+", item.id):
+                link_id = f"publication--{item.id}"
+            if cutoff is not None and now is not None and item.indexed_at is not None and cutoff <= item.indexed_at <= now:
+                badge = ' <span class="publication-new">New</span>'
         day = item.date.isoformat()
+        fragment = escape(link_id)
+        tag = escape(link_id.removeprefix("publication-"))
         rows.append(
             '<li class="publication-item">'
             f'<p class="publication-meta"><time datetime="{day}">{day}</time>'
-            f' <span aria-hidden="true">//</span> {escape(label)}</p>'
-            f'<{heading}><a id="{escape(link_id)}" href="{escape(href)}">{escape(item.title)}</a></{heading}>'
+            f' <span aria-hidden="true">//</span> {escape(label)}{badge} '
+            f'<a class="publication-permalink" href="#{fragment}" title="Link to this item">#{tag}</a></p>'
+            f'<{heading}><a id="{fragment}" href="{escape(href)}">{escape(item.title)}</a></{heading}>'
             f'<p>{escape(item.summary)}</p></li>'
         )
     return f'<ul class="publication-list">{"".join(rows)}</ul>' if rows else "<p>No publications yet.</p>"
@@ -151,11 +165,16 @@ def render_list(entries: list[Edition | NewsLink], *, archive: bool) -> str:
 
 def render_topics(entries: list[Edition | NewsLink]) -> str:
     now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(hours=1)
     groups: dict[str, list[Edition | NewsLink]] = {key: [] for key in NEWS_TOPICS}
+    seen: set[str] = set()
     for item in entries:
-        if isinstance(item, Edition) or (item.indexed_at is not None and cutoff <= item.indexed_at <= now):
-            groups[news_topic(item)].append(item)
+        if isinstance(item, NewsLink):
+            if item.id in seen:
+                continue
+            seen.add(item.id)
+        group = groups[news_topic(item)]
+        if len(group) < 10:
+            group.append(item)
     links, sections = [], []
     for key, items in groups.items():
         if not items:
@@ -164,11 +183,11 @@ def render_topics(entries: list[Edition | NewsLink]) -> str:
         links.append(f'<li><a href="#{key}">{label} <span>({len(items)})</span></a></li>')
         sections.append(
             f'<section class="news-topic" id="{key}" aria-labelledby="{key}-heading">'
-            f'<h2 id="{key}-heading">{label}</h2>{render_list(items, archive=False)}</section>'
+            f'<h2 id="{key}-heading">{label}</h2>{render_list(items, archive=False, now=now)}</section>'
         )
     nav = f'<nav class="news-topics" aria-label="News topics"><ul>{"".join(links)}</ul></nav>' if links else ""
     empty = "" if any(groups[key] for key in groups if key != "editions") else (
-        f'<p>No news links indexed in the last hour. <a href="{FEED_PATH}">Browse the RSS feed</a> for older links.</p>'
+        f'<p>No news links yet. <a href="{FEED_PATH}">Browse the RSS feed</a>.</p>'
     )
     return f'{nav}{"".join(sections)}{empty}'
 
@@ -177,12 +196,27 @@ def render_page(*, archive: bool, storage_service: BlobServiceClient | None = No
     title, intro = (
         ("Newsletter archive", "Browse past editions of Agent Security Weekly.")
         if archive else
-        ("Latest News", "Agent Security Weekly and security news indexed in the last hour.")
+        ("Latest News", "Agent Security Weekly and the 10 latest links per topic. New marks links indexed in the last hour.")
     )
     entries = ordered(archive, storage_service=storage_service)
     content = render_list(entries, archive=True) if archive else render_topics(entries)
     return PAGE.substitute(title=title, intro=intro, content=content, feed=FEED_PATH,
                            site_header=render_header("/newsletter" if archive else "/news"))
+
+
+def edition_sidebar(current: str) -> str:
+    latest, *previous = newsletter_editions()
+    links = []
+    for item in previous:
+        active = ' aria-current="page"' if item.path == current else ""
+        links.append(f'<li><a href="{item.path}"{active}>Issue {item.issue}: {escape(item.title)}</a></li>')
+    latest_link = '<p><a href="/newsletter">Latest edition</a></p>' if latest.path != current else ""
+    issues = f'<ul>{"".join(links)}</ul>' if links else "<p>No previous editions yet.</p>"
+    return (
+        '<aside class="newsletter-sidebar" aria-labelledby="newsletter-previous">'
+        '<h2 id="newsletter-previous">Previous editions</h2>'
+        f'{latest_link}{issues}<p><a href="/newsletter/archive">Full archive</a></p></aside>'
+    )
 
 
 def render_rss(*, storage_service: BlobServiceClient | None = None) -> bytes:
