@@ -1,7 +1,7 @@
 import os
 import re
 from base64 import b64encode
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from email.utils import format_datetime
 from hashlib import sha256
 from html import escape
@@ -10,7 +10,7 @@ from string import Template
 from xml.etree import ElementTree as ET
 
 from azure.storage.blob import BlobServiceClient
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, TypeAdapter
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, HttpUrl, TypeAdapter
 
 from web.navigation import render_header
 
@@ -40,6 +40,7 @@ class NewsLink(Publication):
     id: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
     source: str = Field(min_length=1)
     url: HttpUrl
+    indexed_at: AwareDatetime | None = None
 
 
 class Catalog(BaseModel):
@@ -71,12 +72,12 @@ NEWS_LINKS = TypeAdapter(list[NewsLink])
 LATEST_RESEARCH = NEWS_LINKS.validate_json((ROOT / "latest-research.json").read_bytes())
 
 NEWS_TOPICS = {
+    "editions": "Agent Security Weekly",
     "vulnerabilities": "Vulnerabilities & CVEs",
     "threats": "Attacks & incidents",
     "defenses": "Defenses & guidance",
     "papers": "Research papers",
     "other": "Other security news",
-    "editions": "Agent Security Weekly",
 }
 
 
@@ -149,9 +150,12 @@ def render_list(entries: list[Edition | NewsLink], *, archive: bool) -> str:
 
 
 def render_topics(entries: list[Edition | NewsLink]) -> str:
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=1)
     groups: dict[str, list[Edition | NewsLink]] = {key: [] for key in NEWS_TOPICS}
     for item in entries:
-        groups[news_topic(item)].append(item)
+        if isinstance(item, Edition) or (item.indexed_at is not None and cutoff <= item.indexed_at <= now):
+            groups[news_topic(item)].append(item)
     links, sections = [], []
     for key, items in groups.items():
         if not items:
@@ -162,16 +166,18 @@ def render_topics(entries: list[Edition | NewsLink]) -> str:
             f'<section class="news-topic" id="{key}" aria-labelledby="{key}-heading">'
             f'<h2 id="{key}-heading">{label}</h2>{render_list(items, archive=False)}</section>'
         )
-    if not sections:
-        return "<p>No publications yet.</p>"
-    return f'<nav class="news-topics" aria-label="News topics"><ul>{"".join(links)}</ul></nav>{"".join(sections)}'
+    nav = f'<nav class="news-topics" aria-label="News topics"><ul>{"".join(links)}</ul></nav>' if links else ""
+    empty = "" if any(groups[key] for key in groups if key != "editions") else (
+        f'<p>No news links indexed in the last hour. <a href="{FEED_PATH}">Browse the RSS feed</a> for older links.</p>'
+    )
+    return f'{nav}{"".join(sections)}{empty}'
 
 
 def render_page(*, archive: bool, storage_service: BlobServiceClient | None = None) -> str:
     title, intro = (
         ("Newsletter archive", "Browse past editions of Agent Security Weekly.")
         if archive else
-        ("Latest News", "Browse security news by topic, with the newest links first in each section.")
+        ("Latest News", "Agent Security Weekly and security news indexed in the last hour.")
     )
     entries = ordered(archive, storage_service=storage_service)
     content = render_list(entries, archive=True) if archive else render_topics(entries)

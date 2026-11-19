@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 from xml.etree import ElementTree as ET
@@ -1030,7 +1031,20 @@ def test_newsletter_page_and_style_policy(client):
     assert client.get("/newsletter/publications.json").status_code == 404
 
 
-def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, tmp_path):
+@pytest.fixture
+def news_clock(monkeypatch):
+    now = datetime(2026, 11, 19, 16, 30, tzinfo=timezone.utc)
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return now.astimezone(tz)
+
+    monkeypatch.setattr(app_module.publications, "datetime", FrozenDateTime)
+    return now
+
+
+def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, tmp_path, news_clock):
     publishing = app_module.publications
     static = tmp_path / "static"
     static.mkdir()
@@ -1054,7 +1068,7 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     monkeypatch.setattr(publishing, "LATEST_RESEARCH", [
         publishing.NewsLink(id="research-test", title="Research update", date="2026-11-18",
                             source="Research Lab", url="https://example.test/research",
-                            summary="Read the original."),
+                            summary="Read the original.", indexed_at=news_clock - timedelta(hours=1)),
     ])
 
     archive = client.get("/newsletter").text
@@ -1065,16 +1079,13 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert client.get("/newsletter/2").text.endswith("<h1>Edition 2</h1>")
     assert client.get("/newsletter/3").status_code == 404  # A file alone does not publish a draft.
     news = client.get("/news").text
-    assert 'href="#other">Other security news <span>(2)</span>' in news
-    assert news.index("Research update") < news.index("News &amp; notes") < news.index("Second edition")
-    assert news.index("Second edition") < news.index("First edition")
+    assert 'href="#other">Other security news <span>(1)</span>' in news
+    assert news.index("Second edition") < news.index("First edition") < news.index("Research update")
     assert 'id="publication-research-test"' in news
-    assert 'id="publication-test-link"' in news
+    assert 'id="publication-test-link"' not in news  # Legacy date-only link stays in RSS.
     assert 'id="publication-newsletter-2"' in news
     assert 'href="#vulnerabilities"' not in news  # Don't show empty sections.
     assert "Research Lab · Automated" in news
-    assert 'href="https://example.test/news?a=1&amp;b=2"' in news
-    assert "Review &lt;access&gt; &amp; permissions." in news
     assert 'type="application/rss+xml" title="AgentLens Latest News" href="/rss.xml"' in news
 
     feed = client.get("/rss.xml", headers={"Host": "custom.example"})
@@ -1093,7 +1104,7 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert items[1].findtext("pubDate") == "Sun, 08 Nov 2026 00:00:00 GMT"
 
 
-def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch):
+def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch, news_clock):
     monkeypatch.setenv("LATEST_NEWS_BACKEND", "azure")
     monkeypatch.setenv("AZURE_NEWS_CONTAINER", "agentlens-news")
 
@@ -1109,6 +1120,7 @@ def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch)
             self.payload = json.dumps([{
                 "id": "research-before", "title": "Before refresh", "date": "2026-11-18",
                 "source": "Example", "url": "https://example.test/before", "summary": "Old index.",
+                "indexed_at": (news_clock - timedelta(hours=1, seconds=1)).isoformat(),
             }]).encode()
             self.downloads = []
 
@@ -1127,21 +1139,24 @@ def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch)
     monkeypatch.setattr(client.app.state.archive, "service", service)
     before = client.get("/news")
     assert before.headers["cache-control"] == "no-store"
-    assert "Before refresh" in before.text
+    assert "Before refresh" not in before.text
+    assert "No news links indexed in the last hour" in before.text
+    assert "Before refresh" in client.get("/rss.xml").text
 
     service.payload = json.dumps([{
         "id": "research-after", "title": "After refresh", "date": "2026-11-19",
         "source": "Example", "url": "https://example.test/after", "summary": "Updated index.",
+        "indexed_at": news_clock.isoformat(),
     }]).encode()
     after = client.get("/news")
     assert "After refresh" in after.text and "Before refresh" not in after.text
     feed = client.get("/rss.xml")
     assert feed.headers["cache-control"] == "no-store"
     assert "After refresh" in feed.text
-    assert service.downloads == [15, 15, 15]
+    assert service.downloads == [15, 15, 15, 15]
 
 
-def test_news_topic_sections_show_each_link_once(client, monkeypatch):
+def test_news_topic_sections_show_each_link_once(client, monkeypatch, news_clock):
     publishing = app_module.publications
     stories = [
         ("vulnerabilities", "CVE-2026-1234 affects an agent tool", "https://example.test/cve"),
@@ -1152,7 +1167,8 @@ def test_news_topic_sections_show_each_link_once(client, monkeypatch):
     ]
     monkeypatch.setattr(publishing, "CATALOG", publishing.Catalog(editions=[], news=[]))
     monkeypatch.setattr(publishing, "LATEST_RESEARCH", [
-        publishing.NewsLink(id=key, title=title, date="2026-11-18", source="Example", url=url, summary="Read more.")
+        publishing.NewsLink(id=key, title=title, date="2026-11-18", source="Example", url=url,
+                            summary="Read more.", indexed_at=news_clock)
         for key, title, url in stories
     ])
     news = client.get("/news").text

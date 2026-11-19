@@ -11,7 +11,7 @@ from tools.check_research_feeds import CONFIG, ROOT, collect, normalise, plain
 LIMIT = 100
 
 
-def merge(curated: list[dict], existing: list[dict], found: list[dict]) -> list[dict]:
+def merge(curated: list[dict], existing: list[dict], found: list[dict], *, indexed_at: datetime) -> list[dict]:
     urls = {normalise(item["url"]) for item in curated}
     titles = {item["title"].casefold() for item in curated}
     rows = []
@@ -30,13 +30,14 @@ def merge(curated: list[dict], existing: list[dict], found: list[dict]) -> list[
             "id": "research-" + sha256(key.encode()).hexdigest(),
             "title": headline,
             "date": item["date"].date().isoformat(),
+            "indexed_at": indexed_at.isoformat(),
             "source": plain(item["feed"]).replace("\u2014", " - "),
             "url": item["url"],
             "summary": "Automatically indexed from the source. Read the original for details.",
         })
         urls.add(key)
         titles.add(title)
-    return sorted(rows, key=lambda row: row["date"], reverse=True)[:LIMIT]
+    return sorted(rows, key=lambda row: (row["date"], row.get("indexed_at", "")), reverse=True)[:LIMIT]
 
 
 def main(web: Path = ROOT / "web") -> int:
@@ -51,7 +52,7 @@ def main(web: Path = ROOT / "web") -> int:
     target = web / "latest-research.json"
     curated = json.loads((web / "publications.json").read_text(encoding="utf-8"))["news"]
     previous = json.loads(target.read_text(encoding="utf-8"))
-    updated = merge(curated, previous, found)
+    updated = merge(curated, previous, found, indexed_at=datetime.now(timezone.utc))
     if updated != previous:
         target.write_text(json.dumps(updated, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return 0

@@ -16,6 +16,8 @@ Azure Hacking (MVP 2026), West Europe, new `rg-agentlens`. Reuse the repository'
 
 ## Validation proof
 
+2026-11-19: For `fcde1d3`, GitHub Actions passed the test job. The Bicep validation helper passed CLI, authentication, compilation, ARM validation and what-if for the existing West Europe `rg-agentlens`. The full ARM preview showed no resource deletions and new resources only for the private news container and app reader role. `az bicep lint` and `git diff --check` passed. The resource-group policy query returned no assignments; ARM accepted the template. The live plan is B1, matching the template parameters.
+
 - [x] All validation checks pass
   - [x] Core validation: CLI, authentication, build, ARM validation and what-if
   - [x] Optional linting: Bicep compiler and shell/YAML checks

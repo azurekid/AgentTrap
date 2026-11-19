@@ -619,8 +619,8 @@ values are never published.
 | `/sources` | Research sources |
 | `/newsletter` | Archive of published Agent Security Weekly editions, newest first |
 | `/newsletter/<issue>` | Permanent URL for a published edition, for example `/newsletter/20` |
-| `/news` | Latest News: browse monitored research and curated links by security topic, newest first within each section. Agent Security Weekly has its own section. |
-| `/rss.xml` | RSS 2.0 feed for Latest News |
+| `/news` | Latest News: Agent Security Weekly first, followed by links first indexed in the last hour, grouped by security topic. |
+| `/rss.xml` | RSS 2.0 feed with all retained research links, curated links, and newsletter editions, without the one-hour filter. |
 
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to
 [azurekid](https://github.com/azurekid).
@@ -640,7 +640,10 @@ Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. Th
    automated links, labels them separately, and updates the private
    `agentlens-news/latest-research.json` blob. `/news` and `/rss.xml` read the current blob
    on each request, so hourly content updates do not commit to Git or redeploy the site.
-   It does not publish excerpts or open issues.
+   The one-hour window uses the time each link was first added to the index. Older
+   records without that timestamp remain in RSS. For the initial timestamp rollout,
+   deploy the updated web app before running the updated hourly workflow so the app
+   can read the new field. The workflow does not publish excerpts or open issues.
 
 ### Research sources
 
