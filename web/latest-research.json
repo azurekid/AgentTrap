@@ -16,6 +16,14 @@
     "summary": "Automatically indexed from the source. Read the original for details."
   },
   {
+    "id": "research-eb564c286093eade9643d815f6cbd1881cb44854c6bad7c8839fbe929fb2d893",
+    "title": "CVE-2026-133161: Summary ui With strip ansi=True , Pydantic AI Harness's ToolOutputLimits capability removes ANSI escape sequences from tool output with a pattern that takes time quadratic in the leng...",
+    "date": "2026-11-19",
+    "source": "NVD CVEs",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-133161",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
     "id": "research-5634964726578c7644b03ae2138a43eb675f8231fe698745883eab75dfb9749b",
     "title": "CVE-2026-77283: obsidian-sync-mcp is an MCP server that gives AI agents access to Obsidian vaults. Prior to 0.5.7, deployments running without MCP AUTH TOKEN install no serverOptions.authenticate chec...",
     "date": "2026-11-18",
