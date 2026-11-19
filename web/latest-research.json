@@ -8,6 +8,14 @@
     "summary": "Automatically indexed from the source. Read the original for details."
   },
   {
+    "id": "research-db3005fbf30bde88c584503121135658eb97bd8948502445b2e0a61aac95fbe1",
+    "title": "30 Years of Gatekeeper Asymmetry Doom: The Paradox that Makes Powerful LLMs More Vulnerable",
+    "date": "2026-11-19",
+    "source": "Check Point Research",
+    "url": "https://research.checkpoint.com/2026/30-years-of-gatekeeper-asymmetry-doom-the-paradox-that-makes-powerful-llms-more-vulnerable/",
+    "summary": "Automatically indexed from the source. Read the original for details."
+  },
+  {
     "id": "research-5634964726578c7644b03ae2138a43eb675f8231fe698745883eab75dfb9749b",
     "title": "CVE-2026-77283: obsidian-sync-mcp is an MCP server that gives AI agents access to Obsidian vaults. Prior to 0.5.7, deployments running without MCP AUTH TOKEN install no serverOptions.authenticate chec...",
     "date": "2026-11-18",
