@@ -620,7 +620,7 @@ values are never published.
 | `/newsletter` | Opens the latest Agent Security Weekly edition, with previous issues in a sidebar |
 | `/newsletter/archive` | Full archive of published Agent Security Weekly editions |
 | `/newsletter/<issue>` | Permanent URL for a published edition, for example `/newsletter/20` |
-| `/news` | Latest News: Agent Security Weekly first, up to 10 items per topic, with a clickable `#ID` tag on each item and a New badge for links indexed in the past hour. |
+| `/news` | Latest News: Agent Security Weekly first, up to 10 items per topic, with a permalink on each item and a New badge for links indexed in the past hour. Research permalinks do not display the full ID. |
 | `/rss.xml` | RSS 2.0 feed with all retained research links, curated links, and newsletter editions. |
 
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to

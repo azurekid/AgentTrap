@@ -531,6 +531,7 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .research-hero p:not(.label) { margin: 14px 0 0; color: var(--muted); font-size: 16px; }
 .publications { max-width: 900px; }
 .publications .research-hero .label { color: var(--cyan); text-shadow: 0 0 12px rgba(34, 211, 238, .45); }
+.publications a { text-decoration: none; }
 .publication-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
 .publication-item { padding: 20px 0; border-bottom: 1px solid var(--line); }
 .publication-item .publication-meta { color: var(--muted); font: 12px var(--mono); }
@@ -545,7 +546,10 @@ select { height: 36px; padding: 0 12px; border: 1px solid var(--line-strong); bo
 .publication-meta .publication-permalink:hover,
 .publication-meta .publication-permalink:focus-visible { color: var(--teal); }
 .publications .publication-item :is(h2, h3) { display: block; margin: 8px 0 5px; font-size: clamp(18px, 2.5vw, 22px); overflow-wrap: anywhere; }
-.publication-item :is(h2, h3) a { color: var(--text); text-decoration-color: var(--teal); }
+.publication-item :is(h2, h3) a { color: var(--cyan); font-weight: 650; border-radius: 3px; }
+.publication-item :is(h2, h3) a:hover,
+.publication-item :is(h2, h3) a:focus-visible { color: var(--text); background: rgba(34, 211, 238, .13); }
+.publication-item :is(h2, h3) a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 .publication-item p { margin: 0; color: var(--body); }
 .news-topics ul { display: flex; flex-wrap: wrap; gap: 4px 18px; list-style: none; margin: 0; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
 .news-topics a { display: inline-block; padding-block: 6px; color: var(--teal); }

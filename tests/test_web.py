@@ -1099,7 +1099,9 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert news.count('class="publication-new"') == 1
     assert 'id="publication-newsletter-2"' in news
     assert 'href="#vulnerabilities"' not in news  # Don't show empty sections.
-    assert "Research Lab · Automated" in news
+    assert "Research Lab" in news and "· Automated" not in news
+    assert 'href="#publication-research-test" aria-label="Permalink to Research update">Permalink</a>' in news
+    assert "#research-test</a>" not in news
     assert 'type="application/rss+xml" title="AgentLens Latest News" href="/rss.xml"' in news
 
     feed = client.get("/rss.xml", headers={"Host": "custom.example"})

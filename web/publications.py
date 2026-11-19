@@ -142,7 +142,7 @@ def render_list(entries: list[Edition | NewsLink], *, archive: bool, now: dateti
             link_id = f"publication-newsletter-{item.issue}"
         else:
             href = str(item.url)
-            label = f"{item.source} · Automated" if item.id.startswith("research-") else item.source
+            label = item.source
             link_id = f"publication-{item.id}"
             # A double hyphen cannot occur in a catalog ID; reserve it for this collision.
             if re.fullmatch(r"newsletter-\d+", item.id):
@@ -151,13 +151,14 @@ def render_list(entries: list[Edition | NewsLink], *, archive: bool, now: dateti
                 badge = ' <span class="publication-new">New</span>'
         day = item.date.isoformat()
         fragment = escape(link_id)
-        tag = escape(link_id.removeprefix("publication-"))
+        tag = "Permalink" if link_id.startswith("publication-research-") else f"#{escape(link_id.removeprefix('publication-'))}"
+        title = escape(item.title)
         rows.append(
             '<li class="publication-item">'
             f'<p class="publication-meta"><time datetime="{day}">{day}</time>'
             f' <span aria-hidden="true">//</span> {escape(label)}{badge} '
-            f'<a class="publication-permalink" href="#{fragment}" title="Link to this item">#{tag}</a></p>'
-            f'<{heading}><a id="{fragment}" href="{escape(href)}">{escape(item.title)}</a></{heading}>'
+            f'<a class="publication-permalink" href="#{fragment}" aria-label="Permalink to {title}">{tag}</a></p>'
+            f'<{heading}><a id="{fragment}" href="{escape(href)}">{title}</a></{heading}>'
             f'<p>{escape(item.summary)}</p></li>'
         )
     return f'<ul class="publication-list">{"".join(rows)}</ul>' if rows else "<p>No publications yet.</p>"
