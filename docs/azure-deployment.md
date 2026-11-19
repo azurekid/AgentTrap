@@ -29,13 +29,17 @@ To deploy code to the old stack before cutover, specify its resource group and
 ```text
  Browser ──HTTPS──▶ App Service (Linux, Python 3.14, 1 Uvicorn worker)
                       │  system-assigned managed identity
-                      ▼  Storage Blob Data Contributor (container scope)
+                      ├─ Storage Blob Data Contributor ─▶ agentlens-investigations/
+                      └─ Storage Blob Data Reader ──────▶ agentlens-news/
                     Storage account (shared keys off, no public access)
-                      └─ agentlens-investigations/
-                           ├─ investigations/…   deleted after 30 days (lifecycle rule)
-                           ├─ feedback/…         false-positive reports, deleted after 180 days (lifecycle rule)
-                           ├─ statistics/totals.json   aggregate counts, kept
-                           └─ uniqueness-v1/…   fingerprints and sanitized assessments, kept
+                      agentlens-investigations/
+                        ├─ investigations/…   deleted after 30 days (lifecycle rule)
+                        ├─ feedback/…         false-positive reports, deleted after 180 days (lifecycle rule)
+                        ├─ statistics/totals.json   aggregate counts, kept
+                        └─ uniqueness-v1/…   fingerprints and sanitized assessments, kept
+                      agentlens-news/
+                        └─ latest-research.json   refreshed hourly by GitHub Actions
+ GitHub Actions OIDC ── Storage Blob Data Contributor ──▶ agentlens-news/
  App Service logs/metrics + Blob audit logs ──▶ Log Analytics workspace (30 days)
 ```
 
@@ -50,9 +54,9 @@ The application serves the site and the API. Public GitHub, GitLab and Azure Dev
 | Web app | `PYTHON|3.14`; HTTPS only; TLS 1.2; HTTP/2; FTP and FTP/SCM basic auth disabled; remote debugging off; health check `/healthz`; system-assigned identity; startup `python -m uvicorn web.app:app --host 0.0.0.0 --port 8000 --workers 1 --no-proxy-headers` |
 | Storage account | StorageV2, `Standard_LRS`; shared-key access **disabled**; anonymous blob access disabled; OAuth by default; TLS 1.2; HTTPS only |
 | Blob service | Blob and container soft delete, versioning and change feed **off**, so no copies outlive the retention period |
-| Blob container | `agentlens-investigations`, private |
+| Blob containers | `agentlens-investigations` and `agentlens-news`, both private |
 | Lifecycle rule | Deletes blobs under `agentlens-investigations/investigations/` 30 days after last modification |
-| Role assignment | *Storage Blob Data Contributor* for the web app identity, on the container only |
+| Role assignments | Web app identity: *Storage Blob Data Contributor* on the archive container and *Storage Blob Data Reader* on the news container. GitHub OIDC identity: *Storage Blob Data Contributor* on the news container only. |
 | Log Analytics | Web app logs and metrics; blob read/write/delete audit logs |
 
 Names are `app-`, `asp-`, `log-` and `st` + prefix + an 8-character suffix derived
@@ -77,6 +81,8 @@ from the resource group, e.g. `app-agentlens-ab12cd34`.
 ARCHIVE_BACKEND=azure
 AZURE_STORAGE_ACCOUNT=<generated>
 AZURE_STORAGE_CONTAINER=agentlens-investigations
+LATEST_NEWS_BACKEND=azure
+AZURE_NEWS_CONTAINER=agentlens-news
 AZURE_ARCHIVE_RETENTION_CONFIRMED=true   # the lifecycle rule is in the same template
 TRUSTED_PROXY_HOPS=1                     # App Service front end appends X-Forwarded-For
 SCM_GITLAB_HOSTS= / SCM_AZDO_HOSTS=      # optional self-managed hosts (Bicep: gitlabHosts, azureDevOpsHosts)
@@ -210,13 +216,15 @@ RESOURCE_GROUP=rg-agentlens infra/setup-github-oidc.sh azurekid/AgentTrap
 The script:
 
 - creates (or reuses) the Entra app `github-<owner>-agentlens-deploy` and its service principal;
-- adds a federated credential for the repository's `production` OIDC subject (including the
-  immutable owner and repository IDs by default; override with `OIDC_SUBJECT` if needed), so only
-  jobs in the `production` environment of that repository can sign in, without a secret;
-- grants *Website Contributor* on the web app only;
-- creates the `production` GitHub environment;
+- adds federated credentials for the repository's `production` and `latest-news` OIDC
+  environments (including immutable owner and repository IDs; override the production
+  subject with `OIDC_SUBJECT` if needed), without a secret;
+- grants *Website Contributor* on the web app and *Storage Blob Data Contributor* on the
+  news container only;
+- creates the `production` and `latest-news` GitHub environments;
 - sets repository variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
-  `AZURE_RESOURCE_GROUP` and `AZURE_WEBAPP_NAME` (identifiers, not secrets).
+  `AZURE_RESOURCE_GROUP`, `AZURE_WEBAPP_NAME`, `AZURE_STORAGE_ACCOUNT_NAME` and
+  `AZURE_NEWS_CONTAINER` (identifiers, not secrets).
 
 Add required reviewers to the `production` environment in the repository settings if
 releases should be approved.
@@ -234,6 +242,10 @@ workflow itself, and on manual **Run workflow**:
 
 CI deploys code only. Changes to `infra/` are applied by running `infra/deploy.sh`,
 so the pipeline never holds rights to create role assignments.
+After deploying the updated template, rerun `infra/setup-github-oidc.sh` to grant the
+new scoped permissions and set the storage variables. The GitHub deployment workflow
+seeds `latest-research.json` if needed. After a manual code deployment, run the
+**Refresh AgentLens Latest News** workflow once to seed it.
 
 ## 4. Updating
 

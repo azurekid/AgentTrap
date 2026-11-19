@@ -637,8 +637,10 @@ Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. Th
 3. Release curated link changes through the normal site deployment. The
    [hourly workflow](.github/workflows/latest-news.yml) also checks the configured research
    feeds at minute 17, excluding unverified search-result feeds. It keeps up to 100
-   automated links, labels them separately, and updates Latest News and RSS only when the
-   index changes. It does not publish excerpts or open issues.
+   automated links, labels them separately, and updates the private
+   `agentlens-news/latest-research.json` blob. `/news` and `/rss.xml` read the current blob
+   on each request, so hourly content updates do not commit to Git or redeploy the site.
+   It does not publish excerpts or open issues.
 
 ### Research sources
 

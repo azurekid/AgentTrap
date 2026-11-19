@@ -81,6 +81,24 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Seed the latest-news blob if it does not exist
+        env:
+          STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT_NAME }}
+          NEWS_CONTAINER: ${{ vars.AZURE_NEWS_CONTAINER }}
+        run: |
+          if [ -z "$STORAGE_ACCOUNT" ] || [ -z "$NEWS_CONTAINER" ]; then
+            echo "::error::Azure storage variables are missing. Re-run infra/setup-github-oidc.sh."
+            exit 1
+          fi
+          exists=$(az storage blob exists --account-name "$STORAGE_ACCOUNT" \
+            --container-name "$NEWS_CONTAINER" --name latest-research.json \
+            --auth-mode login --query exists -o tsv)
+          if [ "$exists" != "true" ]; then
+            az storage blob upload --account-name "$STORAGE_ACCOUNT" \
+              --container-name "$NEWS_CONTAINER" --name latest-research.json \
+              --file web/latest-research.json --auth-mode login --overwrite false \
+              --content-type application/json --only-show-errors
+          fi
       - name: Deploy to App Service and wait until healthy
         id: health
         env:

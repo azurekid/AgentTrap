@@ -1093,6 +1093,54 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert items[1].findtext("pubDate") == "Sun, 08 Nov 2026 00:00:00 GMT"
 
 
+def test_latest_news_reads_the_current_blob_on_each_request(client, monkeypatch):
+    monkeypatch.setenv("LATEST_NEWS_BACKEND", "azure")
+    monkeypatch.setenv("AZURE_NEWS_CONTAINER", "agentlens-news")
+
+    class FakeDownload:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def readall(self):
+            return self.payload
+
+    class FakeBlobService:
+        def __init__(self):
+            self.payload = json.dumps([{
+                "id": "research-before", "title": "Before refresh", "date": "2026-11-18",
+                "source": "Example", "url": "https://example.test/before", "summary": "Old index.",
+            }]).encode()
+            self.downloads = []
+
+        def get_blob_client(self, container, name):
+            assert (container, name) == ("agentlens-news", "latest-research.json")
+            return self
+
+        def download_blob(self, *, timeout):
+            self.downloads.append(timeout)
+            return FakeDownload(self.payload)
+
+        def close(self):
+            pass
+
+    service = FakeBlobService()
+    monkeypatch.setattr(client.app.state.archive, "service", service)
+    before = client.get("/news")
+    assert before.headers["cache-control"] == "no-store"
+    assert "Before refresh" in before.text
+
+    service.payload = json.dumps([{
+        "id": "research-after", "title": "After refresh", "date": "2026-11-19",
+        "source": "Example", "url": "https://example.test/after", "summary": "Updated index.",
+    }]).encode()
+    after = client.get("/news")
+    assert "After refresh" in after.text and "Before refresh" not in after.text
+    feed = client.get("/rss.xml")
+    assert feed.headers["cache-control"] == "no-store"
+    assert "After refresh" in feed.text
+    assert service.downloads == [15, 15, 15]
+
+
 def test_news_topic_sections_show_each_link_once(client, monkeypatch):
     publishing = app_module.publications
     stories = [
@@ -1110,7 +1158,7 @@ def test_news_topic_sections_show_each_link_once(client, monkeypatch):
     news = client.get("/news").text
     for key, title, url in stories:
         section = news.split(f'id="{key}" aria-labelledby=', 1)[1].split("</section>", 1)[0]
-        assert f'<h3><a href="{url}">{title}</a></h3>' in section
+        assert f'<h3><a id="publication-{key}" href="{url}">{title}</a></h3>' in section
         assert news.count(f'href="{url}"') == 1
         assert f'href="#{key}"' in news
     assert 'href="#editions"' not in news

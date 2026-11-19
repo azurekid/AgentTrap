@@ -276,13 +276,16 @@ def newsletter_edition(issue: str):
 
 
 @app.get("/news", response_class=HTMLResponse)
-def latest_news():
-    return publications.render_page(archive=False)
+def latest_news(request: Request):
+    return publications.render_page(archive=False, storage_service=request.app.state.archive.service)
 
 
 @app.get(publications.FEED_PATH)
-def news_feed():
-    return Response(publications.render_rss(), media_type="application/rss+xml")
+def news_feed(request: Request):
+    return Response(
+        publications.render_rss(storage_service=request.app.state.archive.service),
+        media_type="application/rss+xml",
+    )
 
 
 @app.get("/scan")

@@ -9,6 +9,7 @@ from pathlib import Path
 from string import Template
 from xml.etree import ElementTree as ET
 
+from azure.storage.blob import BlobServiceClient
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, TypeAdapter
 
 from web.navigation import render_header
@@ -66,7 +67,8 @@ def load_catalog(root: Path) -> tuple[Catalog, dict[str, tuple[Path, bytes]]]:
 
 
 CATALOG, SNAPSHOTS = load_catalog(ROOT)
-LATEST_RESEARCH = TypeAdapter(list[NewsLink]).validate_json((ROOT / "latest-research.json").read_bytes())
+NEWS_LINKS = TypeAdapter(list[NewsLink])
+LATEST_RESEARCH = NEWS_LINKS.validate_json((ROOT / "latest-research.json").read_bytes())
 
 NEWS_TOPICS = {
     "vulnerabilities": "Vulnerabilities & CVEs",
@@ -95,11 +97,32 @@ def news_topic(item: Edition | NewsLink) -> str:
     return "other"
 
 
-def ordered(archive: bool = False) -> list[Edition | NewsLink]:
+def load_latest_research(storage_service: BlobServiceClient | None = None) -> list[NewsLink]:
+    backend = os.getenv("LATEST_NEWS_BACKEND", "local")
+    if backend == "local":
+        return LATEST_RESEARCH
+    if backend != "azure":
+        raise RuntimeError("LATEST_NEWS_BACKEND must be local or azure.")
+    if storage_service is None:
+        raise RuntimeError("Azure latest-news storage is not available.")
+    container = os.getenv("AZURE_NEWS_CONTAINER")
+    if not container:
+        raise RuntimeError("AZURE_NEWS_CONTAINER is required for Azure latest news.")
+    payload = storage_service.get_blob_client(container, "latest-research.json").download_blob(
+        timeout=15).readall()
+    items = NEWS_LINKS.validate_json(payload)
+    if len({item.id for item in items}) != len(items):
+        raise ValueError("Duplicate news ID in latest-research.json")
+    return items
+
+
+def ordered(
+    archive: bool = False, *, storage_service: BlobServiceClient | None = None
+) -> list[Edition | NewsLink]:
     entries: list[Edition | NewsLink] = [*CATALOG.editions]
     if not archive:
         entries.extend(CATALOG.news)
-        entries.extend(LATEST_RESEARCH)
+        entries.extend(load_latest_research(storage_service))
     return sorted(entries, key=lambda item: item.date, reverse=True)
 
 
@@ -144,19 +167,19 @@ def render_topics(entries: list[Edition | NewsLink]) -> str:
     return f'<nav class="news-topics" aria-label="News topics"><ul>{"".join(links)}</ul></nav>{"".join(sections)}'
 
 
-def render_page(*, archive: bool) -> str:
+def render_page(*, archive: bool, storage_service: BlobServiceClient | None = None) -> str:
     title, intro = (
         ("Newsletter archive", "Browse past editions of Agent Security Weekly.")
         if archive else
         ("Latest News", "Browse security news by topic, with the newest links first in each section.")
     )
-    entries = ordered(archive)
+    entries = ordered(archive, storage_service=storage_service)
     content = render_list(entries, archive=True) if archive else render_topics(entries)
     return PAGE.substitute(title=title, intro=intro, content=content, feed=FEED_PATH,
                            site_header=render_header("/newsletter" if archive else "/news"))
 
 
-def render_rss() -> bytes:
+def render_rss(*, storage_service: BlobServiceClient | None = None) -> bytes:
     root = ET.Element("rss", {"version": "2.0", "xmlns:atom": "http://www.w3.org/2005/Atom"})
     channel = ET.SubElement(root, "channel")
     ET.SubElement(channel, "title").text = "AgentLens Latest News"
@@ -164,7 +187,7 @@ def render_rss() -> bytes:
     ET.SubElement(channel, "description").text = "Agent security research, curated news, and Agent Security Weekly editions."
     ET.SubElement(channel, "language").text = "en"
     ET.SubElement(channel, "atom:link", {"href": SITE + FEED_PATH, "rel": "self", "type": "application/rss+xml"})
-    for item in ordered():
+    for item in ordered(storage_service=storage_service):
         node = ET.SubElement(channel, "item")
         ET.SubElement(node, "title").text = item.title
         ET.SubElement(node, "description").text = escape(item.summary, quote=False)

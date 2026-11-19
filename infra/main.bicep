@@ -53,6 +53,8 @@ var suffix = take(uniqueString(resourceGroup().id, namePrefix), 8)
 var storageName = take('st${replace(namePrefix, '-', '')}${suffix}', 24)
 // Built-in role: Storage Blob Data Contributor
 var blobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+// Built-in role: Storage Blob Data Reader
+var blobDataReaderRoleId = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: 'log-${namePrefix}-${suffix}'
@@ -101,6 +103,14 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
 resource archiveContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobService
   name: archiveContainerName
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource newsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'agentlens-news'
   properties: {
     publicAccess: 'None'
   }
@@ -188,6 +198,8 @@ resource site 'Microsoft.Web/sites@2024-04-01' = {
         { name: 'ARCHIVE_BACKEND', value: 'azure' }
         { name: 'AZURE_STORAGE_ACCOUNT', value: storage.name }
         { name: 'AZURE_STORAGE_CONTAINER', value: archiveContainer.name }
+        { name: 'LATEST_NEWS_BACKEND', value: 'azure' }
+        { name: 'AZURE_NEWS_CONTAINER', value: newsContainer.name }
         // The lifecycle rule in this template enforces the retention period.
         { name: 'AZURE_ARCHIVE_RETENTION_CONFIRMED', value: 'true' }
         { name: 'TRUSTED_PROXY_HOPS', value: string(trustedProxyHops) }
@@ -216,7 +228,7 @@ resource scmCredentials 'Microsoft.Web/sites/basicPublishingCredentialsPolicies@
   properties: { allow: false }
 }
 
-// Least privilege: data access to the archive container only.
+// Keep archive and latest-news data access isolated by container and role.
 resource archiveAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(archiveContainer.id, site.id, blobDataContributorRoleId)
   scope: archiveContainer
@@ -224,6 +236,16 @@ resource archiveAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalId: site.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', blobDataContributorRoleId)
+  }
+}
+
+resource newsAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(newsContainer.id, site.id, blobDataReaderRoleId)
+  scope: newsContainer
+  properties: {
+    principalId: site.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', blobDataReaderRoleId)
   }
 }
 
@@ -257,4 +279,5 @@ output webAppName string = site.name
 output webAppUrl string = 'https://${site.properties.defaultHostName}'
 output storageAccountName string = storage.name
 output archiveContainerName string = archiveContainer.name
+output newsContainerName string = newsContainer.name
 output logAnalyticsWorkspaceName string = logs.name
