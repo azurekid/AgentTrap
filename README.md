@@ -619,7 +619,7 @@ values are never published.
 | `/sources` | Research sources |
 | `/newsletter` | Archive of published Agent Security Weekly editions, newest first |
 | `/newsletter/<issue>` | Permanent URL for a published edition, for example `/newsletter/20` |
-| `/news` | Latest News: monitored research, curated links and published editions, newest first |
+| `/news` | Latest News: browse monitored research and curated links by security topic, newest first within each section. Agent Security Weekly has its own section. |
 | `/rss.xml` | RSS 2.0 feed for Latest News |
 
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to

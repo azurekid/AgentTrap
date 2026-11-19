@@ -1,0 +1,29 @@
+.site-header {
+  position: sticky; top: 0; z-index: 30;
+  background: #080e17; border-bottom: 1px solid #263649;
+  font: 14px/1.4 system-ui, sans-serif;
+}
+.site-header-inner {
+  max-width: 1200px; margin: auto; padding: 12px clamp(12px, 3vw, 24px);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+}
+.site-header a { text-decoration: none; }
+.site-header .site-brand {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #eef3fb; font-size: 19px; font-weight: 600; white-space: nowrap;
+}
+.site-brand svg { width: 25px; height: 29px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.site-brand b, .site-brand svg { color: #2dd4bf; }
+.site-nav { display: flex; align-items: center; gap: clamp(10px, 2vw, 22px); margin-left: auto; }
+.site-nav a, .site-explore summary { color: #b7c5d6; padding-block: 7px; white-space: nowrap; }
+.site-nav a:hover, .site-explore summary:hover { color: #fff; }
+.site-nav a[aria-current="page"], .site-explore:has(a[aria-current="page"]) summary { color: #2dd4bf; }
+.site-header :focus-visible { outline: 2px solid #2dd4bf; outline-offset: 3px; }
+.site-explore { position: relative; }
+.site-explore summary { cursor: pointer; }
+.site-explore ul {
+  position: absolute; right: 0; top: 100%; margin: 4px 0 0; padding: 5px;
+  list-style: none; background: #0c1521; border: 1px solid #263649; border-radius: 8px;
+}
+.site-explore li a { display: block; padding: 8px 12px; }
+.site-explore li a:hover { background: #182637; }

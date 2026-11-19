@@ -23,7 +23,7 @@ from starlette.datastructures import UploadFile
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from scan_agents_md import SEV
-from web import publications, sources as research
+from web import navigation, publications, sources as research
 from web.archive import Archive, ArchiveError
 from web.atlas import DATA as ATLAS_DATA, annotate
 from web.evaluation import evaluate, methodology
@@ -257,9 +257,9 @@ async def validation_error(request: Request, exc: RequestValidationError):
     return JSONResponse({"detail": "Invalid scan request. Check the URL, token and workflow option."}, 422)
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def index():
-    return FileResponse(ROOT / "static" / "index.html")
+    return navigation.render_static_page("index.html")
 
 
 @app.get("/newsletter", response_class=HTMLResponse)
@@ -267,12 +267,12 @@ def newsletter_page():
     return publications.render_page(archive=True)
 
 
-@app.get("/newsletter/{issue}")
+@app.get("/newsletter/{issue}", response_class=HTMLResponse)
 def newsletter_edition(issue: str):
     snapshot = publications.SNAPSHOTS.get(f"/newsletter/{issue}")
     if snapshot is None:
         raise HTTPException(404, "Newsletter edition not found")
-    return FileResponse(snapshot[0])
+    return navigation.render_edition(snapshot[0])
 
 
 @app.get("/news", response_class=HTMLResponse)
@@ -291,9 +291,9 @@ def scan_page(mode: str | None = None):
     return RedirectResponse("/?mode=repo#scanner" if mode == "repo" else "/#scanner", status_code=308)
 
 
-@app.get("/coverage")
+@app.get("/coverage", response_class=HTMLResponse)
 def coverage_page():
-    return FileResponse(ROOT / "static" / "coverage.html")
+    return navigation.render_static_page("coverage.html", "/coverage")
 
 
 class FeedbackFinding(BaseModel):
@@ -328,14 +328,14 @@ async def submit_feedback(payload: FeedbackRequest, request: Request):
     return {"status": "received"}
 
 
-@app.get("/report")
+@app.get("/report", response_class=HTMLResponse)
 def report_page():
-    return FileResponse(ROOT / "static" / "report.html")
+    return navigation.render_static_page("report.html", "/#scanner")
 
 
-@app.get("/fingerprints")
+@app.get("/fingerprints", response_class=HTMLResponse)
 def fingerprint_page():
-    return FileResponse(ROOT / "static" / "fingerprints.html")
+    return navigation.render_static_page("fingerprints.html", "/fingerprints")
 
 
 @app.get("/api/fingerprints/{digest}")
@@ -352,14 +352,14 @@ def fingerprint_lookup(digest: str, request: Request):
     return result
 
 
-@app.get("/samples")
+@app.get("/samples", response_class=HTMLResponse)
 def samples_page():
-    return FileResponse(ROOT / "static" / "samples.html")
+    return navigation.render_static_page("samples.html", "/samples")
 
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "checks.js", "fingerprints.js", "style.css"):
+    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "checks.js", "fingerprints.js", "style.css", "site-nav.css"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 
@@ -379,9 +379,9 @@ def health():
     return {"status": "ok"}
 
 
-@app.get("/sources")
+@app.get("/sources", response_class=HTMLResponse)
 def sources():
-    return FileResponse(ROOT / "static" / "sources.html")
+    return navigation.render_static_page("sources.html", "/sources")
 
 
 @app.get("/api/sources")

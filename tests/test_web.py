@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -311,14 +312,22 @@ def test_risky_upload_archived_original_redacted_report(client):
     ("/", "AgentLens | AI agent security inspection"),
     ("/coverage", "Detection coverage | AgentLens"), ("/samples", "Use-case catalogue | AgentLens"),
     ("/sources", "Research sources | AgentLens"), ("/report", "Inspection report | AgentLens"),
+    ("/fingerprints", "Fingerprint search | AgentLens"),
+    ("/news", "Latest News | AgentLens"), ("/newsletter", "Newsletter archive | AgentLens"),
 ])
 def test_pages_share_navigation_and_credit(client, path, title):
     page = client.get(path)
     assert page.status_code == 200
     assert f"<title>{title}</title>" in page.text
-    for href in ("/#scanner", "/coverage", "/samples", "/sources", "/news", "/newsletter"):
-        assert f'href="{href}"' in page.text
-    assert 'href="https://github.com/azurekid"' in page.text
+    nav = page.text.split('<nav class="site-nav" aria-label="Pages">', 1)[1].split("</nav>", 1)[0]
+    primary, explore = nav.split('<details class="site-explore">', 1)
+    assert re.findall(r'href="([^"]+)"', primary) == ["/#scanner", "/news"]
+    assert "<summary>Explore</summary>" in explore
+    assert re.findall(r'href="([^"]+)"', explore) == [
+        "/newsletter", "/fingerprints", "/coverage", "/samples", "/sources"
+    ]
+    if path != "/fingerprints":
+        assert 'href="https://github.com/azurekid"' in page.text
     if path not in ("/", "/report"):
         assert f'<a href="{path}" aria-current="page">' in page.text
 
@@ -1005,6 +1014,9 @@ def test_newsletter_page_and_style_policy(client):
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
     assert 'href="/newsletter/20">Stolen keys put agents at risk</a>' in archive.text
     assert 'href="/newsletter">Newsletter archive</a>' in page.text
+    assert '<nav class="site-nav" aria-label="Pages">' in page.text
+    assert '<a href="/newsletter" aria-current="page">Newsletter</a>' in page.text
+    assert client.get("/assets/site-nav.css").status_code == 200
     assert "<h1>Stolen keys put agents at risk</h1>" in page.text
     assert "Verify the signal. Defend the perimeter." in page.text
 
@@ -1053,8 +1065,10 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert client.get("/newsletter/2").text.endswith("<h1>Edition 2</h1>")
     assert client.get("/newsletter/3").status_code == 404  # A file alone does not publish a draft.
     news = client.get("/news").text
-    assert news.index("Second edition") < news.index("News &amp; notes") < news.index("First edition")
-    assert news.index("Research update") < news.index("Second edition")
+    assert 'href="#other">Other security news <span>(2)</span>' in news
+    assert news.index("Research update") < news.index("News &amp; notes") < news.index("Second edition")
+    assert news.index("Second edition") < news.index("First edition")
+    assert 'href="#vulnerabilities"' not in news  # Don't show empty sections.
     assert "Research Lab · Automated" in news
     assert 'href="https://example.test/news?a=1&amp;b=2"' in news
     assert "Review &lt;access&gt; &amp; permissions." in news
@@ -1074,6 +1088,29 @@ def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, t
     assert items[1].findtext("guid") == "urn:agentlens:news:test-link"
     assert items[1].findtext("link") == "https://example.test/news?a=1&b=2"
     assert items[1].findtext("pubDate") == "Sun, 08 Nov 2026 00:00:00 GMT"
+
+
+def test_news_topic_sections_show_each_link_once(client, monkeypatch):
+    publishing = app_module.publications
+    stories = [
+        ("vulnerabilities", "CVE-2026-1234 affects an agent tool", "https://example.test/cve"),
+        ("threats", "Researchers take over a model account", "https://example.test/incident"),
+        ("defenses", "Hardening against prompt injection", "https://example.test/guide"),
+        ("papers", "Measuring agent behavior", "https://arxiv.org/abs/2611.00001"),
+        ("other", "Security industry roundup", "https://example.test/news"),
+    ]
+    monkeypatch.setattr(publishing, "CATALOG", publishing.Catalog(editions=[], news=[]))
+    monkeypatch.setattr(publishing, "LATEST_RESEARCH", [
+        publishing.NewsLink(id=key, title=title, date="2026-11-18", source="Example", url=url, summary="Read more.")
+        for key, title, url in stories
+    ])
+    news = client.get("/news").text
+    for key, title, url in stories:
+        section = news.split(f'id="{key}" aria-labelledby=', 1)[1].split("</section>", 1)[0]
+        assert f'<h3><a href="{url}">{title}</a></h3>' in section
+        assert news.count(f'href="{url}"') == 1
+        assert f'href="#{key}"' in news
+    assert 'href="#editions"' not in news
 
 
 def test_research_page_and_parsed_sources(client):
