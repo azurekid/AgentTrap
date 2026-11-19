@@ -215,13 +215,15 @@ RESOURCE_GROUP=rg-agentlens infra/setup-github-oidc.sh azurekid/AgentTrap
 
 The script:
 
-- creates (or reuses) the Entra app `github-<owner>-agentlens-deploy` and its service principal;
+- creates (or reuses) separate Entra apps `github-<owner>-agentlens-deploy` and
+  `github-<owner>-agentlens-news`;
 - adds federated credentials for the repository's `production` and `latest-news` OIDC
   environments (including immutable owner and repository IDs; override the production
   subject with `OIDC_SUBJECT` if needed), without a secret;
-- grants *Website Contributor* on the web app and *Storage Blob Data Contributor* on the
-  news container only;
-- creates the `production` and `latest-news` GitHub environments;
+- grants *Website Contributor* on the web app to the deployment identity only and
+  *Storage Blob Data Contributor* on the news container to both identities;
+- creates the `production` and `latest-news` GitHub environments, restricts the latter
+  to the default branch, and sets its `AZURE_CLIENT_ID` to the news identity;
 - sets repository variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
   `AZURE_RESOURCE_GROUP`, `AZURE_WEBAPP_NAME`, `AZURE_STORAGE_ACCOUNT_NAME` and
   `AZURE_NEWS_CONTAINER` (identifiers, not secrets).
