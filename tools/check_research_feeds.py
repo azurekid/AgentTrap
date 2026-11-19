@@ -35,7 +35,7 @@ SOURCE_ORDER = ("independent", "research", "advisory", "news", "discovery")
 
 
 def fetch(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "SkillVenom-research-watch"})
+    request = urllib.request.Request(url, headers={"User-Agent": "AgentLens-research-watch"})
     with urllib.request.urlopen(request, timeout=20) as response:
         data = response.read(MAX_BYTES + 1)
         encoding = response.headers.get("Content-Encoding", "").lower()

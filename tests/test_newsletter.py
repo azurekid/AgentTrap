@@ -1,14 +1,16 @@
 import io
+import json
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
-from tools import write_newsletter
+from tools import publish_newsletter, write_newsletter
 from tools.write_newsletter import call_model
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,7 +74,7 @@ class NewsletterModelTests(unittest.TestCase):
             cli.chmod(0o755)
             env = {**os.environ, "PATH": f"{path}{os.pathsep}{os.environ['PATH']}"}
             result = subprocess.run(
-                [sys.executable, str(ROOT / "tools/write_newsletter.py"), "--report", str(report),
+                [sys.executable, str(ROOT / "tools/write_newsletter.py"), "--date", "2026-11-18", "--report", str(report),
                  "--title-out", str(title), "--html-out", str(html)],
                 env=env, capture_output=True, text=True,
             )
@@ -99,6 +101,30 @@ class NewsletterModelTests(unittest.TestCase):
             self.assertNotIn("Pause radar", html_text)
             for output in (result.stdout, html_text):
                 self.assertNotRegex(output, r"\[S\d+\]")
+
+            web = path / "web"
+            static = web / "static"
+            static.mkdir(parents=True)
+            manifest = web / "publications.json"
+            old = {"issue": 20, "title": "Earlier edition", "date": "2026-11-11", "summary": "Earlier news"}
+            news = {"id": "curated-link", "title": "Curated news"}
+            manifest.write_text(json.dumps({"editions": [old], "news": [news]}), encoding="utf-8")
+            day = date(2026, 11, 18)
+            headline = title.read_text(encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                publish_newsletter.publish(web, 25, headline, date(2026, 11, 19), html_text)
+            publish_newsletter.publish(web, 25, headline, day, html_text)
+            publish_newsletter.publish(web, 25, headline, day, html_text)
+            snapshot = static / "newsletter-issue-25.html"
+            with self.assertRaisesRegex(ValueError, "Refusing to overwrite"):
+                publish_newsletter.publish(web, 25, headline, day, html_text + "\n")
+            self.assertEqual(snapshot.read_text(encoding="utf-8"), html_text)
+            saved = json.loads(manifest.read_text(encoding="utf-8"))
+            self.assertEqual(saved["news"], [news])
+            self.assertEqual(saved["editions"][0], old)
+            self.assertEqual(len(saved["editions"]), 2)
+            self.assertEqual(saved["editions"][1]["date"], day.isoformat())
+            self.assertEqual(saved["editions"][1]["title"], headline)
 
     def test_long_headline_breaks_at_a_word_boundary(self):
         text = "# Stolen keys show why coding agents need tighter permissions"

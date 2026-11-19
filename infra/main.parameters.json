@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "location": { "value": "westeurope" },
-    "namePrefix": { "value": "skillvenom" },
+    "namePrefix": { "value": "agentlens" },
     "appServiceSku": { "value": "B1" },
     "pythonVersion": { "value": "3.14" },
     "archiveRetentionDays": { "value": 30 },

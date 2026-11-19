@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#05080d">
+  <meta name="description" content="$intro">
+  <title>$title | AgentLens</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a121c'/%3E%3Cpath d='M16 5 25 9v8c0 5-9 10-9 10S7 22 7 17V9Z' fill='none' stroke='%232dd4bf' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%232dd4bf'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="alternate" type="application/rss+xml" title="AgentLens Latest News" href="$feed">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="logo" href="/" aria-label="AgentLens home">
+        <svg class="logo-mark" viewBox="0 0 32 36" aria-hidden="true">
+          <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
+          <circle cx="16" cy="17" r="5.5"/>
+          <circle class="logo-core" cx="16" cy="17" r="2"/>
+        </svg>
+        <span class="wordmark">Agent<b>Lens</b></span>
+      </a>
+      <nav class="nav" aria-label="Pages">
+        <a href="/news"$news_current>Latest News</a>
+        <a href="/newsletter"$archive_current>Newsletter</a>
+        <a href="/#scanner">Scanner</a>
+        <a href="/fingerprints">Fingerprint search</a>
+        <a href="/coverage">Coverage</a>
+        <a href="/samples">Samples</a>
+        <a href="/sources">Research</a>
+      </nav>
+    </div>
+  </header>
+  <main id="content" class="research publications">
+    <header class="research-hero">
+      <p class="label">Agent security bulletin</p>
+      <h1>$title</h1>
+      <p>$intro</p>
+      <p><a class="btn btn-ghost btn-small" href="$feed">Subscribe via RSS</a></p>
+    </header>
+    $content
+  </main>
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="logo-small"><b>AgentLens</b> · Static signals. Human judgment.</span>
+      <span class="credit">Designed &amp; built by <a href="https://github.com/azurekid">azurekid</a></span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -10,7 +10,7 @@ set -euo pipefail
 
 RESOURCE_GROUP="$1"
 APP_NAME="$2"
-ZIP="${3:-dist/skillvenom.zip}"
+ZIP="${3:-dist/agentlens.zip}"
 TIMEOUT_SECONDS="${DEPLOY_TIMEOUT_SECONDS:-1200}"
 
 latest() {

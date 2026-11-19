@@ -1,8 +1,11 @@
 name: Agent-security research watch
 
 on:
-  schedule:
-    - cron: "41 6 * * 1"
+  workflow_call:
+    outputs:
+      issue:
+        description: "New triage issue number, if research was found"
+        value: ${{ jobs.watch.outputs.issue }}
   workflow_dispatch:
 
 permissions:
@@ -13,6 +16,8 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      issue: ${{ steps.triage.outputs.issue }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -31,10 +36,12 @@ jobs:
           [ "$code" -le 1 ]
       # Feed titles are untrusted text: the report is sanitised, and must be triaged by a person.
       - name: Open a triage issue
+        id: triage
         if: steps.check.outputs.code == '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           head -c 60000 report.md > body.md
-          gh issue create --repo "$GITHUB_REPOSITORY" \
-            --title "Triage agent-security research ($(date -u +%Y-%m-%d))" --body-file body.md
+          url=$(gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Triage agent-security research ($(date -u +%Y-%m-%d))" --body-file body.md)
+          echo "issue=${url##*/}" >> "$GITHUB_OUTPUT"

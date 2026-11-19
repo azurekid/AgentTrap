@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from html import escape, unescape
 from pathlib import Path
 from string import Template
@@ -221,6 +221,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--report", required=True, type=Path, help="triage issue body (Markdown)")
     parser.add_argument("--previous", type=Path, help="previous newsletter body, for continuity")
+    parser.add_argument("--date", type=date.fromisoformat, help="publication date (defaults to today in UTC)")
     parser.add_argument("--title-out", type=Path, help="write the headline to this file")
     parser.add_argument("--html-out", type=Path, help="write a standalone branded HTML edition")
     args = parser.parse_args()
@@ -229,7 +230,7 @@ def main():
         print("No research items found in the report; nothing to write.", file=sys.stderr)
         return 1
     previous = args.previous.read_text(encoding="utf-8") if args.previous and args.previous.exists() else ""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = (args.date or datetime.now(timezone.utc).date()).isoformat()
     narrative = sanitise(call_model(build_messages(items, previous, today)), items)
     if not narrative:
         print("Copilot returned no usable newsletter text.", file=sys.stderr)

@@ -16,14 +16,14 @@ from uuid import uuid4
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import UploadFile
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from scan_agents_md import SEV
-from web import sources as research
+from web import publications, sources as research
 from web.archive import Archive, ArchiveError
 from web.atlas import DATA as ATLAS_DATA, annotate
 from web.evaluation import evaluate, methodology
@@ -36,7 +36,7 @@ from web.repository import (
 )
 
 ROOT = Path(__file__).resolve().parent
-LOG = logging.getLogger("skillvenom")
+LOG = logging.getLogger("agentlens")
 MAX_BODY = 6 * 1024 * 1024
 MAX_FEEDBACK_BODY = 64 * 1024
 UPLOAD_SUFFIXES = (".md", ".mdc", ".json", ".toml", ".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts", ".ps1", ".rb")
@@ -206,13 +206,14 @@ class PublicGuard:
         async def secured_send(message: Message) -> None:
             if message["type"] == "http.response.start":
                 style_src = b"style-src 'self'"
-                if path == "/newsletter":
-                    # Authorize only the embedded CSS in the reviewed edition.
-                    style_src += b" 'sha256-nho1YIUUtQiilQhCSMPLArkTu/zOxaYEHF0LQQAjIoo='"
+                script_src = b"script-src 'self'"
+                if snapshot := publications.SNAPSHOTS.get(path):
+                    style_src += b" " + snapshot[1]
+                    script_src = b"script-src 'none'"
                 message["headers"] += [
                     (b"x-content-type-options", b"nosniff"), (b"x-frame-options", b"DENY"),
                     (b"referrer-policy", b"no-referrer"), (b"cache-control", b"no-store"),
-                    (b"content-security-policy", b"default-src 'self'; script-src 'self'; " + style_src + b"; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"),
+                    (b"content-security-policy", b"default-src 'self'; " + script_src + b"; " + style_src + b"; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"),
                     (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
                 ]
             await send(message)
@@ -261,9 +262,27 @@ def index():
     return FileResponse(ROOT / "static" / "index.html")
 
 
-@app.get("/newsletter")
+@app.get("/newsletter", response_class=HTMLResponse)
 def newsletter_page():
-    return FileResponse(ROOT / "static" / "newsletter-issue-20.html")
+    return publications.render_page(archive=True)
+
+
+@app.get("/newsletter/{issue}")
+def newsletter_edition(issue: str):
+    snapshot = publications.SNAPSHOTS.get(f"/newsletter/{issue}")
+    if snapshot is None:
+        raise HTTPException(404, "Newsletter edition not found")
+    return FileResponse(snapshot[0])
+
+
+@app.get("/news", response_class=HTMLResponse)
+def latest_news():
+    return publications.render_page(archive=False)
+
+
+@app.get(publications.FEED_PATH)
+def news_feed():
+    return Response(publications.render_rss(), media_type="application/rss+xml")
 
 
 @app.get("/scan")

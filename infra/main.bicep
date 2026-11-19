@@ -1,4 +1,4 @@
-// SkillVenom: Linux App Service + private Blob archive, managed identity only (no keys).
+// AgentLens: Linux App Service + private Blob archive, managed identity only (no keys).
 targetScope = 'resourceGroup'
 
 @description('Azure region for all resources.')
@@ -7,7 +7,7 @@ param location string = resourceGroup().location
 @description('Short prefix used in resource names.')
 @minLength(3)
 @maxLength(12)
-param namePrefix string = 'skillvenom'
+param namePrefix string = 'agentlens'
 
 @description('App Service plan SKU. B1 is the smallest tier with Always On.')
 @allowed(['B1', 'B2', 'B3', 'P0v3', 'P1v3'])
@@ -17,7 +17,7 @@ param appServiceSku string = 'B3'
 param pythonVersion string = '3.14'
 
 @description('Private container for investigation records and statistics.')
-param archiveContainerName string = 'skillvenom-investigations'
+param archiveContainerName string = 'agentlens-investigations'
 
 @description('Days after which archived investigation records are deleted.')
 @minValue(1)
@@ -46,7 +46,7 @@ param gitlabHosts string = ''
 param azureDevOpsHosts string = ''
 
 param tags object = {
-  application: 'SkillVenom'
+  application: 'agentlens'
 }
 
 var suffix = take(uniqueString(resourceGroup().id, namePrefix), 8)
@@ -115,7 +115,7 @@ resource retention 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05
       rules: [
         {
           enabled: true
-          name: 'expire-skillvenom-investigations'
+          name: 'expire-agentlens-investigations'
           type: 'Lifecycle'
           definition: {
             filters: {
@@ -131,7 +131,7 @@ resource retention 'Microsoft.Storage/storageAccounts/managementPolicies@2023-05
         }
         {
           enabled: true
-          name: 'expire-skillvenom-feedback'
+          name: 'expire-agentlens-feedback'
           type: 'Lifecycle'
           definition: {
             filters: {

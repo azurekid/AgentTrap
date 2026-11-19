@@ -528,7 +528,8 @@ The case studies added the `MEMORY-POISONING`, `FILE-EXFIL`, `REMOTE-COMMANDS`,
 6. **Verify.** Run the test suite and redeploy.
 
 Beyond ATLAS, [.github/workflows/research-watch.yml](.github/workflows/research-watch.yml)
-runs [tools/check_research_feeds.py](tools/check_research_feeds.py) weekly. It reads the
+runs [tools/check_research_feeds.py](tools/check_research_feeds.py) as part of the weekly
+newsletter workflow, or on demand from the Actions tab. It reads the
 feeds in [tools/research_feeds.json](tools/research_feeds.json) (arXiv cs.CR, NVD CVEs,
 Embrace The Red, Simon Willison's prompt-injection tag, BleepingComputer and a Google
 News search), keeps items that mention an agent subject (AGENTS.md, MCP, Claude Code,
@@ -540,9 +541,10 @@ ATLAS case), then add or extend a rule. Feed text is untrusted: the report strip
 markup and links from titles, and should be triaged by a person, not handed to an agent
 with tool access. Tune noisy terms in the JSON config.
 
-After each successful research-watch run,
-[.github/workflows/research-newsletter.yml](.github/workflows/research-newsletter.yml) turns
-the new triage issue into **Agent Security Weekly**: a narrative newsletter with top stories,
+[.github/workflows/research-newsletter.yml](.github/workflows/research-newsletter.yml) starts
+every Wednesday at 06:00 Europe/Amsterdam time (including daylight-saving changes).
+It runs the research watch first and skips publication if no new items are found. Otherwise,
+it turns the new triage issue into **Agent Security Weekly**: a narrative newsletter with top stories,
 threat-level ratings, an expert take on threats and trends, a defender checklist and detection
 ideas, published as an issue labelled `newsletter` and linked from the triage issue. The
 newsletter issue links to both Actions downloads: `newsletter.md` and the standalone
@@ -562,6 +564,10 @@ The previous newsletter is passed in so each issue tracks what continued, escala
 model has no tools and cites items by internal ID; readers see a short source label instead,
 such as the publisher name or the CVE number, linked to the original article. Re-run by hand from the Actions tab with a triage issue number;
 select `force` to publish a new issue if that triage issue already has a newsletter.
+Runs on the default branch also commit the HTML and catalog entry using the GitHub Actions
+token and call the existing Azure deployment workflow to test and deploy that commit.
+If the site job fails after the GitHub issue is created, re-run the failed jobs rather
+than using `force`. GitHub may delay scheduled starts.
 
 ### OWASP Agentic (ASI) mapping
 
@@ -611,14 +617,28 @@ values are never published.
 | `/coverage` | Threat classes, ecosystems and file types inspected |
 | `/samples` | Use-case catalogue |
 | `/sources` | Research sources |
-| `/newsletter` | Reviewed Agent Security Weekly HTML edition, linked from the landing page |
+| `/newsletter` | Archive of published Agent Security Weekly editions, newest first |
+| `/newsletter/<issue>` | Permanent URL for a published edition, for example `/newsletter/20` |
+| `/news` | Latest News: monitored research, curated links and published editions, newest first |
+| `/rss.xml` | RSS 2.0 feed for Latest News |
 
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to
 [azurekid](https://github.com/azurekid).
 
-The newsletter page serves a reviewed static HTML snapshot. Publishing a new edition
-requires updating the snapshot, its inline CSS hash in the web app, and the route test.
-The newsletter workflow's GitHub issue and downloads do not publish drafts to the site.
+#### Publishing news and newsletters
+
+1. The newsletter workflow adds published editions automatically. It saves each HTML file
+   as `web/static/newsletter-issue-<issue>.html` and adds its number, title, date and
+   summary to `editions` in [web/publications.json](web/publications.json). Keep older
+   entries and files in place so their links keep working. The site computes a Content
+   Security Policy hash for each snapshot's embedded stylesheet.
+2. For a curated link, add a `news` entry with a unique, stable `id`, title, date, summary,
+   source name, and original article URL. Reuse the same ID when correcting an entry.
+3. Release curated link changes through the normal site deployment. The
+   [hourly workflow](.github/workflows/latest-news.yml) also checks the configured research
+   feeds at minute 17, excluding unverified search-result feeds. It keeps up to 100
+   automated links, labels them separately, and updates Latest News and RSS only when the
+   index changes. It does not publish excerpts or open issues.
 
 ### Research sources
 
@@ -687,7 +707,7 @@ retention obligations before publicly accepting submissions.
 | `ARCHIVE_DIRECTORY` | `.archive/`, outside the public web routes |
 | `ARCHIVE_MAX_BYTES` | `268435456`, local retained-payload quota |
 | `AZURE_STORAGE_ACCOUNT` | Required for Azure mode |
-| `AZURE_STORAGE_CONTAINER` | `skillvenom-investigations` |
+| `AZURE_STORAGE_CONTAINER` | `agentlens-investigations` |
 | `AZURE_ARCHIVE_RETENTION_CONFIRMED` | Must be `true` for Azure mode, after lifecycle setup |
 
 ## Limits and public-service operation

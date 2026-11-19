@@ -7,6 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 from uuid import uuid4
+from xml.etree import ElementTree as ET
 
 import httpx
 import pytest
@@ -315,7 +316,7 @@ def test_pages_share_navigation_and_credit(client, path, title):
     page = client.get(path)
     assert page.status_code == 200
     assert f"<title>{title}</title>" in page.text
-    for href in ("/#scanner", "/coverage", "/samples", "/sources"):
+    for href in ("/#scanner", "/coverage", "/samples", "/sources", "/news", "/newsletter"):
         assert f'href="{href}"' in page.text
     assert 'href="https://github.com/azurekid"' in page.text
     if path not in ("/", "/report"):
@@ -389,10 +390,15 @@ def test_azure_retention_must_be_confirmed(monkeypatch):
 
 
 @pytest.mark.parametrize("public", [False, True])
-def test_azure_archive_private_container_and_identity(monkeypatch, public):
+@pytest.mark.parametrize("configured_container", [None, "skillvenom-investigations"])
+def test_azure_archive_private_container_and_identity(monkeypatch, public, configured_container):
     monkeypatch.setenv("ARCHIVE_BACKEND", "azure")
-    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "skillvenomtest")
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "agentlenstest")
     monkeypatch.setenv("AZURE_ARCHIVE_RETENTION_CONFIRMED", "true")
+    if configured_container:
+        monkeypatch.setenv("AZURE_STORAGE_CONTAINER", configured_container)
+    else:
+        monkeypatch.delenv("AZURE_STORAGE_CONTAINER", raising=False)
     writes = []
     class FakeContainer:
         def get_container_properties(self):
@@ -401,10 +407,10 @@ def test_azure_archive_private_container_and_identity(monkeypatch, public):
             writes.append(kwargs)
     class FakeService:
         def __init__(self, url, credential, **kwargs):
-            assert url == "https://skillvenomtest.blob.core.windows.net"
+            assert url == "https://agentlenstest.blob.core.windows.net"
             assert credential is sentinel
         def get_container_client(self, name):
-            assert name == "skillvenom-investigations"
+            assert name == (configured_container or "agentlens-investigations")
             return FakeContainer()
     sentinel = object()
     monkeypatch.setattr(archive_module, "ManagedIdentityCredential", lambda: sentinel)
@@ -994,10 +1000,11 @@ def test_clean_report_has_empty_atlas_mapping(client):
 
 
 def test_newsletter_page_and_style_policy(client):
-    homepage = client.get("/")
-    page = client.get("/newsletter")
+    archive = client.get("/newsletter")
+    page = client.get("/newsletter/20")
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
-    assert 'href="/newsletter">Newsletter</a>' in homepage.text
+    assert 'href="/newsletter/20">Stolen keys put agents at risk</a>' in archive.text
+    assert 'href="/newsletter">Newsletter archive</a>' in page.text
     assert "<h1>Stolen keys put agents at risk</h1>" in page.text
     assert "Verify the signal. Defend the perimeter." in page.text
 
@@ -1005,7 +1012,68 @@ def test_newsletter_page_and_style_policy(client):
     digest = base64.b64encode(hashlib.sha256(style).digest()).decode()
     source = f"'sha256-{digest}'"
     assert f"style-src 'self' {source};" in page.headers["content-security-policy"]
-    assert source not in homepage.headers["content-security-policy"]
+    assert "script-src 'none';" in page.headers["content-security-policy"]
+    assert source not in archive.headers["content-security-policy"]
+    assert client.get("/newsletter/999").status_code == 404
+    assert client.get("/newsletter/publications.json").status_code == 404
+
+
+def test_publications_catalog_drives_archive_news_and_rss(client, monkeypatch, tmp_path):
+    publishing = app_module.publications
+    static = tmp_path / "static"
+    static.mkdir()
+    for issue in (1, 2, 3):
+        (static / f"newsletter-issue-{issue}.html").write_text(
+            f"<style>h1 {{order:{issue}}}</style><h1>Edition {issue}</h1>", encoding="utf-8")
+    (tmp_path / "publications.json").write_text(json.dumps({
+        "editions": [
+            {"issue": 1, "title": "First edition", "date": "2026-11-01", "summary": "First briefing"},
+            {"issue": 2, "title": "Second edition", "date": "2026-11-15", "summary": "Second briefing"},
+        ],
+        "news": [{
+            "id": "test-link", "title": "News & notes", "date": "2026-11-08",
+            "summary": "Review <access> & permissions.", "source": "Example",
+            "url": "https://example.test/news?a=1&b=2",
+        }],
+    }), encoding="utf-8")
+    catalog, snapshots = publishing.load_catalog(tmp_path)
+    monkeypatch.setattr(publishing, "CATALOG", catalog)
+    monkeypatch.setattr(publishing, "SNAPSHOTS", snapshots)
+    monkeypatch.setattr(publishing, "LATEST_RESEARCH", [
+        publishing.NewsLink(id="research-test", title="Research update", date="2026-11-18",
+                            source="Research Lab", url="https://example.test/research",
+                            summary="Read the original."),
+    ])
+
+    archive = client.get("/newsletter").text
+    assert archive.index('href="/newsletter/2"') < archive.index('href="/newsletter/1"')
+    assert "News &amp; notes" not in archive
+    assert "Research update" not in archive
+    assert client.get("/newsletter/1").text.endswith("<h1>Edition 1</h1>")
+    assert client.get("/newsletter/2").text.endswith("<h1>Edition 2</h1>")
+    assert client.get("/newsletter/3").status_code == 404  # A file alone does not publish a draft.
+    news = client.get("/news").text
+    assert news.index("Second edition") < news.index("News &amp; notes") < news.index("First edition")
+    assert news.index("Research update") < news.index("Second edition")
+    assert "Research Lab · Automated" in news
+    assert 'href="https://example.test/news?a=1&amp;b=2"' in news
+    assert "Review &lt;access&gt; &amp; permissions." in news
+    assert 'type="application/rss+xml" title="AgentLens Latest News" href="/rss.xml"' in news
+
+    feed = client.get("/rss.xml", headers={"Host": "custom.example"})
+    assert feed.status_code == 200 and feed.headers["content-type"].startswith("application/rss+xml")
+    channel = ET.fromstring(feed.content).find("channel")
+    assert channel is not None
+    assert channel.findtext("link") == f"{publishing.SITE}/news"
+    items = channel.findall("item")
+    assert items[0].findtext("category") == "Automated research"
+    assert items[0].findtext("guid") == "urn:agentlens:news:research-test"
+    items = items[1:]
+    assert [item.findtext("title") for item in items] == ["Second edition", "News & notes", "First edition"]
+    assert items[0].findtext("guid") == items[0].findtext("link") == f"{publishing.SITE}/newsletter/2"
+    assert items[1].findtext("guid") == "urn:agentlens:news:test-link"
+    assert items[1].findtext("link") == "https://example.test/news?a=1&b=2"
+    assert items[1].findtext("pubDate") == "Sun, 08 Nov 2026 00:00:00 GMT"
 
 
 def test_research_page_and_parsed_sources(client):

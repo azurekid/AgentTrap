@@ -202,7 +202,7 @@
     ctx.setLineDash([]);
     ctx.fillStyle = danger ? "#fda4af" : "#5eead4";
     ctx.textAlign = "center";
-    ctx.fillText("SKILLVENOM", core.x, core.y - core.ring - 12);
+    ctx.fillText("AGENTLENS", core.x, core.y - core.ring - 12);
     ctx.textAlign = "start";
 
     const glow = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, core.r * 2.4);

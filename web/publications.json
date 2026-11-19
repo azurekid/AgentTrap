@@ -1,0 +1,28 @@
+{
+  "editions": [
+    {
+      "issue": 20,
+      "title": "Stolen keys put agents at risk",
+      "date": "2026-11-18",
+      "summary": "What stolen vendor keys, model supply chains, and weak inputs mean for people running AI agents."
+    }
+  ],
+  "news": [
+    {
+      "id": "external-sandboxes-for-coding-agents",
+      "title": "External sandboxes for coding agents",
+      "date": "2026-11-17",
+      "source": "Simon Willison",
+      "url": "https://simonwillison.net/2026/Nov/17/external-sandboxes-for-coding-agents/",
+      "summary": "Why running coding agents away from your main machine can limit what they can reach."
+    },
+    {
+      "id": "kokoro-model-account-takeover",
+      "title": "Researchers take over a popular model account on Hugging Face",
+      "date": "2026-11-17",
+      "source": "BleepingComputer",
+      "url": "https://www.bleepingcomputer.com/news/security/researchers-hijack-hugging-face-account-for-popular-kokoro-ai-model/",
+      "summary": "The Kokoro incident shows why teams should pin model downloads to a version they have reviewed."
+    }
+  ]
+}

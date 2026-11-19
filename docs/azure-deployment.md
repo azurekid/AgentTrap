@@ -5,9 +5,14 @@ AgentLens is deployed with **Bicep** and the **Azure CLI**, and updated by a
 No Azure Developer CLI (`azd`), connection strings, storage keys, publishing
 passwords or client secrets are used.
 
-The platform is now named AgentLens. Existing `skillvenom` resource names,
-`application=SkillVenom` discovery tags, archive container names and ZIP paths
-below are intentionally unchanged so existing deployments continue to work.
+New deployments use AgentLens resource names. Changing the prefix does not
+rename the live SkillVenom resources. For a production cutover, provision
+AgentLens alongside the existing stack, verify the site and preserve the private
+archive, scan statistics, and fingerprints before switching the GitHub deployment
+target. Preserve original retention deadlines during any data transfer. Keep the
+legacy stack available for rollback and do not delete it as part of the cutover.
+To deploy code to the old stack before cutover, specify its resource group and
+`APP_NAME` explicitly with `infra/deploy.sh --code-only`.
 
 | File | Purpose |
 | --- | --- |
@@ -26,7 +31,7 @@ below are intentionally unchanged so existing deployments continue to work.
                       │  system-assigned managed identity
                       ▼  Storage Blob Data Contributor (container scope)
                     Storage account (shared keys off, no public access)
-                      └─ skillvenom-investigations/
+                      └─ agentlens-investigations/
                            ├─ investigations/…   deleted after 30 days (lifecycle rule)
                            ├─ feedback/…         false-positive reports, deleted after 180 days (lifecycle rule)
                            ├─ statistics/totals.json   aggregate counts, kept
@@ -45,23 +50,23 @@ The application serves the site and the API. Public GitHub, GitLab and Azure Dev
 | Web app | `PYTHON|3.14`; HTTPS only; TLS 1.2; HTTP/2; FTP and FTP/SCM basic auth disabled; remote debugging off; health check `/healthz`; system-assigned identity; startup `python -m uvicorn web.app:app --host 0.0.0.0 --port 8000 --workers 1 --no-proxy-headers` |
 | Storage account | StorageV2, `Standard_LRS`; shared-key access **disabled**; anonymous blob access disabled; OAuth by default; TLS 1.2; HTTPS only |
 | Blob service | Blob and container soft delete, versioning and change feed **off**, so no copies outlive the retention period |
-| Blob container | `skillvenom-investigations`, private |
-| Lifecycle rule | Deletes blobs under `skillvenom-investigations/investigations/` 30 days after last modification |
+| Blob container | `agentlens-investigations`, private |
+| Lifecycle rule | Deletes blobs under `agentlens-investigations/investigations/` 30 days after last modification |
 | Role assignment | *Storage Blob Data Contributor* for the web app identity, on the container only |
 | Log Analytics | Web app logs and metrics; blob read/write/delete audit logs |
 
 Names are `app-`, `asp-`, `log-` and `st` + prefix + an 8-character suffix derived
-from the resource group, e.g. `app-skillvenom-ab12cd34`.
+from the resource group, e.g. `app-agentlens-ab12cd34`.
 
 ### Parameters
 
 | Parameter | Default | Notes |
 | --- | --- | --- |
 | `location` | `westeurope` | Also settable with `LOCATION` in `deploy.sh` |
-| `namePrefix` | `skillvenom` | 3–12 characters |
+| `namePrefix` | `agentlens` | 3–12 characters |
 | `appServiceSku` | `B1` | `B1`, `B2`, `B3`, `P0v3`, `P1v3` |
 | `pythonVersion` | `3.14` | Must be listed by `az webapp list-runtimes --os linux` |
-| `archiveContainerName` | `skillvenom-investigations` | |
+| `archiveContainerName` | `agentlens-investigations` | |
 | `archiveRetentionDays` | `30` | Lifecycle deletion age; keep in line with the site's retention notice |
 | `logRetentionDays` | `30` | Log Analytics retention |
 | `trustedProxyHops` | `1` | Proxies appending `X-Forwarded-For`; `2` if Front Door is added |
@@ -71,7 +76,7 @@ from the resource group, e.g. `app-skillvenom-ab12cd34`.
 ```text
 ARCHIVE_BACKEND=azure
 AZURE_STORAGE_ACCOUNT=<generated>
-AZURE_STORAGE_CONTAINER=skillvenom-investigations
+AZURE_STORAGE_CONTAINER=agentlens-investigations
 AZURE_ARCHIVE_RETENTION_CONFIRMED=true   # the lifecycle rule is in the same template
 TRUSTED_PROXY_HOPS=1                     # App Service front end appends X-Forwarded-For
 SCM_GITLAB_HOSTS= / SCM_AZDO_HOSTS=      # optional self-managed hosts (Bicep: gitlabHosts, azureDevOpsHosts)
@@ -113,19 +118,19 @@ infra/deploy.sh               # provision, package, deploy, wait for /healthz
 
 | Variable | Default |
 | --- | --- |
-| `RESOURCE_GROUP` | `rg-skillvenom` |
+| `RESOURCE_GROUP` | `rg-agentlens` |
 | `LOCATION` | `westeurope` |
 | `AZURE_SUBSCRIPTION_ID` | current `az account` |
 
-For example: `RESOURCE_GROUP=rg-skillvenom-test LOCATION=northeurope infra/deploy.sh`.
+For example: `RESOURCE_GROUP=rg-agentlens-test LOCATION=northeurope infra/deploy.sh`.
 
 What `deploy.sh` does:
 
-1. Creates the resource group (tag `application=SkillVenom`).
-2. Deploys `main.bicep` as deployment `skillvenom-<UTC timestamp>`.
+1. Creates the resource group (tag `application=agentlens`).
+2. Deploys `main.bicep` as deployment `agentlens-<UTC timestamp>`.
 3. Runs `package.sh`, which zips only `requirements.txt`, `scan_agents_md.py`,
    `credential_rules.json`, `allowlist.json`, `SOURCES.md` and `web/` (no `__pycache__`, tests, fixtures,
-   `poc/`, `.venv/`, `.archive/` or `.env`) into `dist/skillvenom.zip`.
+   `poc/`, `.venv/`, `.archive/` or `.env`) into `dist/agentlens.zip`.
 4. Runs `deploy-code.sh`, which uploads the ZIP with `az webapp deploy --type zip --async true`.
    App Service then builds it remotely (Oryx installs `requirements.txt`; about 4 minutes
    the first time, faster afterwards).
@@ -159,29 +164,29 @@ infra/deploy.sh               # provision + deploy, prints the site URL
 ```
 
 `RESOURCE_GROUP` and `LOCATION` work as above, e.g.
-`RESOURCE_GROUP=rg-skillvenom-test infra/deploy.sh`. To deploy a later version, run
+`RESOURCE_GROUP=rg-agentlens-test infra/deploy.sh`. To deploy a later version, run
 `git pull` and then `infra/deploy.sh --code-only`.
 
 **Option B: upload a ZIP to an existing web app**
 
 Use this when the infrastructure already exists and you have a package built locally
-with `infra/package.sh` (`dist/skillvenom.zip`), for example with unpushed changes.
+with `infra/package.sh` (`dist/agentlens.zip`), for example with unpushed changes.
 
-1. In Cloud Shell select **Manage files → Upload** and choose `skillvenom.zip`.
-   It is stored in your home directory (`~/skillvenom.zip`).
+1. In Cloud Shell select **Manage files → Upload** and choose `agentlens.zip`.
+   It is stored in your home directory (`~/agentlens.zip`).
 2. Deploy it:
 
 ```bash
-RG=rg-skillvenom
-APP=$(az webapp list -g $RG --query "[?tags.application=='SkillVenom'].name | [0]" -o tsv)
-az webapp deploy -g $RG -n $APP --src-path ~/skillvenom.zip --type zip --async true
+RG=rg-agentlens
+APP=$(az webapp list -g $RG --query "[?tags.application=='agentlens'].name | [0]" -o tsv)
+az webapp deploy -g $RG -n $APP --src-path ~/agentlens.zip --type zip --async true
 az webapp log deployment list -g $RG -n $APP --query "[0].{status:status, complete:complete}"   # 4 + true = done
 curl -s "https://$(az webapp show -g $RG -n $APP --query defaultHostName -o tsv)/healthz"
 ```
 
 `--async true` returns as soon as the upload is accepted; repeat the status command
 until `status` is `4` (`3` means the build failed). With a clone of the repository,
-`infra/deploy-code.sh $RG $APP ~/skillvenom.zip` does the waiting for you.
+`infra/deploy-code.sh $RG $APP ~/agentlens.zip` does the waiting for you.
 
 Notes:
 
@@ -199,13 +204,14 @@ Notes:
 Run once, after the first deployment:
 
 ```bash
-RESOURCE_GROUP=rg-skillvenom infra/setup-github-oidc.sh azurekid/AgentTrap
+RESOURCE_GROUP=rg-agentlens infra/setup-github-oidc.sh azurekid/AgentTrap
 ```
 
 The script:
 
-- creates (or reuses) the Entra app `github-<owner>-<repo>-deploy` and its service principal;
-- adds a federated credential for `repo:<owner>/<repo>:environment:production`, so only
+- creates (or reuses) the Entra app `github-<owner>-agentlens-deploy` and its service principal;
+- adds a federated credential for the repository's `production` OIDC subject (including the
+  immutable owner and repository IDs by default; override with `OIDC_SUBJECT` if needed), so only
   jobs in the `production` environment of that repository can sign in, without a secret;
 - grants *Website Contributor* on the web app only;
 - creates the `production` GitHub environment;
@@ -245,8 +251,8 @@ existing resources are updated, not duplicated.
 The **Report false positives** button on `/report` posts to `/api/feedback` (5 per 10 minutes per client, 200 per hour overall, 64 KiB max; blobs are deleted after `feedbackRetentionDays`, default 180). Each report is one JSON blob under `feedback/` in the archive container: rule, severity, path, line, an optional comment and, only if the user opts in, the matched line (never for `SECRET-*` rules). There is no admin page; read them with Storage Explorer or:
 
 ```bash
-az storage blob list --account-name <storage> -c skillvenom-investigations --prefix feedback/ --auth-mode login -o table
-az storage blob download --account-name <storage> -c skillvenom-investigations -n feedback/<id>.json --auth-mode login --file -
+az storage blob list --account-name <storage> -c agentlens-investigations --prefix feedback/ --auth-mode login -o table
+az storage blob download --account-name <storage> -c agentlens-investigations -n feedback/<id>.json --auth-mode login --file -
 ```
 
 ## 5. Verify
@@ -278,7 +284,7 @@ Reputation, revocation and timestamp checks remain unassessed.
 - Infrastructure checks:
 
 ```bash
-RG=rg-skillvenom
+RG=rg-agentlens
 ST=$(az storage account list -g $RG --query "[0].name" -o tsv)
 az storage account show -n $ST --query "{sharedKey:allowSharedKeyAccess, publicBlob:allowBlobPublicAccess}"
 az storage account management-policy show -g $RG --account-name $ST --query "policy.rules[].name"
@@ -349,7 +355,7 @@ HTTP/APM body logging disabled; exported reports and file names may still be sen
 ## 8. Remove the deployment
 
 ```bash
-az group delete --name rg-skillvenom --yes
+az group delete --name rg-agentlens --yes
 az ad app delete --id "$(az ad app list --display-name github-azurekid-AgentTrap-deploy --query '[0].appId' -o tsv)"
 ```
 

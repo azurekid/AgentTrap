@@ -3,7 +3,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-out="${1:-dist/skillvenom.zip}"
+out="${1:-dist/agentlens.zip}"
 mkdir -p "$(dirname "$out")"
 rm -f "$out"
 inputs=(requirements.txt scan_agents_md.py credential_rules.json allowlist.json SOURCES.md web)
