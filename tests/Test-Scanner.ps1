@@ -79,6 +79,9 @@ $ngcFindings = @(Invoke-AgentFileScan -File 'SKILL.md' -Text $ngc -Config $confi
 Assert ($ngcFindings.Count -eq 0) 'NGC placeholder and literal registry username are not credentials'
 $tokenFindings = @(Invoke-AgentFileScan -File 'SKILL.md' -Text ($ngc.Replace('<NGC_API_KEY>', '$GITHUB_TOKEN')) -Config $config)
 Assert ($tokenFindings.rule -contains 'OAUTH-TOKEN') 'other token references beside literal registry usernames remain detected'
+$envReferences = 'GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}' + "`n" + 'token = process.env.GITHUB_TOKEN'
+$referenceFindings = @(Invoke-AgentFileScan -File 'AGENTS.md' -Text $envReferences -Config $config)
+Assert ($referenceFindings.Count -eq 0) 'environment references alone do not flag credentials'
 
 Write-Host "`n[5] JSON output and parity with scan_agents_md.py"
 $paths = @(('samples', 'poc/Downloads', 'tests/repo' | ForEach-Object { Join-Path $scratch $_ }) + (Join-Path $root 'tests/benign'))

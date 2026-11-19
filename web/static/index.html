@@ -16,7 +16,7 @@
   <a class="skip" href="#content">Skip to content</a>
   <div class="backdrop" aria-hidden="true"></div>
 
-  <header class="topbar">
+  <header class="topbar home-topbar">
     <div class="topbar-inner">
       <a class="logo" href="/" aria-label="AgentLens home">
         <svg class="logo-mark" viewBox="0 0 32 36" aria-hidden="true">
@@ -27,27 +27,22 @@
         <span class="wordmark">Agent<b>Lens</b></span>
       </a>
       <nav class="nav" aria-label="Pages">
+        <a class="home-scan-link" href="/#scanner">Scanner</a>
         <a href="/news">Latest News</a>
-        <a href="/newsletter">Newsletter</a>
-        <a href="/#scanner">Scanner</a>
-        <a href="/fingerprints">Fingerprint search</a>
-        <a href="/coverage">Coverage</a>
-        <a href="/samples">Samples</a>
-        <a href="/sources">Research</a>
+        <a href="#explore">Explore</a>
       </nav>
-      <span class="status-pill"><i aria-hidden="true"></i>Static analysis · no execution</span>
     </div>
   </header>
 
   <main id="content">
-    <section class="hero" aria-labelledby="page-title">
+    <section class="hero home-hero" aria-labelledby="page-title">
       <div class="hero-copy">
         <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>AI agent supply-chain security</p>
         <h1 id="page-title">Every agent<br><span class="gradient-text">obeys someone.</span></h1>
-        <p class="lede">Make sure it's you. AgentLens inspects the instruction files, skills, and tool configuration your AI agents trust, exposing prompt injection, leaked credentials, and unsafe execution before an agent ever reads them.</p>
+        <p class="lede">Inspect the instructions, skills, and tools your AI agents trust. Find prompt injection, hard-coded secrets, and unsafe commands before your agents run them.</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="/#scanner">Scan agent files</a>
-          <a class="btn btn-secondary" href="/?mode=repo#scanner">Scan a GitHub repo</a>
+          <a class="btn btn-secondary" href="/?mode=repo#scanner">Scan a repository</a>
         </div>
         <ul class="trust" aria-label="Guarantees">
           <li>Read-only inspection</li>
@@ -234,18 +229,18 @@
       </ol>
     </section>
 
-    <section class="explore" aria-labelledby="explore-title">
+    <section class="explore" id="explore" aria-labelledby="explore-title">
       <header class="section-head">
         <p class="label">Explore</p>
-        <h2 id="explore-title">Everything AgentLens knows</h2>
+        <h2 id="explore-title">Explore AgentLens</h2>
         <p>Defensive inspection informed by <a href="https://github.com/azurekid/SkillVenom" target="_blank" rel="noopener">SkillVenom red-team research and samples</a>.</p>
       </header>
       <div class="explore-grid">
-        <a class="explore-card" href="/#scanner">
+        <a class="explore-card" href="/fingerprints">
           <span class="explore-num">01</span>
-          <h3>Scanner</h3>
-          <p>Upload agent files or point at a GitHub, GitLab or Azure DevOps repository and get a mapped, redacted report.</p>
-          <span class="explore-go">Start an inspection <span aria-hidden="true">→</span></span>
+          <h3>Fingerprint search</h3>
+          <p>Look up a file or content fingerprint in the AgentLens registry.</p>
+          <span class="explore-go">Search the registry <span aria-hidden="true">→</span></span>
         </a>
         <a class="explore-card" href="/coverage">
           <span class="explore-num">02</span>
@@ -264,6 +259,12 @@
           <h3>Research</h3>
           <p>The incidents, papers and advisories behind every rule, searchable and linked to the source.</p>
           <span class="explore-go">Read the research <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="explore-card" href="/newsletter">
+          <span class="explore-num">05</span>
+          <h3>Newsletter</h3>
+          <p>Read past editions of Agent Security Weekly.</p>
+          <span class="explore-go">Browse the archive <span aria-hidden="true">→</span></span>
         </a>
       </div>
     </section>

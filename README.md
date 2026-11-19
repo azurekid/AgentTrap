@@ -665,7 +665,9 @@ Azure connection-string account keys and SAS signatures).
 
 Findings on credential-bearing lines are redacted; private-key files have all
 finding snippets redacted. These are **potential** credentials, not provider-verified
-live secrets. Common environment references and obvious placeholders are excluded.
+live secrets. Naming a token variable such as `GITHUB_TOKEN` or wiring it to a
+GitHub Actions secret is not a credential finding by itself. Printing or sending
+a token can still be flagged, and literal secret values are still detected and redacted.
 Format detection cannot catch every secret, and synthetic examples can be flagged.
 Do not treat report redaction as a general-purpose data-loss prevention service.
 Real exposures require revocation/rotation and access-log review.

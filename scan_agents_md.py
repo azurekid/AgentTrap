@@ -45,7 +45,7 @@ RULES = [
      R(r"authorization:\s*(bearer|token|basic)|access_token=|[?&](token|api_?key|secret)=")),
     ('CRED-FILES', 'HIGH', 'Reference to credential stores',
      R(r"~/\.ssh|\.ssh/id_|~/\.aws|\.npmrc|\.netrc|\.git-credentials|\.docker/config\.json|gh auth token|keychain|credentials\.json|application_default_credentials|\.config/gh/hosts\.yml|\.copilot/")),
-    ('OAUTH-TOKEN', 'MEDIUM', 'References OAuth/GitHub/cloud token material',
+    ('OAUTH-TOKEN', 'MEDIUM', 'Token referenced in a possible disclosure or transfer',
      R(r"\b(GITHUB_TOKEN|GH_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|AZURE_[A-Z_]*(SECRET|TOKEN)|AWS_SECRET_ACCESS_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|oauth[ _-]?(access[ _-]?|refresh[ _-]?)?tokens?|(access|refresh|id)_token|client_secret)\b")),
     ('NPM-INSTALL', 'MEDIUM', 'Package installation / execution instruction',
      R(r"\b(npm|pnpm|yarn|bun)\s+(i|install|add|exec|dlx)\b|\bnpx\s+(-y\s+)?\S+|\bpip3?\s+install\b|\buvx?\s+(pip\s+install|run|tool)|\bgo\s+install\b|\bcargo\s+install\b")),
@@ -314,6 +314,11 @@ def mask_denied(lines):
 DOCKER_LITERAL_USERNAME = re.compile(
     r"(\bdocker[ \t]+login\b[^;\n|&]*?[ \t](?:--username(?:[ \t]+|=)|-u[ \t]+))'\$oauthtoken'(?=[ \t]|$)"
 )
+TOKEN_DISCLOSURE = R(
+    r"\b(?:echo|print|printf|log|dump|expose|paste|publish|send|post|upload|"
+    r"curl|wget|ping|nslookup|dig|resolve-dnsname)\b|"
+    r'\bdocker[ \t]+login\b[^;\n|&]*?[ \t](?:--username(?:[ \t]+|=)|-u[ \t]+)"?\$'
+)
 
 
 def scan_text(text, allow):
@@ -328,6 +333,8 @@ def scan_text(text, allow):
             candidate = masked[i - 1]
             if rid == "OAUTH-TOKEN":
                 candidate = DOCKER_LITERAL_USERNAME.sub(r"\1'literal-registry-username'", candidate)
+                if not TOKEN_DISCLOSURE.search(candidate):
+                    continue
             if rx.search(candidate):
                 out.append(finding(i, sev, rid, msg, ln))
         out += url_findings(i, ln, allow)

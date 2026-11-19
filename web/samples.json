@@ -5471,7 +5471,7 @@
   {
    "rule": "OAUTH-TOKEN",
    "severity": "MEDIUM",
-   "message": "References OAuth/GitHub/cloud token material",
+   "message": "Token referenced in a possible disclosure or transfer",
    "ref": "1",
    "atlas": [
     "AML.T0055"

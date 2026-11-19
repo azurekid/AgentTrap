@@ -105,7 +105,7 @@ function Get-ScannerConfig {
                 (& $rx 'authorization:\s*(bearer|token|basic)|access_token=|[?&](token|api_?key|secret)='))
             , @('CRED-FILES', 'HIGH', 'Reference to credential stores',
                 (& $rx '~/\.ssh|\.ssh/id_|~/\.aws|\.npmrc|\.netrc|\.git-credentials|\.docker/config\.json|gh auth token|keychain|credentials\.json|application_default_credentials|\.config/gh/hosts\.yml|\.copilot/'))
-            , @('OAUTH-TOKEN', 'MEDIUM', 'References OAuth/GitHub/cloud token material',
+            , @('OAUTH-TOKEN', 'MEDIUM', 'Token referenced in a possible disclosure or transfer',
                 (& $rx '\b(GITHUB_TOKEN|GH_TOKEN|NPM_TOKEN|NODE_AUTH_TOKEN|AZURE_[A-Z_]*(SECRET|TOKEN)|AWS_SECRET_ACCESS_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|oauth[ _-]?(access[ _-]?|refresh[ _-]?)?tokens?|(access|refresh|id)_token|client_secret)\b'))
             , @('NPM-INSTALL', 'MEDIUM', 'Package installation / execution instruction',
                 (& $rx '\b(npm|pnpm|yarn|bun)\s+(i|install|add|exec|dlx)\b|\bnpx\s+(-y\s+)?\S+|\bpip3?\s+install\b|\buvx?\s+(pip\s+install|run|tool)|\bgo\s+install\b|\bcargo\s+install\b'))
@@ -326,6 +326,7 @@ function Get-RuleMatch {
         $candidate = $Masked
         if ($r[0] -eq 'OAUTH-TOKEN') {
             $candidate = [regex]::Replace($candidate, '(\bdocker[ \t]+login\b[^;\n|&]*?[ \t](?:--username(?:[ \t]+|=)|-u[ \t]+))''\$oauthtoken''(?=[ \t]|$)', '$1''literal-registry-username''')
+            if ($candidate -notmatch '\b(?:echo|print|printf|log|dump|expose|paste|publish|send|post|upload|curl|wget|ping|nslookup|dig|resolve-dnsname)\b|\bdocker[ \t]+login\b[^;\n|&]*?[ \t](?:--username(?:[ \t]+|=)|-u[ \t]+)"?\$') { continue }
         }
         if ($r[3].IsMatch($candidate)) { New-Finding $LineNo $r[1] $r[0] $r[2] $Line $Refs[$r[0]] }
     }
