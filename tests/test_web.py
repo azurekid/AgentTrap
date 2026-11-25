@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
+from html import escape
 from pathlib import Path
 from uuid import uuid4
 from xml.etree import ElementTree as ET
@@ -1011,18 +1012,25 @@ def test_clean_report_has_empty_atlas_mapping(client):
 
 
 def test_newsletter_page_and_style_policy(client):
-    latest = client.get("/newsletter", follow_redirects=False)
-    assert latest.status_code == 307 and latest.headers["location"] == "/newsletter/20"
+    editions = app_module.publications.newsletter_editions()
+    latest_edition, *previous = editions
+    latest_path = latest_edition.path
+    response = client.get("/newsletter", follow_redirects=False)
+    assert response.status_code == 307 and response.headers["location"] == latest_path
     archive = client.get("/newsletter/archive")
-    page = client.get("/newsletter/20")
+    page = client.get(latest_path)
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
-    assert 'href="/newsletter/20">Stolen keys put agents at risk</a>' in archive.text
-    assert 'href="/newsletter/archive">Newsletter archive</a>' in page.text
-    assert "No previous editions yet." in page.text
+    assert f'href="{latest_path}">{escape(latest_edition.title)}</a>' in archive.text
+    assert 'href="/newsletter/archive">Full archive</a>' in page.text
+    if previous:
+        assert (f'href="{previous[0].path}">Issue {previous[0].issue}: '
+                f'{escape(previous[0].title)}</a>') in page.text
+    else:
+        assert "No previous editions yet." in page.text
     assert '<nav class="site-nav" aria-label="Pages">' in page.text
     assert '<a href="/newsletter" aria-current="page">Newsletter</a>' in page.text
     assert client.get("/assets/site-nav.css").status_code == 200
-    assert "<h1>Stolen keys put agents at risk</h1>" in page.text
+    assert f"<h1>{escape(latest_edition.title)}</h1>" in page.text
     assert "Verify the signal. Defend the perimeter." in page.text
 
     style = page.text.split("<style>", 1)[1].split("</style>", 1)[0].encode()
@@ -1031,7 +1039,7 @@ def test_newsletter_page_and_style_policy(client):
     assert f"style-src 'self' {source};" in page.headers["content-security-policy"]
     assert "script-src 'none';" in page.headers["content-security-policy"]
     assert source not in archive.headers["content-security-policy"]
-    assert client.get("/newsletter/999").status_code == 404
+    assert client.get(f"/newsletter/{max(edition.issue for edition in editions) + 1}").status_code == 404
     assert client.get("/newsletter/publications.json").status_code == 404
 
 
