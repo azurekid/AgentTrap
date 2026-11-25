@@ -626,6 +626,11 @@ values are never published.
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to
 [azurekid](https://github.com/azurekid).
 
+Newsletter editions include sharing links for LinkedIn, WhatsApp, X and Bluesky. Preview
+metadata uses the public `AGENTLENS_SITE_URL` when set, or the App Service hostname.
+After deploying preview changes, use [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/)
+to check an edition URL and refresh a cached preview.
+
 #### Publishing news and newsletters
 
 1. The newsletter workflow adds published editions automatically. It saves each HTML file

@@ -7,8 +7,9 @@ import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
-from html import escape
+from html import escape, unescape
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 from xml.etree import ElementTree as ET
 
@@ -1027,6 +1028,7 @@ def test_newsletter_page_and_style_policy(client):
     assert f'<meta property="og:description" content="{escape(latest_edition.summary, quote=True)}">' in page.text
     assert f'<meta property="og:url" content="{share_url}">' in page.text
     assert f'<meta property="og:image" content="{share_image}">' in page.text
+    assert page.text.index('<meta property="og:image"') < page.text.index("<style>")
     assert '<meta property="og:image:width" content="1200">' in page.text
     assert '<meta property="og:image:height" content="630">' in page.text
     assert '<meta name="twitter:card" content="summary_large_image">' in page.text
@@ -1042,6 +1044,10 @@ def test_newsletter_page_and_style_policy(client):
     banner = client.get("/assets/newsletter-banner.jpg")
     assert banner.status_code == 200 and banner.headers["content-type"].startswith("image/jpeg")
     assert banner.content.startswith(b"\xff\xd8")
+    for path in (latest_path, "/assets/newsletter-banner.jpg"):
+        head = client.head(path, headers={"user-agent": "LinkedInBot/1.0"})
+        assert head.status_code == 200 and head.content == b""
+    assert client.head("/newsletter", follow_redirects=False).headers["location"] == latest_path
     assert f"<h1>{escape(latest_edition.title)}</h1>" in page.text
     assert "Verify the signal. Defend the perimeter." in page.text
 
@@ -1053,6 +1059,34 @@ def test_newsletter_page_and_style_policy(client):
     assert source not in archive.headers["content-security-policy"]
     assert client.get(f"/newsletter/{max(edition.issue for edition in editions) + 1}").status_code == 404
     assert client.get("/newsletter/publications.json").status_code == 404
+
+
+def test_newsletter_share_links_encode_each_edition(client, monkeypatch, tmp_path):
+    publishing = app_module.publications
+    snapshot = tmp_path / "edition.html"
+    snapshot.write_text("<html><head><style></style></head><body><main></main></body></html>", encoding="utf-8")
+    edition = publishing.Edition(issue=7, title='R&D "keys" <test>', date="2026-11-25", summary="A & B")
+    monkeypatch.setattr(publishing, "CATALOG", publishing.Catalog(editions=[edition], news=[]))
+    monkeypatch.setattr(publishing, "SNAPSHOTS", {edition.path: (snapshot, b"'sha256-test'")})
+    page = client.get(edition.path).text
+    assert f'<meta property="og:title" content="{escape(edition.title, quote=True)}">' in page
+    assert '<meta property="og:description" content="A &amp; B">' in page
+    nav = page.split('<nav class="newsletter-share"', 1)[1].split("</nav>", 1)[0]
+    links = {label: urlsplit(unescape(href)) for href, label in re.findall(r'<a href="([^"]+)"[^>]*>([^<]+)</a>', nav)}
+    url = f"{publishing.SITE}{edition.path}"
+    assert set(links) == {"LinkedIn", "WhatsApp", "X", "Bluesky"}
+    for label, host, path in (
+        ("LinkedIn", "www.linkedin.com", "/sharing/share-offsite/"),
+        ("WhatsApp", "api.whatsapp.com", "/send"),
+        ("X", "twitter.com", "/intent/tweet"),
+        ("Bluesky", "bsky.app", "/intent/compose"),
+    ):
+        assert links[label].scheme == "https"
+        assert (links[label].netloc, links[label].path) == (host, path)
+    assert parse_qs(links["LinkedIn"].query) == {"url": [url]}
+    assert parse_qs(links["X"].query) == {"text": [edition.title], "url": [url]}
+    for label in ("WhatsApp", "Bluesky"):
+        assert parse_qs(links[label].query) == {"text": [f"{edition.title}\n{url}"]}
 
 
 @pytest.fixture

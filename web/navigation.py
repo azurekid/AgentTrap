@@ -1,6 +1,7 @@
 from html import escape
 from pathlib import Path
 from string import Template
+from urllib.parse import urlencode
 
 STATIC = Path(__file__).resolve().parent / "static"
 HEADER = Template((STATIC / "site-header.html").read_text(encoding="utf-8"))
@@ -40,12 +41,28 @@ def render_edition(
         f'<meta name="twitter:description" content="{escape(description, quote=True)}">',
         f'<meta name="twitter:image" content="{escape(image_url, quote=True)}">',
     ))
+    share_text = f"{title}\n{url}"
+    share_links = (
+        ("LinkedIn", "https://www.linkedin.com/sharing/share-offsite/?" + urlencode({"url": url})),
+        ("WhatsApp", "https://api.whatsapp.com/send?" + urlencode({"text": share_text})),
+        ("X", "https://twitter.com/intent/tweet?" + urlencode({"text": title, "url": url})),
+        ("Bluesky", "https://bsky.app/intent/compose?" + urlencode({"text": share_text})),
+    )
+    links = "".join(
+        f'<a href="{escape(link, quote=True)}" target="_blank" rel="noopener noreferrer">{label}</a>'
+        for label, link in share_links
+    )
+    share = f'<nav class="newsletter-share" aria-label="Share this edition"><span>Share this edition</span>{links}</nav>'
     return page.replace(
-        "</head>", f'{social_metadata}\n<link rel="stylesheet" href="/assets/site-nav.css">\n</head>', 1
+        "<style>", f'{social_metadata}\n<style>', 1
+    ).replace(
+        "</head>", '<link rel="stylesheet" href="/assets/site-nav.css">\n</head>', 1
     ).replace(
         "<body>", "<body>\n" + render_header("/newsletter") + '<div class="newsletter-layout">', 1
     ).replace(
         "<main>", '<a href="#newsletter-previous" class="newsletter-sidebar-jump">Previous editions</a>\n<main>', 1
+    ).replace(
+        "</main>", share + "\n</main>", 1
     ).replace(
         "</body>", sidebar + "</div>\n</body>", 1
     ).replace(

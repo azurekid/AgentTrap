@@ -262,7 +262,7 @@ def index():
     return navigation.render_static_page("index.html")
 
 
-@app.get("/newsletter", response_class=HTMLResponse)
+@app.api_route("/newsletter", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def newsletter_page():
     editions = publications.newsletter_editions()
     target = editions[0].path if editions else "/newsletter/archive"
@@ -274,7 +274,7 @@ def newsletter_archive():
     return publications.render_page(archive=True)
 
 
-@app.get("/newsletter/{issue}", response_class=HTMLResponse)
+@app.api_route("/newsletter/{issue}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def newsletter_edition(issue: str):
     path = f"/newsletter/{issue}"
     snapshot = publications.SNAPSHOTS.get(path)
@@ -375,7 +375,7 @@ def samples_page():
     return navigation.render_static_page("samples.html", "/samples")
 
 
-@app.get("/assets/{name}")
+@app.api_route("/assets/{name}", methods=["GET", "HEAD"])
 def asset(name: str):
     if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "checks.js", "fingerprints.js",
                     "style.css", "site-nav.css", "newsletter-banner.jpg"):
