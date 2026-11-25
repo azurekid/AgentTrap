@@ -278,9 +278,16 @@ def newsletter_archive():
 def newsletter_edition(issue: str):
     path = f"/newsletter/{issue}"
     snapshot = publications.SNAPSHOTS.get(path)
-    if snapshot is None:
+    edition = next((item for item in publications.CATALOG.editions if item.path == path), None)
+    if snapshot is None or edition is None:
         raise HTTPException(404, "Newsletter edition not found")
-    return navigation.render_edition(snapshot[0], publications.edition_sidebar(path))
+    return navigation.render_edition(
+        snapshot[0], publications.edition_sidebar(path),
+        title=edition.title,
+        description=edition.summary,
+        url=f"{publications.SITE}{edition.path}",
+        image_url=f"{publications.SITE}/assets/newsletter-banner.jpg",
+    )
 
 
 @app.get("/news", response_class=HTMLResponse)
@@ -370,7 +377,8 @@ def samples_page():
 
 @app.get("/assets/{name}")
 def asset(name: str):
-    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "checks.js", "fingerprints.js", "style.css", "site-nav.css"):
+    if name not in ("app.js", "fx.js", "research.js", "sarif.js", "radar.js", "checks.js", "fingerprints.js",
+                    "style.css", "site-nav.css", "newsletter-banner.jpg"):
         raise HTTPException(404)
     return FileResponse(ROOT / "static" / name)
 

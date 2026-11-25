@@ -1,3 +1,4 @@
+from html import escape
 from pathlib import Path
 from string import Template
 
@@ -18,10 +19,29 @@ def render_static_page(name: str, current: str = "") -> str:
     return page.replace("<!-- site-header -->", render_header(current), 1)
 
 
-def render_edition(snapshot: Path, sidebar: str) -> str:
+def render_edition(
+    snapshot: Path, sidebar: str, *, title: str, description: str, url: str, image_url: str
+) -> str:
     page = snapshot.read_text(encoding="utf-8")
+    social_metadata = "\n".join((
+        f'<link rel="canonical" href="{escape(url, quote=True)}">',
+        '<meta property="og:type" content="article">',
+        f'<meta property="og:title" content="{escape(title, quote=True)}">',
+        f'<meta property="og:description" content="{escape(description, quote=True)}">',
+        f'<meta property="og:url" content="{escape(url, quote=True)}">',
+        '<meta property="og:site_name" content="Agent Security Weekly">',
+        f'<meta property="og:image" content="{escape(image_url, quote=True)}">',
+        '<meta property="og:image:width" content="1200">',
+        '<meta property="og:image:height" content="630">',
+        '<meta property="og:image:type" content="image/jpeg">',
+        '<meta property="og:image:alt" content="AgentLens Newsletter - Agent Security Weekly, with a radar graphic">',
+        '<meta name="twitter:card" content="summary_large_image">',
+        f'<meta name="twitter:title" content="{escape(title, quote=True)}">',
+        f'<meta name="twitter:description" content="{escape(description, quote=True)}">',
+        f'<meta name="twitter:image" content="{escape(image_url, quote=True)}">',
+    ))
     return page.replace(
-        "</head>", '<link rel="stylesheet" href="/assets/site-nav.css">\n</head>', 1
+        "</head>", f'{social_metadata}\n<link rel="stylesheet" href="/assets/site-nav.css">\n</head>', 1
     ).replace(
         "<body>", "<body>\n" + render_header("/newsletter") + '<div class="newsletter-layout">', 1
     ).replace(

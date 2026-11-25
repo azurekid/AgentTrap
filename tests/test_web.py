@@ -1021,6 +1021,15 @@ def test_newsletter_page_and_style_policy(client):
     page = client.get(latest_path)
     assert page.status_code == 200 and page.headers["content-type"].startswith("text/html")
     assert f'href="{latest_path}">{escape(latest_edition.title)}</a>' in archive.text
+    share_url = f"{app_module.publications.SITE}{latest_path}"
+    share_image = f"{app_module.publications.SITE}/assets/newsletter-banner.jpg"
+    assert f'<meta property="og:title" content="{escape(latest_edition.title, quote=True)}">' in page.text
+    assert f'<meta property="og:description" content="{escape(latest_edition.summary, quote=True)}">' in page.text
+    assert f'<meta property="og:url" content="{share_url}">' in page.text
+    assert f'<meta property="og:image" content="{share_image}">' in page.text
+    assert '<meta property="og:image:width" content="1200">' in page.text
+    assert '<meta property="og:image:height" content="630">' in page.text
+    assert '<meta name="twitter:card" content="summary_large_image">' in page.text
     assert 'href="/newsletter/archive">Full archive</a>' in page.text
     if previous:
         assert (f'href="{previous[0].path}">Issue {previous[0].issue}: '
@@ -1030,6 +1039,9 @@ def test_newsletter_page_and_style_policy(client):
     assert '<nav class="site-nav" aria-label="Pages">' in page.text
     assert '<a href="/newsletter" aria-current="page">Newsletter</a>' in page.text
     assert client.get("/assets/site-nav.css").status_code == 200
+    banner = client.get("/assets/newsletter-banner.jpg")
+    assert banner.status_code == 200 and banner.headers["content-type"].startswith("image/jpeg")
+    assert banner.content.startswith(b"\xff\xd8")
     assert f"<h1>{escape(latest_edition.title)}</h1>" in page.text
     assert "Verify the signal. Defend the perimeter." in page.text
 
