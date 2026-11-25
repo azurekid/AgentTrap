@@ -403,7 +403,7 @@ def test_azure_retention_must_be_confirmed(monkeypatch):
 
 
 @pytest.mark.parametrize("public", [False, True])
-@pytest.mark.parametrize("configured_container", [None, "skillvenom-investigations"])
+@pytest.mark.parametrize("configured_container", [None, "custom-investigations"])
 def test_azure_archive_private_container_and_identity(monkeypatch, public, configured_container):
     monkeypatch.setenv("ARCHIVE_BACKEND", "azure")
     monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "agentlenstest")
@@ -1029,6 +1029,7 @@ def test_newsletter_page_and_style_policy(client):
     assert f'<meta property="og:url" content="{share_url}">' in page.text
     assert f'<meta property="og:image" content="{share_image}">' in page.text
     assert page.text.index('<meta property="og:image"') < page.text.index("<style>")
+    assert page.text.index('<nav class="newsletter-share"') < page.text.index("<header>")
     assert '<meta property="og:image:width" content="1200">' in page.text
     assert '<meta property="og:image:height" content="630">' in page.text
     assert '<meta name="twitter:card" content="summary_large_image">' in page.text
@@ -1061,6 +1062,23 @@ def test_newsletter_page_and_style_policy(client):
     assert client.get("/newsletter/publications.json").status_code == 404
 
 
+@pytest.mark.parametrize(("configured", "expected"), [
+    ({}, "https://agentlens.fyi"),
+    ({"WEBSITE_HOSTNAME": "example.azurewebsites.net"}, "https://agentlens.fyi"),
+    ({"AGENTLENS_SITE_URL": "https://agentlens.example/", "WEBSITE_HOSTNAME": "example.azurewebsites.net"},
+     "https://agentlens.example"),
+])
+def test_publications_public_site_url(configured, expected):
+    env = {key: value for key, value in os.environ.items()
+           if key not in ("AGENTLENS_SITE_URL", "WEBSITE_HOSTNAME")}
+    env.update(configured)
+    result = subprocess.run(
+        [sys.executable, "-c", "from web.publications import SITE; print(SITE)"],
+        cwd=ROOT, env=env, capture_output=True, text=True, check=True,
+    )
+    assert result.stdout.strip() == expected
+
+
 def test_newsletter_share_links_encode_each_edition(client, monkeypatch, tmp_path):
     publishing = app_module.publications
     snapshot = tmp_path / "edition.html"
@@ -1072,7 +1090,12 @@ def test_newsletter_share_links_encode_each_edition(client, monkeypatch, tmp_pat
     assert f'<meta property="og:title" content="{escape(edition.title, quote=True)}">' in page
     assert '<meta property="og:description" content="A &amp; B">' in page
     nav = page.split('<nav class="newsletter-share"', 1)[1].split("</nav>", 1)[0]
-    links = {label: urlsplit(unescape(href)) for href, label in re.findall(r'<a href="([^"]+)"[^>]*>([^<]+)</a>', nav)}
+    links = {
+        label: urlsplit(unescape(href))
+        for href, label in re.findall(
+            r'<a href="([^"]+)"[^>]*><svg aria-hidden="true"[^>]*>.*?</svg>([^<]+)</a>', nav,
+        )
+    }
     url = f"{publishing.SITE}{edition.path}"
     assert set(links) == {"LinkedIn", "WhatsApp", "X", "Bluesky"}
     for label, host, path in (

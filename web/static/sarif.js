@@ -30,7 +30,7 @@ function buildSarif(report) {
       }
       results.push({
         ruleId: hit.rule, level: levels[hit.severity], message: { text: hit.message }, locations: [location],
-        ...(hit.id && { partialFingerprints: { "skillvenomFinding/v1": hit.id } }),
+        ...(hit.id && { partialFingerprints: { "agentlensFinding/v1": hit.id } }),
         properties: {
           severity: hit.severity, evidenceSource: hit.evidence_source || "raw",
           ...(hit.category && { category: hit.category }),

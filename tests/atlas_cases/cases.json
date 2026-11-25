@@ -1,5 +1,5 @@
 {
-  "_comment": "Paraphrased, defanged payloads for MITRE ATLAS case studies that SkillVenom must keep detecting. See tools/atlas_case_studies.json.",
+  "_comment": "Paraphrased, defanged payloads for MITRE ATLAS case studies that AgentLens must keep detecting. See tools/atlas_case_studies.json.",
   "cases": [
     {
       "case_study": "AML.CS0015",

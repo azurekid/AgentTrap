@@ -36,7 +36,7 @@ async function load({ activityFails = false, registryFails = false, invalid = fa
   };
   vm.runInNewContext(script, context);
   await new Promise((resolve) => setImmediate(resolve));
-  return { elements, requests, refresh: () => listeners["skillvenom:scan-complete"](), update: (value) => { findings = value; } };
+  return { elements, requests, refresh: () => listeners["agentlens:scan-complete"](), update: (value) => { findings = value; } };
 }
 
 test("primary metrics use unique findings, one registry request, and refresh after scans", async () => {

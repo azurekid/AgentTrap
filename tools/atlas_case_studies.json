@@ -1,7 +1,7 @@
 {
   "atlas_version": "2026.09",
   "scopes": {
-    "file": "Detected by SkillVenom rules, regression-tested",
+    "file": "Detected by AgentLens rules, regression-tested",
     "partial": "Related artifacts detected",
     "channel": "Payload detectable only when written to a scanned file",
     "out": "Not applicable to static instruction-file scanning"

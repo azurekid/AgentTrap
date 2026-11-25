@@ -1,11 +1,11 @@
-# SkillVenom
+# AgentLens
 
 A cybersecurity dashboard and static scanner for the files that guide AI agents.
 Inspect uploaded files or a public GitHub repository for prompt injection, hidden
 instructions, unsafe commands, agent permission changes, credential theft patterns,
 and potentially embedded secrets.
 
-SkillVenom was previously named AgentTrap; the GitHub repository is still
+AgentLens is the defensive inspection platform; the GitHub repository is still
 `azurekid/AgentTrap`. The separate
 [SkillVenom research repository](https://github.com/azurekid/SkillVenom) holds the
 original malicious-skill use cases this scanner detects.
@@ -80,7 +80,7 @@ rule maps to, and every report includes an `atlas` summary: findings per tactic
 (the 10 tactics observable in static agent files, in ATLAS matrix order) and each
 hit technique with its ATLAS mitigations. The results page draws this as a radar
 ("spiderweb") chart with technique and mitigation cards. Where ATLAS lists no
-mitigation for a technique, the card shows clearly labelled **SkillVenom guidance**.
+mitigation for a technique, the card shows clearly labelled **AgentLens guidance**.
 
 The rule-to-technique mapping in [web/atlas.json](web/atlas.json) is analyst
 judgement; names, tactics, URLs, and mitigations come from the official ATLAS STIX
@@ -262,7 +262,7 @@ retention obligations before publicly accepting submissions.
 | `ARCHIVE_DIRECTORY` | `.archive/`, outside the public web routes |
 | `ARCHIVE_MAX_BYTES` | `268435456`, local retained-payload quota |
 | `AZURE_STORAGE_ACCOUNT` | Required for Azure mode |
-| `AZURE_STORAGE_CONTAINER` | `skillvenom-investigations` |
+| `AZURE_STORAGE_CONTAINER` | `agentlens-investigations` |
 | `AZURE_ARCHIVE_RETENTION_CONFIRMED` | Must be `true` for Azure mode, after lifecycle setup |
 
 ## Limits and public-service operation
@@ -304,10 +304,10 @@ working in this repository never auto-load them. Restore the real names in a
 scratch directory outside the repository before scanning them:
 
 ```bash
-python3 tools/fixtures.py /tmp/skillvenom-fixtures
-python3 scan_agents_md.py --json /tmp/skillvenom-fixtures/tests/repo
-python3 scan_agents_md.py --include-workflows --fail-on HIGH /tmp/skillvenom-fixtures/tests/repo
-pwsh -NoProfile -File Scan-AgentsMd.ps1 -Path /tmp/skillvenom-fixtures/tests/repo -Json
+python3 tools/fixtures.py /tmp/agentlens-fixtures
+python3 scan_agents_md.py --json /tmp/agentlens-fixtures/tests/repo
+python3 scan_agents_md.py --include-workflows --fail-on HIGH /tmp/agentlens-fixtures/tests/repo
+pwsh -NoProfile -File Scan-AgentsMd.ps1 -Path /tmp/agentlens-fixtures/tests/repo -Json
 ```
 
 Exit code 1 means findings meet the configured threshold. Discovery and existing

@@ -6,7 +6,7 @@ No Azure Developer CLI (`azd`), connection strings, storage keys, publishing
 passwords or client secrets are used.
 
 New deployments use AgentLens resource names. Changing the prefix does not
-rename the live SkillVenom resources. For a production cutover, provision
+rename existing resources. For a production cutover, provision
 AgentLens alongside the existing stack, verify the site and preserve the private
 archive, scan statistics, and fingerprints before switching the GitHub deployment
 target. Preserve original retention deadlines during any data transfer. Keep the
@@ -288,8 +288,8 @@ Reputation, revocation and timestamp checks remain unassessed.
   finding/evaluation digests and counters remain unchanged. Back up storage before
   rollout if required by your operational policy. Cleanup failures block startup.
   New registration accepts only HIGH/CRITICAL snapshots and finding digests.
-- Run `python tools/fixtures.py /tmp/skillvenom-fixtures` and upload
-  `/tmp/skillvenom-fixtures/tests/repo/.codex/config.toml`: `CODEX-FULL-ACCESS` and a
+- Run `python tools/fixtures.py /tmp/agentlens-fixtures` and upload
+  `/tmp/agentlens-fixtures/tests/repo/.codex/config.toml`: `CODEX-FULL-ACCESS` and a
   private record under `investigations/`. Retention and fingerprint registration
   happen automatically, including private-token scans; tokens themselves are not stored.
   Repeat the scan: `seen_before` becomes true and unique finding counts stay unchanged.

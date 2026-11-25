@@ -1,5 +1,5 @@
 {
-  "_comment": "Categories and platforms for the SkillVenom use-case catalogue. Written in our own words; OWASP ASI and MITRE ATLAS identifiers are cross-references, not quotations.",
+  "_comment": "Categories and platforms for the AgentLens use-case catalogue. Written in our own words; OWASP ASI and MITRE ATLAS identifiers are cross-references, not quotations.",
   "categories": [
     {"code": "PI", "slug": "prompt-injection", "title": "Prompt Injection & Instruction Override",
      "description": "Text that overrides the agent's instructions, impersonates the system, jailbreaks a persona, or coaxes the model into unsafe tasking."},

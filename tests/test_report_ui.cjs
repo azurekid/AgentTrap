@@ -91,7 +91,7 @@ test("paste submits exact skill text through upload pipeline and opens the store
   assert.equal(await file.text(), content);
   assert.equal(body.get("discover"), "false");
   assert.equal(body.get("include_workflows"), "false");
-  assert.equal(saved.get("skillvenom:report"), '{"status":"complete"}');
+  assert.equal(saved.get("agentlens:report"), '{"status":"complete"}');
   assert.deepEqual(destinations, ["/report"]);
   assert.equal(elements["skill-content"].disabled, false);
   assert.equal(elements["skill-content"].value, content);

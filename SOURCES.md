@@ -89,7 +89,7 @@ Added 2026-10-27 from the official ATLAS v2026.09 STIX release; titles and URLs 
 
 ## Skill-scanner projects and frameworks
 
-Added 2026-10-28 from a gap analysis of public agent-skill scanners. SkillVenom reuses ideas, not text; see the README for what was adopted.
+Added 2026-10-28 from a gap analysis of public agent-skill scanners. AgentLens reuses ideas, not text; see the README for what was adopted.
 
 | # | Title | Publisher/Author | Date | URL | Type |
 |---|---|---|---|---|---|

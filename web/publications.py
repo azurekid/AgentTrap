@@ -15,8 +15,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, HttpUrl, TypeA
 from web.navigation import render_header
 
 ROOT = Path(__file__).resolve().parent
-SITE = (os.getenv("AGENTLENS_SITE_URL") or
-        f"https://{os.getenv('WEBSITE_HOSTNAME', 'app-skillvenom-bb6uknnp.azurewebsites.net')}").rstrip("/")
+SITE = (os.getenv("AGENTLENS_SITE_URL") or "https://agentlens.fyi").rstrip("/")
 FEED_PATH = "/rss.xml"
 PAGE = Template((ROOT / "static" / "publications.html").read_text(encoding="utf-8"))
 

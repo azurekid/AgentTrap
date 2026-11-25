@@ -5,16 +5,16 @@ Inspect uploaded files or a public GitHub repository for prompt injection, hidde
 instructions, unsafe commands, agent permission changes, credential theft patterns,
 and potentially embedded secrets.
 
-AgentLens is the defensive inspection platform, previously branded SkillVenom
-and originally AgentTrap. The GitHub repository remains `azurekid/AgentTrap`.
+AgentLens is the defensive inspection platform. The GitHub repository remains
+`azurekid/AgentTrap`.
 The separate
 [SkillVenom research repository](https://github.com/azurekid/SkillVenom) holds the
 red-team research and malicious-skill use cases used to test this scanner.
 AgentLens inspects the evidence; SkillVenom supplies research and samples.
 
-Existing Azure resource names, tags, storage container names, browser session keys
-and SARIF fingerprint keys retain their legacy identifiers for compatibility.
 The rebrand does not rename deployed resources, move stored data or change scan rules.
+Browser session reports saved under the former key are not carried over, and the SARIF
+fingerprint key has changed to `agentlensFinding/v1`.
 
 ## Run locally
 
@@ -626,10 +626,14 @@ values are never published.
 Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. The scanner pages share the navigation and the footer credit to
 [azurekid](https://github.com/azurekid).
 
-Newsletter editions include sharing links for LinkedIn, WhatsApp, X and Bluesky. Preview
-metadata uses the public `AGENTLENS_SITE_URL` when set, or the App Service hostname.
+Newsletter editions include sharing links for LinkedIn, WhatsApp, X and Bluesky. Sharing
+links and preview metadata use `https://agentlens.fyi` by default; set
+`AGENTLENS_SITE_URL` to a different public base URL for other deployments.
 After deploying preview changes, use [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/)
 to check an edition URL and refresh a cached preview.
+Share icons use [Font Awesome Free 6.7.2](https://fontawesome.com) by Fonticons, Inc.,
+licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the SVGs are
+modified for inline display.
 
 #### Publishing news and newsletters
 
@@ -763,10 +767,10 @@ working in this repository never auto-load them. Restore the real names in a
 scratch directory outside the repository before scanning them:
 
 ```bash
-python3 tools/fixtures.py /tmp/skillvenom-fixtures
-python3 scan_agents_md.py --json /tmp/skillvenom-fixtures/tests/repo
-python3 scan_agents_md.py --include-workflows --fail-on HIGH /tmp/skillvenom-fixtures/tests/repo
-pwsh -NoProfile -File Scan-AgentsMd.ps1 -Path /tmp/skillvenom-fixtures/tests/repo -Json
+python3 tools/fixtures.py /tmp/agentlens-fixtures
+python3 scan_agents_md.py --json /tmp/agentlens-fixtures/tests/repo
+python3 scan_agents_md.py --include-workflows --fail-on HIGH /tmp/agentlens-fixtures/tests/repo
+pwsh -NoProfile -File Scan-AgentsMd.ps1 -Path /tmp/agentlens-fixtures/tests/repo -Json
 ```
 
 Exit code 1 means findings meet the configured threshold. Discovery and existing

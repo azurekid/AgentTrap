@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "SkillVenom use case",
+  "title": "AgentLens use case",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "title", "summary", "category", "platforms", "severity", "status", "source", "artifacts", "expected", "why_it_works", "mitigations"],

@@ -16,7 +16,7 @@ function Scan([string]$File) {
 
 # Hostile fixtures are stored as *.inert with dot-* folders so agents never load them; restore the
 # real names in a scratch directory outside the repository (mirrors tools/fixtures.py).
-$scratch = Join-Path ([IO.Path]::GetTempPath()) ("skillvenom-fixtures-" + [guid]::NewGuid())
+$scratch = Join-Path ([IO.Path]::GetTempPath()) ("agentlens-fixtures-" + [guid]::NewGuid())
 foreach ($dir in 'tests/repo', 'samples', 'poc/Downloads') {
     $base = (Resolve-Path (Join-Path $root $dir)).Path
     foreach ($file in Get-ChildItem -LiteralPath $base -Recurse -File -Filter '*.inert') {

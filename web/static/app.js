@@ -41,7 +41,7 @@ function changeMode(next) {
 }
 const scannerPage = Boolean($("scan-form"));
 const reportPage = Boolean($("findings"));
-const REPORT_KEY = "skillvenom:report";
+const REPORT_KEY = "agentlens:report";
 if ($("methodology-version")) {
   fetch("/api/methodology", { headers: { Accept: "application/json" } })
     .then((response) => {
@@ -885,7 +885,7 @@ if (scannerPage) {
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "The request was rejected. Check your selected files.");
       report = data;
-      document.dispatchEvent(new Event("skillvenom:scan-complete"));
+      document.dispatchEvent(new Event("agentlens:scan-complete"));
       try {
         sessionStorage.setItem(REPORT_KEY, JSON.stringify(report));
       } catch {

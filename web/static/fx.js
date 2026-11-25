@@ -94,7 +94,7 @@
     }
   }
   refreshStatistics();
-  document.addEventListener("skillvenom:scan-complete", refreshStatistics);
+  document.addEventListener("agentlens:scan-complete", refreshStatistics);
   setInterval(() => {
     if (!document.hidden) refreshStatistics();
   }, 60000);

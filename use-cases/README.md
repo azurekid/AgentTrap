@@ -1,7 +1,7 @@
-# SkillVenom use-case catalogue
+# AgentLens use-case catalogue
 
 A catalogue of **defanged, test-backed** agent-file attacks, organised by category and tagged by
-target platform. Each use case is one small payload plus the exact SkillVenom rules it should
+target platform. Each use case is one small payload plus the exact AgentLens rules it should
 trigger, a benign look-alike where one exists, and a mapping to MITRE ATLAS and OWASP Agentic
 (ASI). It is the test-backed counterpart to catalogues such as the
 [SkillVenom research use-cases](https://github.com/azurekid/SkillVenom/tree/main/use-cases) and

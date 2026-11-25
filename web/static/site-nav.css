@@ -41,14 +41,16 @@
 .newsletter-sidebar a[aria-current="page"] { font-weight: 700; }
 .newsletter-share {
   display: flex; flex-wrap: wrap; align-items: center; gap: .6rem;
-  padding: 1rem clamp(1.25rem, 5vw, 3rem); border-top: 1px solid #263649;
+  padding: 1rem clamp(1.25rem, 5vw, 3rem); border-bottom: 1px solid #263649;
   font: .9rem/1.4 system-ui, sans-serif;
 }
 .newsletter-share span { color: #eef3fb; font-weight: 600; margin-right: .25rem; }
 .newsletter-share a {
-  display: inline-block; padding: .4rem .7rem; border: 1px solid #385169; border-radius: .35rem;
+  display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .7rem;
+  border: 1px solid #385169; border-radius: .35rem;
   color: #86dcff; text-decoration: none;
 }
+.newsletter-share svg { width: 1rem; height: 1rem; fill: #fff; flex: none; }
 .newsletter-share a:hover { border-color: #2dd4bf; color: #fff; }
 .newsletter-share a:focus-visible { outline: 2px solid #2dd4bf; outline-offset: 3px; }
 @media (min-width: 64rem) {

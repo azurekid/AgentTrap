@@ -25,7 +25,7 @@ test("SARIF uses real locations, URI encoding, distinct rules, fingerprints and 
   const hit = run.results[0];
   assert.equal(hit.locations[0].physicalLocation.artifactLocation.uri, "skills/a%20%23%3F/SKILL.md");
   assert.equal(hit.locations[0].physicalLocation.region.startLine, 4);
-  assert.equal(hit.partialFingerprints["skillvenomFinding/v1"], "a".repeat(64));
+  assert.equal(hit.partialFingerprints["agentlensFinding/v1"], "a".repeat(64));
   assert.equal(run.properties.detectorSha256, "b".repeat(64));
   assert.equal(run.invocations[0].executionSuccessful, true);
   assert.ok(!JSON.stringify(sarif).includes("DO NOT EXPORT THIS"));
