@@ -1028,7 +1028,8 @@ def test_newsletter_page_and_style_policy(client):
     description = unescape(re.search(r'<meta name="description" content="([^"]*)">', page.text).group(1))
     assert len(description) >= 100
     assert description.startswith(latest_edition.summary)
-    assert '<meta name="author" content="Agent Security Weekly">' in page.text
+    assert "Every article is read by a human before it is shared." in description
+    assert '<meta name="author" content="AgentLens">' in page.text
     assert f'<meta property="og:description" content="{escape(description, quote=True)}">' in page.text
     assert f'<meta name="twitter:description" content="{escape(description, quote=True)}">' in page.text
     assert f'<meta property="og:url" content="{share_url}">' in page.text
@@ -1093,7 +1094,7 @@ def test_newsletter_share_links_encode_each_edition(client, monkeypatch, tmp_pat
     monkeypatch.setattr(publishing, "SNAPSHOTS", {edition.path: (snapshot, b"'sha256-test'")})
     page = client.get(edition.path).text
     assert f'<meta property="og:title" content="{escape(edition.title, quote=True)}">' in page
-    assert '<meta name="description" content="A &amp; B Explore Agent Security Weekly' in page
+    assert '<meta name="description" content="A &amp; B Every article is read by a human' in page
     nav = page.split('<nav class="newsletter-share"', 1)[1].split("</nav>", 1)[0]
     links = {
         label: urlsplit(unescape(href))
@@ -1129,8 +1130,9 @@ def test_newsletter_social_description_length(client, monkeypatch, tmp_path, sum
     description = unescape(re.search(r'<meta name="description" content="([^"]*)">', page).group(1))
     assert len(description) >= 100
     assert description.startswith(summary)
+    assert "Every article is read by a human before it is shared." in description
     if len(summary) >= 100:
-        assert description == summary
+        assert description == summary + " Every article is read by a human before it is shared."
     assert f'<meta property="og:description" content="{description}">' in page
 
 

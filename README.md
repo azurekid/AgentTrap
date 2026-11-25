@@ -629,8 +629,9 @@ Old single-page anchors `/#coverage` and `/#samples` redirect to their pages. Th
 Newsletter editions include sharing links for LinkedIn, WhatsApp, X and Bluesky. Sharing
 links and preview metadata use `https://agentlens.fyi` by default; set
 `AGENTLENS_SITE_URL` to a different public base URL for other deployments.
-Each edition includes an Agent Security Weekly author tag and a preview description
-of at least 100 characters; short catalog summaries are expanded for previews only.
+Each edition includes an AgentLens author tag and a preview description
+mentioning human review. Descriptions are at least 100 characters; short catalog
+summaries are expanded for previews only.
 After deploying preview changes, use [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/)
 to check an edition URL and refresh a cached preview.
 Share icons use [Font Awesome Free 6.7.2](https://fontawesome.com) by Fonticons, Inc.,
