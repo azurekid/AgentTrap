@@ -1025,7 +1025,12 @@ def test_newsletter_page_and_style_policy(client):
     share_url = f"{app_module.publications.SITE}{latest_path}"
     share_image = f"{app_module.publications.SITE}/assets/newsletter-banner.jpg"
     assert f'<meta property="og:title" content="{escape(latest_edition.title, quote=True)}">' in page.text
-    assert f'<meta property="og:description" content="{escape(latest_edition.summary, quote=True)}">' in page.text
+    description = unescape(re.search(r'<meta name="description" content="([^"]*)">', page.text).group(1))
+    assert len(description) >= 100
+    assert description.startswith(latest_edition.summary)
+    assert '<meta name="author" content="Agent Security Weekly">' in page.text
+    assert f'<meta property="og:description" content="{escape(description, quote=True)}">' in page.text
+    assert f'<meta name="twitter:description" content="{escape(description, quote=True)}">' in page.text
     assert f'<meta property="og:url" content="{share_url}">' in page.text
     assert f'<meta property="og:image" content="{share_image}">' in page.text
     assert page.text.index('<meta property="og:image"') < page.text.index("<style>")
@@ -1088,7 +1093,7 @@ def test_newsletter_share_links_encode_each_edition(client, monkeypatch, tmp_pat
     monkeypatch.setattr(publishing, "SNAPSHOTS", {edition.path: (snapshot, b"'sha256-test'")})
     page = client.get(edition.path).text
     assert f'<meta property="og:title" content="{escape(edition.title, quote=True)}">' in page
-    assert '<meta property="og:description" content="A &amp; B">' in page
+    assert '<meta name="description" content="A &amp; B Explore Agent Security Weekly' in page
     nav = page.split('<nav class="newsletter-share"', 1)[1].split("</nav>", 1)[0]
     links = {
         label: urlsplit(unescape(href))
@@ -1110,6 +1115,23 @@ def test_newsletter_share_links_encode_each_edition(client, monkeypatch, tmp_pat
     assert parse_qs(links["X"].query) == {"text": [edition.title], "url": [url]}
     for label in ("WhatsApp", "Bluesky"):
         assert parse_qs(links[label].query) == {"text": [f"{edition.title}\n{url}"]}
+
+
+@pytest.mark.parametrize("summary", ["A", "A" * 99, "A" * 100])
+def test_newsletter_social_description_length(client, monkeypatch, tmp_path, summary):
+    publishing = app_module.publications
+    snapshot = tmp_path / "edition.html"
+    snapshot.write_text("<html><head><style></style></head><body><main></main></body></html>", encoding="utf-8")
+    edition = publishing.Edition(issue=7, title="Headline", date="2026-11-25", summary=summary)
+    monkeypatch.setattr(publishing, "CATALOG", publishing.Catalog(editions=[edition], news=[]))
+    monkeypatch.setattr(publishing, "SNAPSHOTS", {edition.path: (snapshot, b"'sha256-test'")})
+    page = client.get(edition.path).text
+    description = unescape(re.search(r'<meta name="description" content="([^"]*)">', page).group(1))
+    assert len(description) >= 100
+    assert description.startswith(summary)
+    if len(summary) >= 100:
+        assert description == summary
+    assert f'<meta property="og:description" content="{description}">' in page
 
 
 @pytest.fixture

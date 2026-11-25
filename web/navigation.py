@@ -25,8 +25,16 @@ def render_edition(
     snapshot: Path, sidebar: str, *, title: str, description: str, url: str, image_url: str
 ) -> str:
     page = snapshot.read_text(encoding="utf-8")
+    description = description.strip()
+    if len(description) < 100:
+        description += (
+            " Explore Agent Security Weekly for AI agent security research, emerging threats, "
+            "and practical steps for defenders."
+        )
     social_metadata = "\n".join((
         f'<link rel="canonical" href="{escape(url, quote=True)}">',
+        '<meta name="author" content="Agent Security Weekly">',
+        f'<meta name="description" content="{escape(description, quote=True)}">',
         '<meta property="og:type" content="article">',
         f'<meta property="og:title" content="{escape(title, quote=True)}">',
         f'<meta property="og:description" content="{escape(description, quote=True)}">',
