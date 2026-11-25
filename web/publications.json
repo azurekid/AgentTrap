@@ -5,6 +5,12 @@
       "title": "Stolen keys put agents at risk",
       "date": "2026-11-18",
       "summary": "What stolen vendor keys, model supply chains, and weak inputs mean for people running AI agents."
+    },
+    {
+      "issue": 25,
+      "title": "AI agents speed up real attacks",
+      "date": "2026-11-25",
+      "summary": "This week's top agent security stories and practical steps for defenders."
     }
   ],
   "news": [

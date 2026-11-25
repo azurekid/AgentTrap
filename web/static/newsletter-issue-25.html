@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI agents speed up real attacks | Agent Security Weekly</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05070c; --panel: #0a0f18; --line: #223046;
+      --text: #eef3fb; --muted: #aab7ca; --dim: #8292a8;
+      --cyan: #2ee6d6; --magenta: #ff4fc3; --link: #86dcff;
+      --critical: #ff5c7a; --high: #ff9d4d; --medium: #ffd166; --low: #6ee7a0;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: clamp(.75rem, 4vw, 3rem); background: var(--bg); color: var(--muted);
+      font: 1.02rem/1.7 system-ui, -apple-system, "Segoe UI", sans-serif; overflow-wrap: anywhere;
+    }
+    main { max-width: 50rem; margin: auto; background: var(--panel); }
+    header, article, footer { padding-inline: clamp(1.25rem, 5vw, 3rem); }
+    .label { margin: 0; color: var(--dim); font: 600 .72rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    .critical { --level: var(--critical); }
+    .high { --level: var(--high); }
+    .medium { --level: var(--medium); }
+    .low { --level: var(--low); }
+
+    header {
+      position: relative; isolation: isolate; overflow: hidden;
+      padding-block-end: clamp(1.5rem, 4vw, 2.25rem); border-block-end: 1px solid var(--line);
+      background: radial-gradient(ellipse at 100% 30%, #2b1539, transparent 65%),
+        linear-gradient(110deg, #0b1821, var(--panel) 62%);
+    }
+    header::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--cyan), var(--magenta)); }
+    .topbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: .4rem 1.5rem; padding-block: 1.25rem 1rem; border-block-end: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: .6rem; color: var(--text); font-size: 1.1rem; font-weight: 700; }
+    .brand b { color: var(--cyan); }
+    .logo { width: 1.9rem; fill: none; stroke: var(--cyan); stroke-width: 1.8; stroke-linejoin: round; }
+    .logo-core { fill: var(--cyan); stroke: none; }
+    .kicker { margin-block-start: 2rem; color: var(--cyan); }
+    .headline-row { display: grid; grid-template-columns: minmax(0, 1fr) clamp(7rem, 38%, 17rem); align-items: center; }
+    h1 {
+      margin: .5rem 0; max-width: 22ch; color: var(--text); font-size: clamp(1.75rem, 5vw, 3.2rem);
+      line-height: 1.08; letter-spacing: -.035em; text-wrap: balance;
+      text-shadow: 0 0 .45rem #2ee6d647, 0 0 1.35rem #ff4fc34d;
+    }
+    .radar { display: block; width: 100%; color: var(--cyan); overflow: visible; }
+    .radar-sweep { transform-origin: 150px 77px; }
+    .radar-target { color: var(--magenta); filter: drop-shadow(0 0 4px var(--magenta)); }
+    .radar-blip { fill: currentColor; stroke: none; }
+    @media screen and (prefers-reduced-motion: no-preference) {
+      .radar-sweep { animation: sweep 4.8s linear; }
+      .radar-blip { animation: pulse 4.8s ease-in-out; }
+    }
+    @keyframes sweep { from { transform: rotate(-360deg); } to { transform: rotate(0deg); } }
+    @keyframes pulse {
+      18%, 50%, 82% { opacity: .25; }
+      0%, 34%, 66%, 100% { opacity: 1; }
+    }
+
+    article { padding-block: clamp(1.5rem, 5vw, 2.75rem); }
+    h2, h3, strong { color: var(--text); }
+    article > h2 {
+      position: relative; margin: 2.75rem 0 1rem; padding: .3rem 0 .7rem 2rem;
+      font: 800 clamp(1.05rem, 3.4vw, 1.55rem)/1.3 var(--mono);
+      letter-spacing: .045em; text-transform: uppercase;
+      text-shadow: 1px 1px #ff4fc355, 0 0 .55rem #2ee6d660, 0 0 1.2rem #ff4fc34d;
+    }
+    article > h2::before {
+      content: ""; position: absolute; inset: .46rem auto auto .26rem;
+      width: .28rem; height: 1em; background: var(--cyan);
+      box-shadow: .48rem 0 var(--magenta), 0 0 .55rem #2ee6d680;
+      transform: skewX(-23deg);
+    }
+    article > h2::after {
+      content: ""; position: absolute; inset: auto 0 0; height: 1px;
+      background: linear-gradient(90deg, var(--cyan) 1.1rem, var(--magenta) 1.1rem 2.8rem, var(--line) 2.8rem, transparent);
+    }
+    article > h2:first-child {
+      margin-block-start: 0; color: var(--cyan);
+    }
+    article > h2:first-child + ul { color: var(--text); }
+    article > h3 {
+      margin: 1.8rem 0 .65rem; padding-inline-start: .6rem; border-inline-start: 2px solid var(--magenta);
+      color: var(--magenta); font: 700 .82rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .12em;
+      text-shadow: 0 0 .5rem #ff4fc359;
+    }
+    article > h4 { margin: 1.4rem 0 .5rem; color: var(--text); font-size: 1.18rem; line-height: 1.35; }
+    article > h3 + h4 { margin-block-start: 0; }
+    article > h4 + p { margin-block-start: .5rem; }
+    .threat { margin-block: .6rem 1.1rem; font-size: .93rem; }
+    .threat strong {
+      margin-inline-end: .3rem; color: var(--level, var(--text));
+      font: 700 .74rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .1em;
+    }
+
+    a { color: var(--link); text-decoration-color: #86dcff73; text-underline-offset: .2em; }
+    a:hover { text-decoration-color: currentColor; }
+    a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .cites a {
+      color: var(--cyan); font-size: .8em; vertical-align: .06em; white-space: nowrap;
+    }
+
+    ul { padding-inline-start: 1.3rem; }
+    li + li { margin-block-start: .5rem; }
+    li::marker { color: var(--cyan); }
+    .contains-task-list { padding: 0; list-style: none; }
+    .task-list-item { position: relative; padding-inline-start: 1.5rem; }
+    .task-list-item-checkbox {
+      position: absolute; top: .42rem; left: 0; width: .85rem; height: .85rem; margin: 0;
+      border: 1px solid var(--cyan); appearance: none;
+    }
+    .task-list-item-checkbox:checked { background: var(--cyan); }
+    p:has(+ ul) > strong:only-child { color: var(--magenta); font: 700 .72rem/1.5 var(--mono); text-transform: uppercase; letter-spacing: .14em; }
+    hr { margin: 2.5rem 0 1rem; border: 0; border-block-start: 1px dashed var(--line); }
+    hr + p { color: var(--dim); font-size: .85rem; }
+    footer {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem 1.5rem;
+      padding-block: .9rem; border-block-start: 1px solid var(--line); background: var(--bg);
+    }
+
+    @media (max-width: 30rem) {
+      .headline-row { grid-template-columns: minmax(0, 1fr) 6.5rem; }
+    }
+    @media print {
+      :root {
+        color-scheme: light; --bg: #fff; --panel: #fff; --line: #9aa8b8;
+        --text: #000; --muted: #1f2933; --dim: #4a5565; --cyan: #08695b; --magenta: #8a1f6a; --link: #135a85;
+        --critical: #a3001f; --high: #8f4300; --medium: #6b5200; --low: #17603a;
+      }
+      body { padding: 0; }
+      header { background: #fff; }
+      .headline-row { display: block; }
+      .radar { display: none; }
+      h1, article > h2, article > h3 { text-shadow: none; }
+      article > h2 { border-block-end: 1px solid var(--line); padding-inline-start: 0; }
+      article > h2::before, article > h2::after { display: none; }
+      h2, h3, h4 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 32 36" aria-hidden="true">
+          <path d="M16 2.5 28.5 7.5v11c0 7.5-12.5 15-12.5 15S3.5 26 3.5 18.5v-11Z"/>
+          <circle cx="16" cy="17" r="5.5"/>
+          <circle class="logo-core" cx="16" cy="17" r="2"/>
+        </svg>
+        <span>Agent<b>Lens</b></span>
+      </div>
+      <p class="label">Agent Security Weekly</p>
+    </div>
+    <p class="label kicker">Weekly threat briefing <span aria-hidden="true">//</span> <time datetime="2026-11-25">2026-11-25</time></p>
+    <div class="headline-row">
+      <h1>AI agents speed up real attacks</h1>
+      <svg class="radar" viewBox="0 0 228 154" aria-hidden="true">
+        <defs>
+          <linearGradient id="radar-trail" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop stop-color="#2ee6d6" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#2ee6d6" stop-opacity=".02"/>
+          </linearGradient>
+        </defs>
+        <g fill="none" stroke="currentColor">
+          <circle cx="150" cy="77" r="73" opacity=".85"/>
+          <circle cx="150" cy="77" r="55" opacity=".6"/>
+          <circle cx="150" cy="77" r="36" opacity=".6"/>
+          <circle cx="150" cy="77" r="18" opacity=".6"/>
+          <path d="M77 77h146M150 4v146" stroke-dasharray="2 4" opacity=".6"/>
+          <path d="M150 1v7m0 138v7M74 77h7m138 0h7M96 23l5 5m98 98 5 5m0-108-5 5m-98 98-5 5"/>
+        </g>
+        <g class="radar-sweep">
+          <path d="M150 77 103 21A73 73 0 0 1 147 4Z" fill="url(#radar-trail)"/>
+          <path d="M150 77 103 21" stroke="currentColor" stroke-width="1.5"/>
+        </g>
+        <circle cx="150" cy="77" r="3" fill="currentColor"/>
+        <circle cx="185" cy="105" r="2" fill="currentColor" opacity=".65"/>
+        <g class="radar-target" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path class="radar-arrow" d="M11 77h45l28-28M16 72l-5 5 5 5"/>
+          <path class="radar-tether" d="M84 49L117 49"/>
+          <g class="radar-lock">
+            <path d="M121 40h-4v4m14-4h4v4m0 10v4h-4m-10 0h-4v-4M117 47v4"/>
+            <circle class="radar-blip" cx="126" cy="49" r="3.5"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </header>
+  <article>
+<h2>TL;DR</h2>
+<ul>
+<li>Attackers are using AI agents to go from a new flaw to full access in minutes ( <span class="cites"><a href="https://www.darkreading.com/cyberattacks-data-breaches/ai-agents-flaw-discovery-root-access-11-minutes" title="AI Agents Zip From Flaw Discovery to Root Access in 11 Minutes">Dark Reading</a></span>).</li>
+<li>Three AI hosting providers lost customer prompts for months, and LiteLLM servers are under attack ( <span class="cites"><a href="https://thehackernews.com/2026/11/openrouter-drops-3-providers-after.html" title="OpenRouter Drops 3 Providers After Researchers Catch Months of Prompt Theft at AI Hosting Firms">The Hacker News</a></span>).</li>
+<li>New MCP and agent-platform CVEs show local tools that web pages or attackers can still reach ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136630" title="CVE-2026-136630: Electerm before 5.9.0 contains an origin validation vulnerability in the MCP Server widget that allows remote attackers to execute commands by bypassing Host and Origin checks through...">CVE-2026-136630</a></span>).</li>
+</ul>
+<h2>The week in agent security</h2>
+<p>The new fact this week is speed. Reports describe attackers using AI pentesting tools against real targets, not only in labs. The FBI warned about an open-source framework called ARTEX ( <span class="cites"><a href="https://www.aikido.dev/blog/artex-ai-pentesting-defenders" title="What the ARTEX attacks tell defenders about AI pentesting">Aikido Security</a></span>). Another report says a China-linked group used a similar tool against universities ( <span class="cites"><a href="https://www.darkreading.com/cyberattacks-data-breaches/ai-agents-flaw-discovery-root-access-11-minutes" title="AI Agents Zip From Flaw Discovery to Root Access in 11 Minutes">Dark Reading</a></span>). In India, CERT-In (the national response team) reports AI-assisted attacks that caused unauthorized bank payments ( <span class="cites"><a href="https://thehackernews.com/2026/11/ai-assisted-cyberattacks-trigger.html" title="AI-Assisted Cyber Attacks Trigger Unauthorized Payments at Indian Banks and Fintech Firms">The Hacker News</a></span>).</p>
+<p>The second theme is trust in the layer below your agent. Model routers, hosting providers and gateways see your prompts and keys. When one fails, every customer is exposed. A review of 50 incidents this year reaches the same view: most came from exposed secrets, wide access and weak isolation ( <span class="cites"><a href="https://www.aikido.dev/blog/ai-incidents-root-causes-patterns" title="AI incidents of 2026: Rogue agents, stolen keys, and other familiar stories">Aikido Security</a></span>).</p>
+<p>The third theme is old bugs in agent tools. MCP (Model Context Protocol, the tool link for agents) servers keep shipping with weak origin checks and file path checks ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136620" title="CVE-2026-136620: pain001-mcp 0.0.72 before 0.0.80 contains a path traversal vulnerability in the commit payment batch MCP tool that allows attackers to write files outside any output directory via out...">CVE-2026-136620</a></span>). Agent platforms also leave code sandboxes running after use ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132260" title="CVE-2026-132260: AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. From 0.4.2 before 0.11.0, the E2B code-execution blocks Exec...">CVE-2026-132260</a></span>).</p>
+<p>Some commentary says AI creates &quot;vulnerability hysteria&quot; ( <span class="cites"><a href="https://www.darkreading.com/vulnerabilities-threats/navigating-vulnerability-hysteria-ai-era" title="Navigating Vulnerability Hysteria in the AI Era">Dark Reading</a></span>). In our view, the panic is partly fair and partly noise. The speed is real. Most successful attacks still use basic mistakes.</p>
+<h2>Top stories</h2>
+<h3>Attackers using AI</h3>
+<h4>Cairn and ARTEX: AI pentest tools used in attacks</h4>
+<p>Dark Reading reports that a China-nexus actor used the Cairn penetration testing tool against East Asian universities. The actor exploited a zero-day in a medical imaging app and reached root in about 11 minutes ( <span class="cites"><a href="https://www.darkreading.com/cyberattacks-data-breaches/ai-agents-flaw-discovery-root-access-11-minutes" title="AI Agents Zip From Flaw Discovery to Root Access in 11 Minutes">Dark Reading</a></span>). CISA added the MONAI Label flaw to its Known Exploited Vulnerabilities (KEV) list, and the headline says AI agents exploited it ( <span class="cites"><a href="https://thehackernews.com/2026/11/hackers-exploit-n-able-mailassure-flaw.html" title="Hackers Exploit N-able MailAssure Flaw While AI Agents Exploit MONAI Label Zero-Day">The Hacker News</a></span>). Separately, the FBI warned about ARTEX, and Aikido gives defender advice ( <span class="cites"><a href="https://www.aikido.dev/blog/artex-ai-pentesting-defenders" title="What the ARTEX attacks tell defenders about AI pentesting">Aikido Security</a></span>).</p>
+<p>This matters because patch windows are shrinking. Agents also try many paths without getting tired. We cannot tell from the excerpts how much work humans did.</p>
+<p class="threat critical"><strong>Threat level:</strong> Critical. Active exploitation is reported, and CISA lists one flaw.</p>
+<h3>Model infrastructure</h3>
+<h4>OpenRouter drops three providers after prompt theft</h4>
+<p>Researchers at Dragos say attackers stole data from inside three AI inference providers for months. None of the three knew until they were told. Some stolen requests were marked Zero Data Retention ( <span class="cites"><a href="https://thehackernews.com/2026/11/openrouter-drops-3-providers-after.html" title="OpenRouter Drops 3 Providers After Researchers Catch Months of Prompt Theft at AI Hosting Firms">The Hacker News</a></span>). OpenRouter removed the providers after finding they broke their data-handling rules and exposed sensitive data ( <span class="cites"><a href="https://www.bleepingcomputer.com/news/security/openrouter-drops-ai-providers-over-leaked-prompts-and-secrets/" title="OpenRouter drops AI providers over leaked prompts and secrets">BleepingComputer</a></span>).</p>
+<p>If your agents send code, keys or customer data through a router, the weakest provider sets your risk. A &quot;zero retention&quot; label is a promise, not a control.</p>
+<p class="threat high"><strong>Threat level:</strong> High. Real data theft is reported, but we do not know what each customer lost.</p>
+<h4>LiteLLM guardrail escape and active scanning</h4>
+<p>A write-up lists CVE-2026-40217, a LiteLLM guardrail sandbox escape, in the CISA KEV list ( <span class="cites"><a href="https://news.google.com/rss/articles/CBMijwFBVV95cUxPTmpjVko1a2xLOEk1RlRVci01c3FpcjZPUlZFenNjdGYweWZHemRfd1NuQ3Nnb2p5a1BrNF9EWWVyQ3d3aEIzcWh5SzJ5d1hnWGRvdU12a3hjcjBmMm01RWk0TW5mNUdMY0pONm5BdEVoV21CRlZpNk1zYzV0aHRubm1GVDBOU2l0YTdQcG1nWQ?oc=5" title="LiteLLM Guardrail Sandbox Escape in CISA KEV (CVE-2026-40217): Patch Now - Rescana">Rescana</a></span>). Another report says attackers scan LiteLLM servers for critical flaws that allow remote code execution (RCE) ( <span class="cites"><a href="https://news.google.com/rss/articles/CBMiXkFVX3lxTE5xeTdoWWwwazFNOFpjS2ViaUQ1UUJxRU9xZXZFMlNlQVlhZnFCWWZScmxPUTlTc004dnJOYm9ZeUNGdmNwQ0w1d1JxaGFQczREUW9aSjE4NkxHN1ZTS1HSAWNBVV95cUxNdlI4OXlJTTVZeWNqdlJLUUFiWGFpNUl5a2lNQno4VTFTTGc4TFlPMmVmNzV0S3lYbXVkcGctTHZzNG40VWxpNHgzdFo2U0I3ZXF2bllmOTVBR2E5cHU3UTY0M1k?oc=5" title="Hackers Actively Scan LiteLLM AI Servers for Critical Flaws Enabling RCE Attacks - CyberSecurityNews">CyberSecurityNews</a></span>). Both are discovery leads from news sites, so check the CVE record and the vendor advisory yourself. LiteLLM gateways often hold keys for many model providers, so one bad server can expose many accounts.</p>
+<p class="threat critical"><strong>Threat level:</strong> Critical. KEV listing means exploitation, but confirm the details first.</p>
+<h3>Tool security</h3>
+<h4>Electerm MCP widget open to DNS rebinding</h4>
+<p>CVE-2026-136630 affects Electerm before 5.9.0. The MCP Server widget does not validate origins properly, so a web page can use DNS rebinding (a trick that points a site name at 127.0.0.1) to call it and run commands ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136630" title="CVE-2026-136630: Electerm before 5.9.0 contains an origin validation vulnerability in the MCP Server widget that allows remote attackers to execute commands by bypassing Host and Origin checks through...">CVE-2026-136630</a></span>). A user only needs to visit a bad page. The excerpt is cut off, so confirm the full impact in the advisory.</p>
+<p class="threat high"><strong>Threat level:</strong> High. Details are public and the product is real. No exploitation is reported.</p>
+<h4>pain001-mcp path traversal and AutoGPT sandboxes</h4>
+<p>CVE-2026-136620 affects pain001-mcp 0.0.72 before 0.0.80. An attacker can write files outside the output folder by using a self-issued confirmation token ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136620" title="CVE-2026-136620: pain001-mcp 0.0.72 before 0.0.80 contains a path traversal vulnerability in the commit payment batch MCP tool that allows attackers to write files outside any output directory via out...">CVE-2026-136620</a></span>). For a payments tool, that is a serious risk. CVE-2026-132260 says AutoGPT's E2B code blocks, including a Claude Code block, can leave sandboxes running before 0.11.0 ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132260" title="CVE-2026-132260: AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. From 0.4.2 before 0.11.0, the E2B code-execution blocks Exec...">CVE-2026-132260</a></span>).</p>
+<p class="threat medium"><strong>Threat level:</strong> Medium. The flaws are credible, but the reach is narrower.</p>
+<h2>Expert take: threats and trends</h2>
+<p>Attackers are changing speed, not method. They use AI to find and chain known weak points faster. Tool names such as ARTEX and Cairn will get headlines, but the defence is the same: patch quickly, limit access and watch for odd behaviour.</p>
+<p>Too much attention goes to jailbreak papers. A new preprint shows suffix attacks can be sampled more cheaply ( <span class="cites"><a href="https://arxiv.org/abs/2611.33030v1" title="SALSA: Sampling Adversarial Suffixes from Learned Distributions for LLM Safety Assessment">arXiv AI-security papers</a></span>). Another essay argues that a weaker filter cannot safely vet input for a stronger model ( <span class="cites"><a href="https://research.checkpoint.com/2026/30-years-of-gatekeeper-asymmetry-doom-the-paradox-that-makes-powerful-llms-more-vulnerable/" title="30 Years of Gatekeeper Asymmetry Doom: The Paradox that Makes Powerful LLMs More Vulnerable">Check Point Research</a></span>). These are useful ideas, but we see more damage from leaked keys and open services. Preprints are unreviewed.</p>
+<p>Worth watching: attestation for agents. One preprint proposes proving agent identity in HPC (high-performance computing) clusters, to stop a hijacked but authorized agent ( <span class="cites"><a href="https://arxiv.org/abs/2611.32958v1" title="Attestation is All You Need: Toward a Zero-Trust Architecture for HPC AI Agents">arXiv AI-security papers</a></span>). Also watch fraud, where a preprint tests whether hosted models will run a scam seller role ( <span class="cites"><a href="https://arxiv.org/abs/2611.32957v1" title="&quot;I Do Intend to Deliver&quot;: Will LLMs Run a Marketplace Advance-Fee Scam?">arXiv AI-security papers</a></span>), and a talk on token fraud covers abuse of paid model access ( <span class="cites"><a href="https://simonwillison.net/2026/Nov/20/token-fraud-is-here-and-its-bad/" title="Token fraud is here and it’s BAD (YouTube)">Simon Willison</a></span>).</p>
+<p>Compared with last week, MCP bugs stayed the same and provider trust got worse. Last week a vendor key leak hurt one tool. This week, theft inside hosting providers hit many customers.</p>
+<p><strong>Watch next week:</strong> KEV updates for LiteLLM, ARTEX follow-ups and new MCP origin-check CVEs.</p>
+<h2>Defender checklist</h2>
+<ul class="contains-task-list">
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Patch Electerm to 5.9.0 or later, and block untrusted web pages from reaching local MCP ports ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136630" title="CVE-2026-136630: Electerm before 5.9.0 contains an origin validation vulnerability in the MCP Server widget that allows remote attackers to execute commands by bypassing Host and Origin checks through...">CVE-2026-136630</a></span>).</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Upgrade pain001-mcp to 0.0.80 or later, and remove self-issued confirmation tokens from approval flows ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136620" title="CVE-2026-136620: pain001-mcp 0.0.72 before 0.0.80 contains a path traversal vulnerability in the commit payment batch MCP tool that allows attackers to write files outside any output directory via out...">CVE-2026-136620</a></span>).</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Upgrade AutoGPT to 0.11.0 or later, and list any E2B sandboxes still running ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132260" title="CVE-2026-132260: AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. From 0.4.2 before 0.11.0, the E2B code-execution blocks Exec...">CVE-2026-132260</a></span>).</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Check LiteLLM versions against the vendor advisory and KEV entry, and rotate stored provider keys if exposed ( <span class="cites"><a href="https://news.google.com/rss/articles/CBMijwFBVV95cUxPTmpjVko1a2xLOEk1RlRVci01c3FpcjZPUlZFenNjdGYweWZHemRfd1NuQ3Nnb2p5a1BrNF9EWWVyQ3d3aEIzcWh5SzJ5d1hnWGRvdU12a3hjcjBmMm01RWk0TW5mNUdMY0pONm5BdEVoV21CRlZpNk1zYzV0aHRubm1GVDBOU2l0YTdQcG1nWQ?oc=5" title="LiteLLM Guardrail Sandbox Escape in CISA KEV (CVE-2026-40217): Patch Now - Rescana">Rescana</a></span>).</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Review which AI providers see your prompts, and treat zero retention claims as unverified ( <span class="cites"><a href="https://thehackernews.com/2026/11/openrouter-drops-3-providers-after.html" title="OpenRouter Drops 3 Providers After Researchers Catch Months of Prompt Theft at AI Hosting Firms">The Hacker News</a></span>).</li>
+<li class="task-list-item"><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"> Shorten your patch time for KEV items, because exploit tools now move in minutes ( <span class="cites"><a href="https://www.darkreading.com/cyberattacks-data-breaches/ai-agents-flaw-discovery-root-access-11-minutes" title="AI Agents Zip From Flaw Discovery to Root Access in 11 Minutes">Dark Reading</a></span>).</li>
+</ul>
+<h2>Detection ideas</h2>
+<ul>
+<li>Add a scanner rule for MCP servers that bind to 0.0.0.0 or skip Host and Origin checks, motivated by DNS rebinding ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136630" title="CVE-2026-136630: Electerm before 5.9.0 contains an origin validation vulnerability in the MCP Server widget that allows remote attackers to execute commands by bypassing Host and Origin checks through...">CVE-2026-136630</a></span>).</li>
+<li>Add a rule for MCP tools that take file paths without limiting them to an output folder, mapped to path traversal ( <span class="cites"><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136620" title="CVE-2026-136620: pain001-mcp 0.0.72 before 0.0.80 contains a path traversal vulnerability in the commit payment batch MCP tool that allows attackers to write files outside any output directory via out...">CVE-2026-136620</a></span>).</li>
+<li>Add a sample that flags agent configs sending prompts to unvetted inference providers, mapped to OWASP LLM sensitive information disclosure ( <span class="cites"><a href="https://thehackernews.com/2026/11/openrouter-drops-3-providers-after.html" title="OpenRouter Drops 3 Providers After Researchers Catch Months of Prompt Theft at AI Hosting Firms">The Hacker News</a></span>).</li>
+</ul>
+<h2>Reading list</h2>
+<p>This week's full list of leads. Check the original sources before you act.</p>
+<p><strong>Independent</strong></p>
+<ul>
+<li><a href="https://simonwillison.net/2026/Nov/24/llm-inflection-points/">Three LLM inflection points in twelve months</a> (2026-11-24, Simon Willison)</li>
+<li><a href="https://www.schneier.com/blog/archives/2026/11/we-get-the-infrastructure-we-pay-for.html">We Get the Infrastructure We Pay For</a> (2026-11-24, Bruce Schneier)</li>
+<li><a href="https://simonwillison.net/2026/Nov/23/ladybird/">Ladybird's first alpha release</a> (2026-11-23, Simon Willison)</li>
+<li><a href="https://simonwillison.net/2026/Nov/20/token-fraud-is-here-and-its-bad/">Token fraud is here and it’s BAD (YouTube)</a> (2026-11-20, Simon Willison)</li>
+</ul>
+<p><strong>Research</strong></p>
+<ul>
+<li><a href="https://arxiv.org/abs/2611.33030v1">SALSA: Sampling Adversarial Suffixes from Learned Distributions for LLM Safety Assessment</a> (2026-11-24, arXiv AI-security papers (unreviewed preprints))</li>
+<li><a href="https://arxiv.org/abs/2611.32958v1">Attestation is All You Need: Toward a Zero-Trust Architecture for HPC AI Agents</a> (2026-11-24, arXiv AI-security papers (unreviewed preprints))</li>
+<li><a href="https://arxiv.org/abs/2611.32957v1">&quot;I Do Intend to Deliver&quot;: Will LLMs Run a Marketplace Advance-Fee Scam?</a> (2026-11-24, arXiv AI-security papers (unreviewed preprints))</li>
+<li><a href="https://www.aikido.dev/blog/artex-ai-pentesting-defenders">What the ARTEX attacks tell defenders about AI pentesting</a> (2026-11-24, Aikido Security)</li>
+<li><a href="https://www.aikido.dev/blog/ai-incidents-root-causes-patterns">AI incidents of 2026: Rogue agents, stolen keys, and other familiar stories</a> (2026-11-19, Aikido Security)</li>
+<li><a href="https://research.checkpoint.com/2026/30-years-of-gatekeeper-asymmetry-doom-the-paradox-that-makes-powerful-llms-more-vulnerable/">30 Years of Gatekeeper Asymmetry Doom: The Paradox that Makes Powerful LLMs More Vulnerable</a> (2026-11-19, Check Point Research)</li>
+<li><a href="https://snyk.io/blog/why-harness-matters-evo-code-scanning-agent/">Why the Harness Matters: Early Lessons From the Evo Code Scanning Agent Preview</a> (2026-11-19, Snyk Research)</li>
+</ul>
+<p><strong>Advisory</strong></p>
+<ul>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136630">CVE-2026-136630: Electerm before 5.9.0 contains an origin validation vulnerability in the MCP Server widget...</a> (2026-11-25, NVD CVEs)</li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-136620">CVE-2026-136620: pain001-mcp 0.0.72 before 0.0.80 contains a path traversal vulnerability in the commit...</a> (2026-11-25, NVD CVEs)</li>
+<li><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-132260">CVE-2026-132260: AutoGPT is a workflow automation platform for creating, deploying, and managing continuous...</a> (2026-11-25, NVD CVEs)</li>
+</ul>
+<p><strong>News</strong></p>
+<ul>
+<li><a href="https://www.bleepingcomputer.com/news/security/from-vulnerability-noise-to-resilience-rethinking-security-in-the-ai-era/">From Vulnerability Noise to Resilience: Rethinking Security in the AI Era</a> (2026-11-24, BleepingComputer)</li>
+<li><a href="https://www.bleepingcomputer.com/news/security/new-shirudo-tool-uses-ai-to-shield-unpatched-linux-systems-from-exploits/">New Shirudo tool uses AI to shield unpatched Linux systems from exploits</a> (2026-11-24, BleepingComputer)</li>
+<li><a href="https://thehackernews.com/2026/11/hackers-exploit-n-able-mailassure-flaw.html">Hackers Exploit N-able MailAssure Flaw While AI Agents Exploit MONAI Label Zero-Day</a> (2026-11-24, The Hacker News)</li>
+<li><a href="https://www.bleepingcomputer.com/news/security/openrouter-drops-ai-providers-over-leaked-prompts-and-secrets/">OpenRouter drops AI providers over leaked prompts and secrets</a> (2026-11-23, BleepingComputer)</li>
+<li><a href="https://www.darkreading.com/cyberattacks-data-breaches/ai-agents-flaw-discovery-root-access-11-minutes">AI Agents Zip From Flaw Discovery to Root Access in 11 Minutes</a> (2026-11-23, Dark Reading)</li>
+<li><a href="https://thehackernews.com/2026/11/ai-assisted-cyberattacks-trigger.html">AI-Assisted Cyber Attacks Trigger Unauthorized Payments at Indian Banks and Fintech Firms</a> (2026-11-23, The Hacker News)</li>
+<li><a href="https://thehackernews.com/2026/11/openrouter-drops-3-providers-after.html">OpenRouter Drops 3 Providers After Researchers Catch Months of Prompt Theft at AI Hosting Firms</a> (2026-11-22, The Hacker News)</li>
+<li><a href="https://www.darkreading.com/vulnerabilities-threats/navigating-vulnerability-hysteria-ai-era">Navigating Vulnerability Hysteria in the AI Era</a> (2026-11-19, Dark Reading)</li>
+<li><a href="https://www.darkreading.com/vulnerabilities-threats/java4shell-flaw-threatens-global-java-application-ecosystem">Java4Shell Flaw Threatens Global Enterprises, Java Application Ecosystem</a> (2026-11-18, Dark Reading)</li>
+</ul>
+<p><strong>Discovery</strong></p>
+<ul>
+<li><a href="https://news.google.com/rss/articles/CBMipwFBVV95cUxPc1RXTm1mSU9EYWtpUVBpTWhIemhKVWZral9Xc1p6Q1RmekZFaWxURmEtWkFRN3dNZFBEOFJSRWE4ZGdQZHNYOFUwXzBxR2RZSGRwZTF3c3p4Tmhnb1JLa0F6RVc5VURONXV0OVZQZzhmWWQzLXhfcjRnYlBOdjFjQjRKV2pTZVJDQkpJSThkQUpuZnhrRXowaElEdmNQZ0lfblQ4U21uTQ?oc=5">Amazon Spots Apparent Open-Source AI Agent Gaining Unauthorized Access</a> (2026-11-24, Gizmodo)</li>
+<li><a href="https://news.google.com/rss/articles/CBMie0FVX3lxTE1VU1ZoclloUEtoLUNWYWJIQngwUFhBNm93b1h2WFBtb05FR2RoVU1QTG56Q3BPRC1GOUZoZ3Uzdk1IQjJIaG1rSmI2TDBMdEdMeFY2bXNuaExpWW5mQjlCcWVhNkk1NTBQWGRseU1IbFpPZGtMMThFYk11NA?oc=5">CISA Issues Fix After AI Agent Attack</a> (2026-11-24, Brief IA)</li>
+<li><a href="https://news.google.com/rss/articles/CBMihAFBVV95cUxPQW1vVDlmbkdHbmp4OTdWY00wNUdqTW1yX3BCM29EdXRwcVYxdXRpM2xIWXYxWXlIR0RmVEozTVhVSmlpbUN6MjdBSFUzMDVoNkF6Z0NyWmU1djBjRW82b29FUWdOeWlLb1RzOXJhaHlNay01WjhjXzNwNjBWelQtTzhBaWU?oc=5">From GitHub Copilot to Prompt Injection</a> (2026-11-24, Technology Org)</li>
+<li><a href="https://news.google.com/rss/articles/CBMic0FVX3lxTFB4QTBzSERCNGZfOC12ZzdrVml0MUw0bFhqZnRFZ2xFcGNwLWx0ZnE4U284bDZYbzR6SDk5QlVOVmJzRFd2VnhqOFlDZFFjdGNzWENkSDFNRlRKQjZrZzNibjQ4MVAxN2dLQ0ZaZ3gxVWtmZjA?oc=5">Chinese Open-Weight AI Models Top Closed Ones at Vulnerability Discovery in New Test</a> (2026-11-24, Infosecurity Magazine)</li>
+<li><a href="https://news.google.com/rss/articles/CBMijwFBVV95cUxNcWdwQmFQcmtJYnVTN3praTJvc000QWpWUVBjaEthRE10MnpXeHhpOWxwTFNEdVY2c2NBd1dyc01meWVPaUt5SklWazUwSUU4MlY2bFBkdEoya2gwbFEya2Q2ajNEbGRTUE5zQWVHbExIQ1FsSVNwZkdCZ3RTMmtkMmJFelJxOW10WlZSdXBzOA?oc=5">AI vulnerability models find almost no common flaws</a> (2026-11-23, SecurityBrief Australia)</li>
+<li><a href="https://news.google.com/rss/articles/CBMiXkFVX3lxTE5xeTdoWWwwazFNOFpjS2ViaUQ1UUJxRU9xZXZFMlNlQVlhZnFCWWZScmxPUTlTc004dnJOYm9ZeUNGdmNwQ0w1d1JxaGFQczREUW9aSjE4NkxHN1ZTS1HSAWNBVV95cUxNdlI4OXlJTTVZeWNqdlJLUUFiWGFpNUl5a2lNQno4VTFTTGc4TFlPMmVmNzV0S3lYbXVkcGctTHZzNG40VWxpNHgzdFo2U0I3ZXF2bllmOTVBR2E5cHU3UTY0M1k?oc=5">Hackers Actively Scan LiteLLM AI Servers for Critical Flaws Enabling RCE Attacks</a> (2026-11-20, CyberSecurityNews)</li>
+<li><a href="https://news.google.com/rss/articles/CBMilgFBVV95cUxNWUVNaTdOVUdkVzc4WTVBc0ZQZnNwdUN6S2ltdm9xWmVFaW1hYl9EQjZvYVBoRUpHQVJDOFRKdThKVV8yZ0lNUFZQSlE0Vnd4TUZYWWlYSmt0d0U0MnE2c1JZUWFMajN2by1ZQWllUGNIRzd6WXdWdWt2SVgzZV9EcTlmdENSVmFxS3pZOFVaRU1rTnQ5Y0E?oc=5">Taylor &amp; Francis Retracts Biomedical Engineering Paper Over Hidden AI Prompt Injection</a> (2026-11-20, CASRAI)</li>
+<li><a href="https://news.google.com/rss/articles/CBMifEFVX3lxTFBxT09GZG1XbGp2X0tmSHAxQ3ZjWjRKM213U0pZMmlJOWRxc1ZVeHBENndwYjJCZFhwZmxhR3Z6dXcxdmd5ZTBobVpWT1RXZEdkclFaNW1oYXhzWWk5M3VETG5VSGh1Z1JKejNVZGhzRV9tT2ZZYVVEX2pzcGs?oc=5">Your AI red team may be finding the same prompt injection thousands of times</a> (2026-11-20, Help Net Security)</li>
+<li><a href="https://news.google.com/rss/articles/CBMijwFBVV95cUxPTmpjVko1a2xLOEk1RlRVci01c3FpcjZPUlZFenNjdGYweWZHemRfd1NuQ3Nnb2p5a1BrNF9EWWVyQ3d3aEIzcWh5SzJ5d1hnWGRvdU12a3hjcjBmMm01RWk0TW5mNUdMY0pONm5BdEVoV21CRlZpNk1zYzV0aHRubm1GVDBOU2l0YTdQcG1nWQ?oc=5">LiteLLM Guardrail Sandbox Escape in CISA KEV (CVE-2026-40217): Patch Now</a> (2026-11-19, Rescana)</li>
+</ul>
+<hr />
+<p><strong>END OF TRANSMISSION //</strong> Verify the signal. Defend the perimeter.</p>
+
+  </article>
+  <footer>
+    <p class="label">AgentLens</p>
+    <p class="label">Agent Security Weekly <span aria-hidden="true">//</span> 2026-11-25</p>
+  </footer>
+</main>
+</body>
+</html>
